@@ -1,0 +1,441 @@
+@use "../../../scss/globals.scss";
+
+.website-links-panel {
+  width: 100%;
+  background-color: globals.$background-color;
+  border-radius: 12px;
+  border: 1px solid globals.$border-color;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-top: calc(globals.$spacing-unit * 1.5);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: calc(globals.$spacing-unit * 2.5)
+      calc(globals.$spacing-unit * 2);
+    gap: globals.$spacing-unit;
+    background-color: transparent;
+    color: globals.$muted-color;
+    font-size: globals.$body-font-size;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    &:active {
+      opacity: globals.$active-opacity;
+    }
+  }
+
+  &__chevron {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+
+    &--open {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__body {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.4s cubic-bezier(0, 1, 0, 1);
+
+    &--open {
+      max-height: 700px;
+    }
+  }
+}
+
+.website-links-tab-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  border-top: 1px solid globals.$border-color;
+  border-bottom: 1px solid globals.$border-color;
+  background-color: globals.$dark-background-color;
+
+  &__scroll {
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    flex: 1;
+    height: 100%;
+    padding: 0 calc(globals.$spacing-unit);
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  &__tab {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(globals.$spacing-unit);
+    padding: 0 calc(globals.$spacing-unit * 2);
+    height: 100%;
+    white-space: nowrap;
+    background-color: transparent;
+    color: globals.$body-color;
+    font-size: globals.$small-font-size;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease,
+      border-color 0.15s ease;
+    flex-shrink: 0;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    &--active {
+      color: globals.$brand-teal;
+      border-bottom-color: globals.$brand-teal;
+    }
+
+    &:active {
+      opacity: globals.$active-opacity;
+    }
+  }
+
+  &__tab-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    object-fit: contain;
+  }
+
+  &__tab-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+  }
+
+  &__fade {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+
+    &--left {
+      left: 0;
+      background: linear-gradient(
+        to right,
+        globals.$dark-background-color,
+        transparent
+      );
+    }
+
+    &--right {
+      right: 0;
+      background: linear-gradient(
+        to left,
+        globals.$dark-background-color,
+        transparent
+      );
+    }
+
+    &--visible {
+      opacity: 1;
+    }
+  }
+
+  &__arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(30, 30, 30, 0.9);
+    border: 1px solid globals.$border-color;
+    border-radius: 50%;
+    color: globals.$body-color;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+
+    &--left {
+      left: 4px;
+    }
+
+    &--right {
+      right: 4px;
+    }
+
+    &--visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    &:hover {
+      background-color: rgba(60, 60, 60, 0.9);
+    }
+  }
+}
+
+.website-links-iframe {
+  position: relative;
+  height: 500px;
+  overflow: hidden;
+  background-color: globals.$dark-background-color;
+  display: flex;
+  flex-direction: column;
+
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 1.5);
+    padding: calc(globals.$spacing-unit * 1) calc(globals.$spacing-unit * 1.5);
+    background-color: #161616;
+    border-bottom: 1px solid globals.$border-color;
+    height: 44px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+  }
+
+  &__nav-controls,
+  &__action-controls {
+    display: flex;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 0.5);
+  }
+
+  &__toolbar-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 4px;
+    background-color: transparent;
+    color: globals.$body-color;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background-color: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    &:active:not(:disabled) {
+      background-color: rgba(255, 255, 255, 0.12);
+    }
+
+    &:disabled {
+      color: globals.$muted-color;
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+  }
+
+  &__address-form {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  &__address-bar {
+    width: 100%;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid globals.$border-color;
+    border-radius: 14px;
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:focus-within {
+      border-color: globals.$brand-teal;
+      background-color: rgba(0, 0, 0, 0.55);
+      box-shadow: 0 0 0 2px rgba(22, 177, 149, 0.15);
+    }
+  }
+
+  &__security-icon {
+    flex-shrink: 0;
+    color: globals.$muted-color;
+
+    &--secure {
+      color: globals.$brand-teal;
+    }
+  }
+
+  &__address-input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: globals.$body-color;
+    font-size: globals.$small-font-size;
+    font-family: inherit;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+
+    &::placeholder {
+      color: globals.$muted-color;
+      opacity: 0.8;
+    }
+  }
+
+  &__content {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    background-color: #000;
+  }
+
+  &__frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+
+    &--hidden {
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+
+  &__skeleton {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+
+    .react-loading-skeleton {
+      background: linear-gradient(
+        90deg,
+        #1c1c1c 25%,
+        #2a2a2a 50%,
+        #1c1c1c 75%
+      );
+      background-size: 200% 100%;
+      animation: website-links-skeleton-loading 1.5s infinite;
+    }
+  }
+
+  &__skeleton-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: globals.$brand-teal;
+    border-radius: 50%;
+    animation: website-links-spinner 0.8s linear infinite;
+  }
+
+  &__fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: calc(globals.$spacing-unit * 4);
+    background-color: globals.$dark-background-color;
+  }
+
+  &__fallback-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 2);
+    text-align: center;
+    color: globals.$muted-color;
+  }
+
+  &__fallback-icon {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+  }
+
+  &__fallback-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    margin: 0;
+  }
+
+  &__fallback-message {
+    font-size: globals.$small-font-size;
+    color: globals.$muted-color;
+    margin: 0;
+  }
+
+  &__fallback-button {
+    padding: calc(globals.$spacing-unit) calc(globals.$spacing-unit * 2);
+    background-color: globals.$brand-teal;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: globals.$body-font-size;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: darken(#16b195, 8%);
+    }
+  }
+
+  &__spin {
+    animation: website-links-spinner-rot 1s linear infinite;
+  }
+}
+
+@keyframes website-links-skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes website-links-spinner {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes website-links-spinner-rot {
+  to {
+    transform: rotate(360deg);
+  }
+}

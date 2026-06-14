@@ -19,6 +19,7 @@ import {
   app,
   nativeImage,
   screen,
+  session,
   shell,
 } from "electron";
 import { t } from "i18next";
@@ -57,6 +58,7 @@ export class WindowManager {
       webPreferences: {
         preload: path.join(__dirname, "../preload/index.mjs"),
         sandbox: false,
+        webviewTag: true,
       },
       show: false,
     };
@@ -187,6 +189,12 @@ export class WindowManager {
       this.mainWindow.maximize();
     }
 
+    // Stable Chrome UA used for all iframe (website preview) requests so that
+    // sites like YouTube don't detect per-request UA inconsistency as bot traffic.
+    const stableIframeUA =
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+
+    // Default session: Main window and local/app requests
     this.mainWindow.webContents.session.webRequest.onBeforeSendHeaders(
       (details, callback) => {
         if (
@@ -196,39 +204,36 @@ export class WindowManager {
           return callback(details);
         }
 
+        const requestHeaders = { ...details.requestHeaders };
+
         if (details.url.includes("workwonders")) {
-          return callback({
-            ...details,
-            requestHeaders: {
-              Origin: "https://workwonders.app",
-              ...details.requestHeaders,
-            },
-          });
+          requestHeaders["Origin"] = "https://workwonders.app";
+          return callback({ requestHeaders });
         }
 
         const userAgent = new UserAgent();
+        requestHeaders["user-agent"] = userAgent.toString();
 
-        callback({
-          requestHeaders: {
-            ...details.requestHeaders,
-            "user-agent": userAgent.toString(),
-          },
-        });
+        callback({ requestHeaders });
       }
     );
 
     this.mainWindow.webContents.session.webRequest.onHeadersReceived(
       (details, callback) => {
+        const responseHeaders = details.responseHeaders
+          ? { ...details.responseHeaders }
+          : {};
+
         if (
           details.webContentsId !== this.mainWindow?.webContents.id ||
           details.url.includes("featurebase") ||
           details.url.includes("chatwoot") ||
           details.url.includes("workwonders")
         ) {
-          return callback(details);
+          return callback({ cancel: false, responseHeaders });
         }
 
-        const headers = {
+        const corsHeaders = {
           "access-control-allow-origin": ["*"],
           "access-control-allow-methods": ["GET, POST, PUT, DELETE, OPTIONS"],
           "access-control-expose-headers": ["ETag"],
@@ -241,8 +246,8 @@ export class WindowManager {
           return callback({
             cancel: false,
             responseHeaders: {
-              ...details.responseHeaders,
-              ...headers,
+              ...responseHeaders,
+              ...corsHeaders,
             },
             statusLine: "HTTP/1.1 200 OK",
           });
@@ -250,12 +255,122 @@ export class WindowManager {
 
         return callback({
           responseHeaders: {
-            ...details.responseHeaders,
-            ...headers,
+            ...responseHeaders,
+            ...corsHeaders,
           },
         });
       }
     );
+
+    // Isolated session for website previews (<webview partition="persist:website-previews">)
+    const previewSession = session.fromPartition("persist:website-previews");
+
+    previewSession.webRequest.onBeforeSendHeaders((details, callback) => {
+      const requestHeaders = details.requestHeaders
+        ? { ...details.requestHeaders }
+        : {};
+
+      // Always spoof User-Agent to stable desktop Chrome for previews
+      requestHeaders["user-agent"] = stableIframeUA;
+
+      // Spoof Origin and Referer for previews to bypass CSRF/CORS and GraphQL blocks
+      try {
+        const urlObj = new URL(details.url);
+        const hostname = urlObj.hostname;
+        let baseOrigin = "";
+
+        if (hostname.endsWith("twitch.tv") || hostname.endsWith("ttvnw.net")) {
+          baseOrigin = "https://www.twitch.tv";
+        } else if (hostname.endsWith("nexusmods.com")) {
+          baseOrigin = "https://www.nexusmods.com";
+        } else if (
+          hostname.endsWith("youtube.com") ||
+          hostname.endsWith("youtu.be")
+        ) {
+          baseOrigin = "https://www.youtube.com";
+        } else if (hostname.endsWith("steampowered.com")) {
+          baseOrigin = "https://store.steampowered.com";
+        } else if (hostname.endsWith("steamdb.info")) {
+          baseOrigin = "https://steamdb.info";
+        } else if (hostname.endsWith("protondb.com")) {
+          baseOrigin = "https://www.protondb.com";
+        } else if (hostname.endsWith("pcgamingwiki.com")) {
+          baseOrigin = "https://www.pcgamingwiki.com";
+        } else if (hostname.endsWith("moddb.com")) {
+          baseOrigin = "https://www.moddb.com";
+        } else if (
+          hostname.endsWith("gamefaqs.gamespot.com") ||
+          hostname.endsWith("gamespot.com")
+        ) {
+          baseOrigin = "https://gamefaqs.gamespot.com";
+        } else if (hostname.endsWith("metacritic.com")) {
+          baseOrigin = "https://www.metacritic.com";
+        } else if (hostname.endsWith("howlongtobeat.com")) {
+          baseOrigin = "https://howlongtobeat.com";
+        } else if (hostname.endsWith("igdb.com")) {
+          baseOrigin = "https://www.igdb.com";
+        }
+
+        if (baseOrigin) {
+          requestHeaders["Origin"] = baseOrigin;
+          requestHeaders["Referer"] = baseOrigin + "/";
+        }
+      } catch {
+        /* ignore invalid URLs */
+      }
+
+      callback({ requestHeaders });
+    });
+
+    previewSession.webRequest.onHeadersReceived((details, callback) => {
+      const responseHeaders = details.responseHeaders
+        ? { ...details.responseHeaders }
+        : {};
+
+      // Strip X-Frame-Options and CSP headers for all HTTP/HTTPS requests in preview session
+      if (
+        details.url.startsWith("http://") ||
+        details.url.startsWith("https://")
+      ) {
+        for (const key of Object.keys(responseHeaders)) {
+          const lowerKey = key.toLowerCase();
+          if (
+            lowerKey === "x-frame-options" ||
+            lowerKey === "content-security-policy" ||
+            lowerKey === "content-security-policy-report-only"
+          ) {
+            delete responseHeaders[key];
+          }
+        }
+      }
+
+      const corsHeaders = {
+        "access-control-allow-origin": ["*"],
+        "access-control-allow-methods": ["GET, POST, PUT, DELETE, OPTIONS"],
+        "access-control-expose-headers": ["ETag"],
+        "access-control-allow-headers": [
+          "Content-Type, Authorization, X-Requested-With, If-None-Match",
+        ],
+      };
+
+      if (details.method === "OPTIONS") {
+        return callback({
+          cancel: false,
+          responseHeaders: {
+            ...responseHeaders,
+            ...corsHeaders,
+          },
+          statusLine: "HTTP/1.1 200 OK",
+        });
+      }
+
+      return callback({
+        responseHeaders: {
+          ...responseHeaders,
+          ...corsHeaders,
+        },
+      });
+    });
 
     const initialHash = userPreferences?.launchToLibraryPage ? "library" : "";
 

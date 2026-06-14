@@ -16,6 +16,7 @@ import { GallerySlider } from "./gallery-slider/gallery-slider";
 import { Sidebar } from "./sidebar/sidebar";
 import { GameReviews } from "./game-reviews";
 import { GameLogo } from "./game-logo";
+import { WebsiteLinksPanel } from "./website-links-panel";
 
 import { AuthPage } from "@shared";
 import { cloudSyncContext, gameDetailsContext } from "@renderer/context";
@@ -434,6 +435,8 @@ export function GameDetailsContent() {
                 {isDescriptionExpanded ? t("show_less") : t("show_more")}
               </button>
             )}
+
+            <WebsiteLinksPanel />
 
             {shop !== "custom" && shop && objectId && (
               <div ref={reviewsRef}>
