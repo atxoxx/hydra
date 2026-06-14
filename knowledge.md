@@ -1,6 +1,7 @@
 # Hydra Launcher — Project Knowledge
 
 ## What this is
+
 Hydra Launcher is an open-source gaming platform (Electron desktop app) for managing your game library — downloading, launching, achievements, cloud saves, and social features. Written in **TypeScript, React, Python, and Rust**.
 
 - **Repo**: https://github.com/hydralauncher/hydra
@@ -16,25 +17,25 @@ yarn dev:big-picture  # start Big Picture mode only (vite)
 
 ### Key commands
 
-| Command | Description |
-|---|---|
-| `yarn dev` | Electron dev mode with HMR |
-| `yarn start` | Preview production build |
-| `yarn build` | Typecheck + production build |
-| `yarn test` | Run tests (node --test with ts-node) |
-| `yarn lint` | ESLint + auto-fix |
-| `yarn typecheck` | Full typecheck (node + web tsconfigs) |
-| `yarn typecheck:node` | Typecheck main/preload/shared only |
-| `yarn typecheck:web` | Typecheck renderer/big-picture only |
-| `yarn format` | Prettier format all files |
-| `yarn format-check` | Prettier check only |
-| `yarn build:win` | Build Windows installer (NSIS + portable) |
-| `yarn build:mac` | Build macOS DMG |
-| `yarn build:linux` | Build Linux (AppImage, snap, deb, rpm) |
-| `yarn build:unpack` | Build unpacked for local testing |
-| `yarn build:native` | Build Rust native addon only |
-| `yarn build:python-rpc` | Build Python RPC (cx_Freeze) |
-| `yarn protoc` | Generate protobuf TypeScript from `.proto` files |
+| Command                 | Description                                      |
+| ----------------------- | ------------------------------------------------ |
+| `yarn dev`              | Electron dev mode with HMR                       |
+| `yarn start`            | Preview production build                         |
+| `yarn build`            | Typecheck + production build                     |
+| `yarn test`             | Run tests (node --test with ts-node)             |
+| `yarn lint`             | ESLint + auto-fix                                |
+| `yarn typecheck`        | Full typecheck (node + web tsconfigs)            |
+| `yarn typecheck:node`   | Typecheck main/preload/shared only               |
+| `yarn typecheck:web`    | Typecheck renderer/big-picture only              |
+| `yarn format`           | Prettier format all files                        |
+| `yarn format-check`     | Prettier check only                              |
+| `yarn build:win`        | Build Windows installer (NSIS + portable)        |
+| `yarn build:mac`        | Build macOS DMG                                  |
+| `yarn build:linux`      | Build Linux (AppImage, snap, deb, rpm)           |
+| `yarn build:unpack`     | Build unpacked for local testing                 |
+| `yarn build:native`     | Build Rust native addon only                     |
+| `yarn build:python-rpc` | Build Python RPC (cx_Freeze)                     |
+| `yarn protoc`           | Generate protobuf TypeScript from `.proto` files |
 
 ## Architecture
 
@@ -78,23 +79,26 @@ src/
 ```
 
 ### Data storage
+
 - **LevelDB** (`classic-level`) at the user data path. Main sublevels: games, downloads, user preferences, etc.
 - Game save backups via **Ludusavi** (bundled binary).
 - Hydra Cloud sync for saves/achievements via REST + WebSocket (`hydra-api.ts`, `ws/`).
 
 ### Aliases (defined in tsconfig + vite config)
-| Alias | Path |
-|---|---|
-| `@main/*` | `src/main/*` |
-| `@renderer/*` | `src/renderer/src/*` |
-| `@locales` | `src/locales/index.ts` |
-| `@shared` | `src/shared/index.ts` |
-| `@types` | `src/types/index.ts` |
-| `@resources` | `resources/` |
+
+| Alias         | Path                   |
+| ------------- | ---------------------- |
+| `@main/*`     | `src/main/*`           |
+| `@renderer/*` | `src/renderer/src/*`   |
+| `@locales`    | `src/locales/index.ts` |
+| `@shared`     | `src/shared/index.ts`  |
+| `@types`      | `src/types/index.ts`   |
+| `@resources`  | `resources/`           |
 
 ## Conventions
 
 ### Formatting & Linting
+
 - **Prettier**: semicolons: `true`, singleQuote: `false`, trailingComma: `"es5"`, tabWidth: 2
 - **ESLint**: Extends `@electron-toolkit/eslint-config-ts/recommended` + React + jsx-a11y + prettier
 - `@typescript-eslint/no-explicit-any`: **warning** (not error)
@@ -103,6 +107,7 @@ src/
 - **Commitlint**: conventional commits (`@commitlint/config-conventional`)
 
 ### Patterns
+
 - **Package manager**: Always `yarn` (not npm). Enforced in `package.json` engines.
 - **Module system**: ESM (`"type": "module"` in package.json). Use `import`/`export`, not `require`.
 - **State**: Redux Toolkit for renderer state, Zustand for some hook-level state.
@@ -113,6 +118,7 @@ src/
 - **SCSS**: Uses `sass-embedded` with `api: "modern"`.
 
 ### Gotchas
+
 - **Rust toolchain required** for `hydra-native`. Postinstall builds it automatically.
 - **Python 3.9+ required**. Install deps with `pip install -r requirements.txt`.
 - **7zip binaries** are bundled per-platform in `binaries/`.

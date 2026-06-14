@@ -85,9 +85,7 @@ const logPlaytimeTrace = (
 const getGameExecutables = async () => {
   const gameExecutables = (
     await axios
-      .get(
-        envConfig.externalResourcesUrl + "/game-executables.json"
-      )
+      .get(envConfig.externalResourcesUrl + "/game-executables.json")
       .catch(() => {
         return { data: {} };
       })

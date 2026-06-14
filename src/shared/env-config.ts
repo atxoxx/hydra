@@ -6,5 +6,9 @@ const PRODUCTION_DEFAULTS: Record<string, string> = {
 };
 
 export function getRendererEnv(key: string): string {
-  return (import.meta.env as Record<string, string>)[key] ?? PRODUCTION_DEFAULTS[key] ?? "";
+  return (
+    (import.meta.env as Record<string, string>)[key] ??
+    PRODUCTION_DEFAULTS[key] ??
+    ""
+  );
 }
