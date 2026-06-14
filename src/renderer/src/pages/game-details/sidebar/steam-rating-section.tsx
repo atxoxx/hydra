@@ -46,8 +46,9 @@ export function SteamRatingSection({
   const { t } = useTranslation("game_details");
   const { numberFormatter } = useFormat();
 
-  const [reviewSummary, setReviewSummary] =
-    useState<SteamReviewSummary | null>(null);
+  const [reviewSummary, setReviewSummary] = useState<SteamReviewSummary | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 

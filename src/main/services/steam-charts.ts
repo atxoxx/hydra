@@ -72,9 +72,7 @@ export async function getCurrentPlayerCount(
  * SteamSpy endpoint: ?request=appdetails&appid={appid}
  * Returns ccu (concurrent users) field which represents the peak.
  */
-export async function getSteamSpyPeak(
-  appId: number
-): Promise<number | null> {
+export async function getSteamSpyPeak(appId: number): Promise<number | null> {
   try {
     const response = await axios.get<{ ccu?: number }>(STEAMSPY_API, {
       params: { request: "appdetails", appid: appId },
@@ -95,9 +93,7 @@ export async function getSteamSpyPeak(
  * Scrape SteamCharts.com for trend data (24h and 7d change percentages)
  * and all-time peak as a fallback.
  */
-export async function scrapeSteamChartsData(
-  appId: number
-): Promise<{
+export async function scrapeSteamChartsData(appId: number): Promise<{
   allTimePeak: number | null;
   trend24h: number | null;
   trend7d: number | null;
@@ -116,9 +112,7 @@ export async function scrapeSteamChartsData(
 
     // Try to parse the all-time peak from the page
     // SteamCharts typically shows: "all-time peak: X,XXX"
-    const peakMatch = html.match(
-      /all-time peak[:\s]*([\d,]+)/i
-    );
+    const peakMatch = html.match(/all-time peak[:\s]*([\d,]+)/i);
     const allTimePeak = peakMatch
       ? parseInt(peakMatch[1].replace(/,/g, ""), 10)
       : null;
@@ -132,12 +126,8 @@ export async function scrapeSteamChartsData(
       /(?:7d|7 day|past 7 days|past week)[^<]*?([+-]?\d+\.?\d*)\s*%/i
     );
 
-    const trend24h = trend24hMatch
-      ? parseFloat(trend24hMatch[1])
-      : null;
-    const trend7d = trend7dMatch
-      ? parseFloat(trend7dMatch[1])
-      : null;
+    const trend24h = trend24hMatch ? parseFloat(trend24hMatch[1]) : null;
+    const trend7d = trend7dMatch ? parseFloat(trend7dMatch[1]) : null;
 
     return { allTimePeak, trend24h, trend7d };
   } catch (err) {
@@ -169,8 +159,7 @@ export async function getSteamPlayerCountData(
     scrapeSteamChartsData(appId),
   ]);
 
-  const allTimePeak =
-    steamSpyPeak ?? steamChartsData?.allTimePeak ?? null;
+  const allTimePeak = steamSpyPeak ?? steamChartsData?.allTimePeak ?? null;
 
   const result: SteamPlayerCount = {
     currentPlayers,
@@ -407,7 +396,12 @@ async function collectReviewData(
   signal?: AbortSignal
 ): Promise<{
   languageBreakdown: { language: string; count: number }[];
-  history: { date: string; positive: number; negative: number; total: number }[];
+  history: {
+    date: string;
+    positive: number;
+    negative: number;
+    total: number;
+  }[];
 }> {
   const languageCounts = new Map<string, number>();
   const monthlyBuckets = new Map<
@@ -484,10 +478,7 @@ export async function getSteamReviewAnalysisData(
   const summary = await getSteamReviewSummaryData(appId);
   if (!summary) return null;
 
-  const { languageBreakdown, history } = await collectReviewData(
-    appId,
-    signal
-  );
+  const { languageBreakdown, history } = await collectReviewData(appId, signal);
 
   const result: SteamReviewAnalysis = {
     summary,

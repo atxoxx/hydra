@@ -42,37 +42,37 @@ Add a **live Steam player counter badge** to the right side of the hero banner i
 
 ### 1.3 Data Sources
 
-| Data Point | Primary Source | Fallback |
-|---|---|---|
-| **Current players** | Steam Web API `ISteamUserStats/GetNumberOfCurrentPlayers/v1/?appid={appid}` | None (required) |
-| **All-time peak** | SteamSpy API `https://steamspy.com/api.php?request=appdetails&appid={appid}` → `ccu` field | Scrape SteamCharts.com `/app/{appid}` page |
-| **24h/7d trend** | Scrape SteamCharts.com `/app/{appid}` page (parse the trend indicators) | Show "—" placeholder |
+| Data Point          | Primary Source                                                                             | Fallback                                   |
+| ------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------ |
+| **Current players** | Steam Web API `ISteamUserStats/GetNumberOfCurrentPlayers/v1/?appid={appid}`                | None (required)                            |
+| **All-time peak**   | SteamSpy API `https://steamspy.com/api.php?request=appdetails&appid={appid}` → `ccu` field | Scrape SteamCharts.com `/app/{appid}` page |
+| **24h/7d trend**    | Scrape SteamCharts.com `/app/{appid}` page (parse the trend indicators)                    | Show "—" placeholder                       |
 
 ### 1.4 Data Flow
 
 ```
 Renderer                          Main Process                     External
 ─────────                         ────────────                     ────────
-HeroPlayerCounter                 
-  │                               
-  ├─► window.electron             
+HeroPlayerCounter
+  │
+  ├─► window.electron
   │   .getSteamPlayerCount(       registerEvent
   │     shop, objectId,           "getSteamPlayerCount"
-  │     gameTitle)                
+  │     gameTitle)
   │                               ├─► fetch current players:
   │                               │   GET store.steampowered.com/api/
   │                               │   appdetails?appids={id}
-  │                               │   
+  │                               │
   │                               ├─► fetch peak via SteamSpy:
   │                               │   GET steamspy.com/api.php?
   │                               │   request=appdetails&appid={id}
-  │                               │   
+  │                               │
   │                               └─► scrape trend:
   │                                   GET steamcharts.com/app/{id}
   │                                   (parse HTML for trend %)
-  │                               
+  │
   │◄── SteamPlayerCountResponse ──┤
-  │                               
+  │
   └─► render badge
 ```
 
@@ -91,13 +91,13 @@ HeroPlayerCounter
 
 ### 1.7 Error States
 
-| Scenario | Behavior |
-|---|---|
-| Network offline | Hide the badge entirely |
-| Steam API down/error | Hide the badge entirely |
-| Non-Steam game, no match found | Hide the badge entirely |
+| Scenario                                      | Behavior                                 |
+| --------------------------------------------- | ---------------------------------------- |
+| Network offline                               | Hide the badge entirely                  |
+| Steam API down/error                          | Hide the badge entirely                  |
+| Non-Steam game, no match found                | Hide the badge entirely                  |
 | Peak/trend unavailable but current players OK | Show current players only, no peak/trend |
-| All data unavailable | Hide the badge entirely |
+| All data unavailable                          | Hide the badge entirely                  |
 
 ---
 
@@ -134,12 +134,12 @@ HeroPlayerCounter
 ```typescript
 interface SteamReviewSummary {
   // Overall
-  reviewScoreDescriptor: string;      // "Very Positive", "Mixed", etc.
+  reviewScoreDescriptor: string; // "Very Positive", "Mixed", etc.
   totalPositive: number;
   totalNegative: number;
   totalReviews: number;
-  reviewScore: number;                // 0–100 percentage
-  
+  reviewScore: number; // 0–100 percentage
+
   // Recent (30 days)
   recentReviewScoreDescriptor: string;
   recentPositive: number;
@@ -169,6 +169,7 @@ interface SteamReviewSummary {
 #### Modal Content Tabs/Sections
 
 **Tab 1: Reviews Overview**
+
 - Overall score descriptor + percentage (large, prominent)
 - Review count over time chart (line/area chart using `recharts`)
   - X-axis: months (last 12 months if available, else "all time")
@@ -178,6 +179,7 @@ interface SteamReviewSummary {
 - Review score trend (line chart of percentage positive over time)
 
 **Tab 2: Player Count** (if data available)
+
 - Current player count (live)
 - All-time peak player count
 - Player count history chart (using `recharts`)
@@ -185,18 +187,19 @@ interface SteamReviewSummary {
   - Y-axis: concurrent players
 
 **Tab 3: Language Breakdown** (if available from Steam API)
+
 - Table or bar chart showing review counts by language
 - Top 5–10 languages
 
 ### 2.4 Data Sources for Review Data
 
-| Data Point | Source |
-|---|---|
-| Review summary (all-time) | Steam Store API `store.steampowered.com/appreviews/{appid}?json=1&language=all&purchase_type=all` |
-| Review summary (recent 30d) | Same API with `?json=1&language=all&purchase_type=all&day_range=30` |
-| Review count over time | Steam Store API `store.steampowered.com/appreviews/{appid}?json=1&cursor=*&num_per_page=100` (paginated to build history) — OR scrape SteamDB/SteamCharts |
-| Player count history | Scrape SteamCharts.com `/app/{appid}` for the chart data table |
-| Language breakdown | Steam Store API review data includes `language` field — aggregate client-side |
+| Data Point                  | Source                                                                                                                                                    |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Review summary (all-time)   | Steam Store API `store.steampowered.com/appreviews/{appid}?json=1&language=all&purchase_type=all`                                                         |
+| Review summary (recent 30d) | Same API with `?json=1&language=all&purchase_type=all&day_range=30`                                                                                       |
+| Review count over time      | Steam Store API `store.steampowered.com/appreviews/{appid}?json=1&cursor=*&num_per_page=100` (paginated to build history) — OR scrape SteamDB/SteamCharts |
+| Player count history        | Scrape SteamCharts.com `/app/{appid}` for the chart data table                                                                                            |
+| Language breakdown          | Steam Store API review data includes `language` field — aggregate client-side                                                                             |
 
 ### 2.5 Non-Steam Games
 
@@ -206,7 +209,7 @@ interface SteamReviewSummary {
 
 ### 2.6 Loading States
 
-- **Rating section skeleton**: 
+- **Rating section skeleton**:
   - 2-line skeleton for score descriptor + percentage
   - Full-width skeleton bar for the progress bar
   - 3 shorter skeletons for the counts
@@ -214,12 +217,12 @@ interface SteamReviewSummary {
 
 ### 2.7 Error States
 
-| Scenario | Rating Section | Modal |
-|---|---|---|
-| Steam API unavailable | "Data temporarily unavailable" message | N/A (button hidden) |
-| Non-Steam, no match | "No Steam data available" placeholder | N/A |
-| Partial data (e.g., no recent) | Show all-time only, hide recent | Show available data only |
-| Network offline | Keep previous cached data (if any) | Show cached data or error |
+| Scenario                       | Rating Section                         | Modal                     |
+| ------------------------------ | -------------------------------------- | ------------------------- |
+| Steam API unavailable          | "Data temporarily unavailable" message | N/A (button hidden)       |
+| Non-Steam, no match            | "No Steam data available" placeholder  | N/A                       |
+| Partial data (e.g., no recent) | Show all-time only, hide recent        | Show available data only  |
+| Network offline                | Keep previous cached data (if any)     | Show cached data or error |
 
 ---
 
@@ -231,7 +234,7 @@ interface SteamReviewSummary {
 export interface SteamPlayerCount {
   currentPlayers: number;
   allTimePeak: number | null;
-  trend24h: number | null;     // percentage change, e.g., 12.5 or -5.3
+  trend24h: number | null; // percentage change, e.g., 12.5 or -5.3
   trend7d: number | null;
   timestamp: number;
 }
@@ -250,14 +253,14 @@ export interface SteamReviewSummary {
 }
 
 export interface SteamReviewHistoryPoint {
-  date: string;       // ISO date string
+  date: string; // ISO date string
   positive: number;
   negative: number;
   total: number;
 }
 
 export interface SteamPlayerHistoryPoint {
-  date: string;       // ISO date string
+  date: string; // ISO date string
   players: number;
 }
 
@@ -298,16 +301,16 @@ src/main/services/
 
 ### 3.4 Modified Files
 
-| File | Change |
-|---|---|
-| `src/renderer/src/pages/game-details/game-details-content.tsx` | Insert `<HeroPlayerCounter />` in hero area |
-| `src/renderer/src/pages/game-details/sidebar/sidebar.tsx` | Insert `<SteamRatingSection />` below stats section |
-| `src/renderer/src/pages/game-details/hero.scss` | Add positioning for player counter badge |
-| `src/types/steam.types.ts` | Add new interfaces |
-| `src/types/index.ts` | Re-export new types |
-| `src/preload/index.ts` | Add new IPC method declarations |
-| `src/main/events/index.ts` | Register new event handlers |
-| `src/locales/en/translation.json` | Add translation keys |
+| File                                                           | Change                                              |
+| -------------------------------------------------------------- | --------------------------------------------------- |
+| `src/renderer/src/pages/game-details/game-details-content.tsx` | Insert `<HeroPlayerCounter />` in hero area         |
+| `src/renderer/src/pages/game-details/sidebar/sidebar.tsx`      | Insert `<SteamRatingSection />` below stats section |
+| `src/renderer/src/pages/game-details/hero.scss`                | Add positioning for player counter badge            |
+| `src/types/steam.types.ts`                                     | Add new interfaces                                  |
+| `src/types/index.ts`                                           | Re-export new types                                 |
+| `src/preload/index.ts`                                         | Add new IPC method declarations                     |
+| `src/main/events/index.ts`                                     | Register new event handlers                         |
+| `src/locales/en/translation.json`                              | Add translation keys                                |
 
 ### 3.5 Dependencies
 
@@ -379,15 +382,15 @@ src/main/services/
 
 ## 5. Edge Cases & Constraints
 
-| Scenario | Behavior |
-|---|---|
-| Steam App ID not available for a non-Steam game | Search Steam store by game name; if no match found, hide both features |
-| SteamCharts.com blocks scraping (Cloudflare, etc.) | Fall back to showing only Steam API data; hide chart/trend |
-| SteamSpy API rate-limited | Skip peak data, show current players only |
-| Game has very few reviews (< 50) | Still show the data, but note "Limited data" |
-| User rapidly switches between games | Abort in-flight requests using AbortController (existing pattern in context) |
-| Very long game names for non-Steam search | URL-encode properly; truncate if needed |
-| Modal open while navigating away | Auto-close modal on route change |
+| Scenario                                           | Behavior                                                                     |
+| -------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Steam App ID not available for a non-Steam game    | Search Steam store by game name; if no match found, hide both features       |
+| SteamCharts.com blocks scraping (Cloudflare, etc.) | Fall back to showing only Steam API data; hide chart/trend                   |
+| SteamSpy API rate-limited                          | Skip peak data, show current players only                                    |
+| Game has very few reviews (< 50)                   | Still show the data, but note "Limited data"                                 |
+| User rapidly switches between games                | Abort in-flight requests using AbortController (existing pattern in context) |
+| Very long game names for non-Steam search          | URL-encode properly; truncate if needed                                      |
+| Modal open while navigating away                   | Auto-close modal on route change                                             |
 
 ---
 

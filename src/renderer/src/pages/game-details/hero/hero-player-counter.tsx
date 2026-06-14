@@ -73,11 +73,7 @@ export function HeroPlayerCounter() {
     if (playerData.trend24h === null) return null;
     const isPositive = playerData.trend24h > 0;
     const isNeutral = playerData.trend24h === 0;
-    const color = isNeutral
-      ? "#d0d1d7"
-      : isPositive
-        ? "#4caf50"
-        : "#e11d48";
+    const color = isNeutral ? "#d0d1d7" : isPositive ? "#4caf50" : "#e11d48";
     const arrow = isNeutral ? "" : isPositive ? "↑" : "↓";
     return (
       <span className="hero-player-counter__trend" style={{ color }}>

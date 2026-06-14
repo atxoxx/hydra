@@ -55,8 +55,9 @@ export function SteamReviewModal({
   const { t } = useTranslation("game_details");
   const { numberFormatter } = useFormat();
 
-  const [analysisData, setAnalysisData] =
-    useState<SteamReviewAnalysis | null>(null);
+  const [analysisData, setAnalysisData] = useState<SteamReviewAnalysis | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [activeTab, setActiveTab] = useState<ModalTab>("overview");
@@ -125,9 +126,11 @@ export function SteamReviewModal({
   return (
     <Modal
       visible={visible}
-      title={displayTitle
-        ? `${displayTitle} — ${t("steam_review_analysis")}`
-        : t("steam_review_analysis")}
+      title={
+        displayTitle
+          ? `${displayTitle} — ${t("steam_review_analysis")}`
+          : t("steam_review_analysis")
+      }
       onClose={onClose}
       large
     >
@@ -223,8 +226,16 @@ function OverviewTab({
 }) {
   const barData = useMemo(
     () => [
-      { name: t("positive"), value: summary.totalPositive, fill: chartTheme.blue },
-      { name: t("negative"), value: summary.totalNegative, fill: chartTheme.red },
+      {
+        name: t("positive"),
+        value: summary.totalPositive,
+        fill: chartTheme.blue,
+      },
+      {
+        name: t("negative"),
+        value: summary.totalNegative,
+        fill: chartTheme.red,
+      },
     ],
     [summary, chartTheme, t]
   );
@@ -269,7 +280,8 @@ function OverviewTab({
           </span>
           <span>
             {summary.recentReviewScore}% —{" "}
-            {numberFormatter.format(summary.recentTotal ?? 0)} {t("review_count").toLowerCase()}
+            {numberFormatter.format(summary.recentTotal ?? 0)}{" "}
+            {t("review_count").toLowerCase()}
           </span>
         </div>
       )}

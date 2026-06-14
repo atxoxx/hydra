@@ -357,9 +357,7 @@ export function Sidebar() {
         </SidebarSection>
       )}
 
-      <SteamRatingSection
-        onOpenDetails={() => setShowSteamReviewModal(true)}
-      />
+      <SteamRatingSection onOpenDetails={() => setShowSteamReviewModal(true)} />
 
       <GameLanguageSection />
 
