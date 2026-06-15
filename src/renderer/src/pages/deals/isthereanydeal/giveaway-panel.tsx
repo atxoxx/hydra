@@ -93,9 +93,7 @@ export function GiveawayPanel(_props: DealSourceProps) {
   return (
     <div className="giveaway-panel">
       <div className="giveaway-panel__header">
-        <h3 className="giveaway-panel__title">
-          {t("giveaways")}
-        </h3>
+        <h3 className="giveaway-panel__title">{t("giveaways")}</h3>
         <button
           type="button"
           className="giveaway-panel__refresh-button"

@@ -58,7 +58,8 @@ export function GamePassFilters({
     [filters, onFiltersChange]
   );
 
-  const hasActiveFilters = filters.categories.length > 0 || filters.search.trim() !== "";
+  const hasActiveFilters =
+    filters.categories.length > 0 || filters.search.trim() !== "";
 
   return (
     <div className="gamepass-filters">

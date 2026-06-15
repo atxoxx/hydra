@@ -1,7 +1,8 @@
 const CATALOG_API_BASE = "https://catalog.gamepass.com/sigls/v2";
 const GAME_PASS_CATALOG_ID = "fdd9e2a7-0fee-49f6-ad69-4354098401ff";
 const EA_PLAY_CATALOG_ID = "1d33fbb9-b895-4732-a8ca-a55c8b99fa2c";
-const PRODUCT_DETAIL_API = "https://displaycatalog.mp.microsoft.com/v7.0/products";
+const PRODUCT_DETAIL_API =
+  "https://displaycatalog.mp.microsoft.com/v7.0/products";
 
 const CACHE_KEY = "hydra_gamepass_cache";
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -204,7 +205,8 @@ async function fetchProductDetails(
   const url = `${PRODUCT_DETAIL_API}?bigIds=${encodeURIComponent(bigIds)}&market=${market}&languages=${language}&MS-CV=F.1`;
 
   const response = await fetch(url);
-  if (!response.ok) throw new Error(`Product detail fetch failed: ${response.status}`);
+  if (!response.ok)
+    throw new Error(`Product detail fetch failed: ${response.status}`);
 
   const data = await response.json();
   return parseProductData(data);
@@ -230,12 +232,8 @@ function parseProductData(catalogData: any): GamePassGame[] {
     const heroImage = images.find(
       (img: any) => img.ImagePurpose === "SuperHeroArt"
     );
-    const boxArt = images.find(
-      (img: any) => img.ImagePurpose === "BoxArt"
-    );
-    const logoImage = images.find(
-      (img: any) => img.ImagePurpose === "Logo"
-    );
+    const boxArt = images.find((img: any) => img.ImagePurpose === "BoxArt");
+    const logoImage = images.find((img: any) => img.ImagePurpose === "Logo");
 
     const coverUrl = posterImage
       ? `https:${posterImage.Uri}`
@@ -271,8 +269,11 @@ function parseProductData(catalogData: any): GamePassGame[] {
   return games;
 }
 
-export async function getGamePassGames(regionCode: string): Promise<GamePassGame[]> {
-  const region = GAMEPASS_REGIONS.find((r) => r.code === regionCode) ?? GAMEPASS_REGIONS[0];
+export async function getGamePassGames(
+  regionCode: string
+): Promise<GamePassGame[]> {
+  const region =
+    GAMEPASS_REGIONS.find((r) => r.code === regionCode) ?? GAMEPASS_REGIONS[0];
 
   // Check cache
   const cached = loadCache();
@@ -290,7 +291,9 @@ export async function getGamePassGames(regionCode: string): Promise<GamePassGame
       region.language,
       region.code
     );
-    console.log(`[GamePass] Fetched ${catalogProducts.length} catalog products for ${regionCode}`);
+    console.log(
+      `[GamePass] Fetched ${catalogProducts.length} catalog products for ${regionCode}`
+    );
   } catch (err) {
     console.error("[GamePass] Failed to fetch main catalog:", err);
   }
@@ -303,7 +306,9 @@ export async function getGamePassGames(regionCode: string): Promise<GamePassGame
       region.language,
       region.code
     );
-    console.log(`[GamePass] Fetched ${eaProducts.length} EA Play products for ${regionCode}`);
+    console.log(
+      `[GamePass] Fetched ${eaProducts.length} EA Play products for ${regionCode}`
+    );
   } catch (err) {
     console.warn("[GamePass] EA Play catalog not available:", err);
   }
@@ -320,10 +325,17 @@ export async function getGamePassGames(regionCode: string): Promise<GamePassGame
   for (let i = 0; i < allProductIds.length; i += batchSize) {
     const batch = allProductIds.slice(i, i + batchSize);
     try {
-      const details = await fetchProductDetails(batch, region.language, region.code);
+      const details = await fetchProductDetails(
+        batch,
+        region.language,
+        region.code
+      );
       allGames.push(...details);
     } catch (err) {
-      console.error(`[GamePass] Failed to fetch batch ${i / batchSize + 1}:`, err);
+      console.error(
+        `[GamePass] Failed to fetch batch ${i / batchSize + 1}:`,
+        err
+      );
     }
   }
 

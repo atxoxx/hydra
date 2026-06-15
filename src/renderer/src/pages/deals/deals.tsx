@@ -59,7 +59,9 @@ export function Deals() {
     setActiveSourceId(validLastTab ?? enabledSources[0].id);
   }, [enabledSources, sourceMap]);
 
-  const activeSource = activeSourceId ? sourceMap.get(activeSourceId) ?? null : null;
+  const activeSource = activeSourceId
+    ? (sourceMap.get(activeSourceId) ?? null)
+    : null;
 
   return (
     <section className="deals__container">

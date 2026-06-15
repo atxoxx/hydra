@@ -32,18 +32,21 @@ export function GamePassBrowser(_props: DealSourceProps) {
   });
   const [selectedGame, setSelectedGame] = useState<GamePassGame | null>(null);
 
-  const fetchGames = useCallback(async (regionCode: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const gameList = await getGamePassGames(regionCode);
-      setGames(gameList);
-    } catch (err) {
-      setError(t("could_not_load_catalog"));
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
+  const fetchGames = useCallback(
+    async (regionCode: string) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const gameList = await getGamePassGames(regionCode);
+        setGames(gameList);
+      } catch (err) {
+        setError(t("could_not_load_catalog"));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [t]
+  );
 
   useEffect(() => {
     const cachedGames = getCachedGamePassGames();
@@ -54,7 +57,9 @@ export function GamePassBrowser(_props: DealSourceProps) {
       // Clear stale empty cache before fetching
       try {
         localStorage.removeItem("hydra_gamepass_cache");
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       fetchGames(loadRegion());
     }
   }, [fetchGames]);
@@ -111,7 +116,10 @@ export function GamePassBrowser(_props: DealSourceProps) {
         result.sort((a, b) => {
           if (!a.releaseDate) return 1;
           if (!b.releaseDate) return -1;
-          return new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime();
+          return (
+            new Date(b.releaseDate).getTime() -
+            new Date(a.releaseDate).getTime()
+          );
         });
         break;
       case "recently-added":
@@ -119,7 +127,10 @@ export function GamePassBrowser(_props: DealSourceProps) {
         result.sort((a, b) => {
           if (!a.releaseDate) return 1;
           if (!b.releaseDate) return -1;
-          return new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime();
+          return (
+            new Date(b.releaseDate).getTime() -
+            new Date(a.releaseDate).getTime()
+          );
         });
         break;
     }
@@ -127,21 +138,24 @@ export function GamePassBrowser(_props: DealSourceProps) {
     return result;
   }, [games, filters]);
 
-  const handlePlayOnXbox = useCallback((productId: string, gameName: string) => {
-    const deepLink = getXboxDeepLink(productId);
-    try {
-      // Use Electron's openExternal for proper protocol handling
-      window.electron.openExternal(deepLink);
-    } catch {
-      // Protocol handler failed — fall back to Microsoft Store
+  const handlePlayOnXbox = useCallback(
+    (productId: string, gameName: string) => {
+      const deepLink = getXboxDeepLink(productId);
       try {
-        const storeUrl = getXboxStoreUrl(gameName);
-        window.electron.openExternal(storeUrl);
+        // Use Electron's openExternal for proper protocol handling
+        window.electron.openExternal(deepLink);
       } catch {
-        // Both failed silently
+        // Protocol handler failed — fall back to Microsoft Store
+        try {
+          const storeUrl = getXboxStoreUrl(gameName);
+          window.electron.openExternal(storeUrl);
+        } catch {
+          // Both failed silently
+        }
       }
-    }
-  }, []);
+    },
+    []
+  );
 
   if (loading && games.length === 0) {
     return (
@@ -196,7 +210,12 @@ export function GamePassBrowser(_props: DealSourceProps) {
               type="button"
               className="gamepass-browser__clear-filters-button"
               onClick={() =>
-                setFilters({ search: "", categories: [], platforms: [], sort: "a-z" })
+                setFilters({
+                  search: "",
+                  categories: [],
+                  platforms: [],
+                  sort: "a-z",
+                })
               }
             >
               {t("clear_filters")}
@@ -228,7 +247,9 @@ export function GamePassBrowser(_props: DealSourceProps) {
         <GamePassDetailModal
           game={selectedGame}
           onClose={() => setSelectedGame(null)}
-          onPlay={() => handlePlayOnXbox(selectedGame.productId, selectedGame.name)}
+          onPlay={() =>
+            handlePlayOnXbox(selectedGame.productId, selectedGame.name)
+          }
           getStoreUrl={getXboxStoreUrl}
         />
       )}

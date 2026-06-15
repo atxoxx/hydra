@@ -46,12 +46,7 @@ export function GamePassCard({ game, onClick, onPlay }: GamePassCardProps) {
           onClick={onPlay}
           aria-label={`Play ${game.name} on Xbox`}
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-          >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
             <path d="M4 2.5v11l9-5.5z" />
           </svg>
         </button>

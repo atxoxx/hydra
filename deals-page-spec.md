@@ -125,6 +125,7 @@ export const DEAL_SOURCES: DealSourceConfig[] = [
 ```
 
 Adding new sources in the future means:
+
 1. Adding an entry to `DEAL_SOURCES`
 2. Creating the component
 3. Adding i18n keys
@@ -150,13 +151,13 @@ The ITAD sub-tab has two modes:
 
 ### 4.3 IPC Events
 
-| Event Name                  | Direction     | Purpose                                            |
-| --------------------------- | ------------- | -------------------------------------------------- |
-| `itad:search-game`          | renderer→main | Search for a game by title on ITAD                 |
-| `itad:get-prices`           | renderer→main | Get current prices for a list of ITAD game IDs     |
-| `itad:get-library-deals`    | renderer→main | Get deals for all library/wishlist games           |
-| `itad:lookup-by-steam-id`   | renderer→main | Look up ITAD game data by Steam app ID             |
-| `itad:get-store`            | renderer→main | Get ITAD configuration (API key status, store list)|
+| Event Name                | Direction     | Purpose                                             |
+| ------------------------- | ------------- | --------------------------------------------------- |
+| `itad:search-game`        | renderer→main | Search for a game by title on ITAD                  |
+| `itad:get-prices`         | renderer→main | Get current prices for a list of ITAD game IDs      |
+| `itad:get-library-deals`  | renderer→main | Get deals for all library/wishlist games            |
+| `itad:lookup-by-steam-id` | renderer→main | Look up ITAD game data by Steam app ID              |
+| `itad:get-store`          | renderer→main | Get ITAD configuration (API key status, store list) |
 
 ### 4.4 ITAD API Endpoints Used
 
@@ -170,6 +171,7 @@ Per the [ITAD API docs](https://docs.isthereanydeal.com/):
 ### 4.5 Library/Wishlist Monitor View
 
 #### Data Flow
+
 1. On sub-tab mount, call `window.electron.itad.getLibraryDeals()`
 2. Main process fetches user's library + wishlist games from LevelDB
 3. For each game with a Steam App ID, batch-lookup via ITAD
@@ -177,6 +179,7 @@ Per the [ITAD API docs](https://docs.isthereanydeal.com/):
 5. Return sorted list of deals to renderer
 
 #### Display
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Deals for Your Games                         [🔄 Refresh]  │
@@ -202,6 +205,7 @@ Per the [ITAD API docs](https://docs.isthereanydeal.com/):
 - Empty state: "No deals found for your library games" with link to search
 
 #### Store Logos
+
 - Use store logos from ITAD's CDN or bundle them as local assets
 - Store names: Steam, GOG, Epic, Humble, Fanatical, GreenManGaming, etc.
 
@@ -319,7 +323,7 @@ Uses Microsoft's **unofficial** catalog APIs (the same ones the Xbox app/PWA use
 
 ### 5.3 IPC Events
 
-Since these are public catalog APIs (no authentication), they can be called directly from the renderer *or* via main process for consistency. **Decision**: Call from renderer directly using `fetch` (no API key to protect). The endpoints are public.
+Since these are public catalog APIs (no authentication), they can be called directly from the renderer _or_ via main process for consistency. **Decision**: Call from renderer directly using `fetch` (no API key to protect). The endpoints are public.
 
 ### 5.4 Region Selection
 
@@ -333,21 +337,21 @@ Inline dropdown at the top of the GamePass sub-tab:
 
 **Supported regions** (market codes from Microsoft):
 
-| Region             | Market Code | Language |
-| ------------------ | ----------- | -------- |
-| United States      | US          | en-us    |
-| United Kingdom     | GB          | en-gb    |
-| Canada             | CA          | en-ca    |
-| France             | FR          | fr-fr    |
-| Germany            | DE          | de-de    |
-| Japan              | JP          | ja-jp    |
-| Australia          | AU          | en-au    |
-| Brazil             | BR          | pt-br    |
-| Mexico             | MX          | es-mx    |
-| Spain              | ES          | es-es    |
-| Italy              | IT          | it-it    |
-| Korea              | KR          | ko-kr    |
-| ... (full list of ~30 regions) |     |          |
+| Region                         | Market Code | Language |
+| ------------------------------ | ----------- | -------- |
+| United States                  | US          | en-us    |
+| United Kingdom                 | GB          | en-gb    |
+| Canada                         | CA          | en-ca    |
+| France                         | FR          | fr-fr    |
+| Germany                        | DE          | de-de    |
+| Japan                          | JP          | ja-jp    |
+| Australia                      | AU          | en-au    |
+| Brazil                         | BR          | pt-br    |
+| Mexico                         | MX          | es-mx    |
+| Spain                          | ES          | es-es    |
+| Italy                          | IT          | it-it    |
+| Korea                          | KR          | ko-kr    |
+| ... (full list of ~30 regions) |             |          |
 
 - Default region: Detected from `navigator.language` or fallback to US
 - Selection persisted in `localStorage` key `hydra_gamepass_region`
@@ -394,6 +398,7 @@ Each card displays:
 ```
 
 **Card interactions**:
+
 - Hover: Subtle scale (1.02) + shadow
 - Click card body: Opens a detail modal/sheet
 - Click "Play on Xbox": Opens `msxbox://game/?productId={id}` deep link (if available) or opens the Xbox app
@@ -401,12 +406,12 @@ Each card displays:
 
 ### 5.7 Filters
 
-| Filter    | Type       | Values                                               |
-| --------- | ---------- | ---------------------------------------------------- |
-| Genre     | Multi-tag  | Action, Adventure, RPG, Shooter, Strategy, etc.      |
-| Platform  | Dropdown   | All, PC, Xbox, Cloud                                 |
-| Sort      | Dropdown   | A-Z, Z-A, Recently Added, Release Date               |
-| Search    | Text input | Filter titles by search term (client-side)           |
+| Filter   | Type       | Values                                          |
+| -------- | ---------- | ----------------------------------------------- |
+| Genre    | Multi-tag  | Action, Adventure, RPG, Shooter, Strategy, etc. |
+| Platform | Dropdown   | All, PC, Xbox, Cloud                            |
+| Sort     | Dropdown   | A-Z, Z-A, Recently Added, Release Date          |
+| Search   | Text input | Filter titles by search term (client-side)      |
 
 - Filters applied client-side after data is fetched
 - "Clear All Filters" button appears when filters are active
@@ -713,29 +718,30 @@ New translation keys to add:
 
 ## 10. Edge Cases & Error Handling
 
-| Scenario                                      | Behavior                                                                    |
-| --------------------------------------------- | --------------------------------------------------------------------------- |
-| ITAD API key not configured                    | Show setup prompt with link to Settings                                     |
-| ITAD API key invalid/expired                   | Show error on validate, display warning banner in sub-tab                   |
-| ITAD API rate limit exceeded                   | Show "Too many requests. Please wait." with retry timer                     |
-| ITAD API down / network error                  | Show "Could not connect to IsThereAnyDeal" with retry button                |
-| No library games with Steam App IDs            | Show "No compatible games in your library" message                          |
-| GamePass API returns empty                     | Show "Could not load catalog. Please try again."                            |
-| GamePass API region unavailable                | Fall back to US catalog, show notice                                        |
-| Xbox app not installed (deep link fails)       | Show toast "Could not open Xbox app. Make sure it's installed."             |
-| No games after filtering GamePass              | Show "No games match your filters" with "Clear Filters" button              |
-| Very large GamePass catalog (400+ games)       | Lazy-render cards, virtualize if needed, show count                         |
-| Rapid region switching on GamePass             | Debounce catalog fetch (500ms)                                              |
-| Game has no cover image on GamePass            | Show placeholder gradient with game initial                                 |
-| localStorage full (cache)                      | Fall back to in-memory only, clear oldest cache entries                     |
-| Deals page opened while offline                | Show offline state for both sub-tabs                                        |
-| Multiple deal sources fail simultaneously      | Show per-source error states, still render working sources                  |
+| Scenario                                  | Behavior                                                        |
+| ----------------------------------------- | --------------------------------------------------------------- |
+| ITAD API key not configured               | Show setup prompt with link to Settings                         |
+| ITAD API key invalid/expired              | Show error on validate, display warning banner in sub-tab       |
+| ITAD API rate limit exceeded              | Show "Too many requests. Please wait." with retry timer         |
+| ITAD API down / network error             | Show "Could not connect to IsThereAnyDeal" with retry button    |
+| No library games with Steam App IDs       | Show "No compatible games in your library" message              |
+| GamePass API returns empty                | Show "Could not load catalog. Please try again."                |
+| GamePass API region unavailable           | Fall back to US catalog, show notice                            |
+| Xbox app not installed (deep link fails)  | Show toast "Could not open Xbox app. Make sure it's installed." |
+| No games after filtering GamePass         | Show "No games match your filters" with "Clear Filters" button  |
+| Very large GamePass catalog (400+ games)  | Lazy-render cards, virtualize if needed, show count             |
+| Rapid region switching on GamePass        | Debounce catalog fetch (500ms)                                  |
+| Game has no cover image on GamePass       | Show placeholder gradient with game initial                     |
+| localStorage full (cache)                 | Fall back to in-memory only, clear oldest cache entries         |
+| Deals page opened while offline           | Show offline state for both sub-tabs                            |
+| Multiple deal sources fail simultaneously | Show per-source error states, still render working sources      |
 
 ---
 
 ## 11. Dependencies
 
 ### New npm Packages
+
 - None required. All functionality uses:
   - Existing `react-router-dom` for routing
   - Existing `react-i18next` for translations
@@ -745,6 +751,7 @@ New translation keys to add:
   - `localStorage` for caching (already available)
 
 ### Existing Packages Used
+
 - `@primer/octicons-react` (`TagIcon`)
 - `react-router-dom`
 - `react-i18next`

@@ -2,12 +2,21 @@ import { useTranslation } from "react-i18next";
 import "./deal-sub-tab-bar.scss";
 
 export interface DealSubTabBarProps {
-  sources: Array<{ id: string; labelKey: string; icon: React.ReactNode; requiresConfig: boolean }>;
+  sources: Array<{
+    id: string;
+    labelKey: string;
+    icon: React.ReactNode;
+    requiresConfig: boolean;
+  }>;
   activeSourceId: string | null;
   onTabChange: (sourceId: string) => void;
 }
 
-export function DealSubTabBar({ sources, activeSourceId, onTabChange }: DealSubTabBarProps) {
+export function DealSubTabBar({
+  sources,
+  activeSourceId,
+  onTabChange,
+}: DealSubTabBarProps) {
   const { t } = useTranslation("deals");
 
   if (sources.length === 0) {
@@ -31,7 +40,10 @@ export function DealSubTabBar({ sources, activeSourceId, onTabChange }: DealSubT
               {t(source.labelKey)}
             </span>
             {source.requiresConfig && (
-              <span className="deal-sub-tab-bar__config-badge" title={t("requires_configuration")}>
+              <span
+                className="deal-sub-tab-bar__config-badge"
+                title={t("requires_configuration")}
+              >
                 •
               </span>
             )}
