@@ -20,7 +20,8 @@
     display: flex;
     align-items: center;
     gap: calc(globals.$spacing-unit * 0.75);
-    padding: calc(globals.$spacing-unit * 1.25) calc(globals.$spacing-unit * 2.5);
+    padding: calc(globals.$spacing-unit * 1.25)
+      calc(globals.$spacing-unit * 2.5);
     background: transparent;
     border: none;
     border-radius: 10px;

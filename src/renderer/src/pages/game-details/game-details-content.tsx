@@ -325,9 +325,7 @@ export function GameDetailsContent() {
 
           {effectiveShop !== "custom" &&
             activeTab !== "weblinks" &&
-            activeTab !== "achievements" && (
-            <Sidebar activeTab={activeTab} />
-          )}
+            activeTab !== "achievements" && <Sidebar activeTab={activeTab} />}
         </div>
       </section>
     </div>

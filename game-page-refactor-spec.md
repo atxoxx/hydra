@@ -12,11 +12,11 @@ Refactor the game details page (`src/renderer/src/pages/game-details/`) to be mo
 
 Three tabs at the top of the game page content area (below the hero backdrop):
 
-| Tab | Name | Content |
-|-----|------|---------|
-| 1 | **Overview** | Dashboard cards (compact summary), similar games section at bottom |
-| 2 | **Details** | Reviews, Activity chart, System Requirements, HowLongToBeat, Achievements, ProtonDB, Language, Controller Support |
-| 3 | **Weblinks** | Website links panel (PCGamingWiki, SteamDB, HowLongToBeat, etc. iframe tabs) |
+| Tab | Name         | Content                                                                                                           |
+| --- | ------------ | ----------------------------------------------------------------------------------------------------------------- |
+| 1   | **Overview** | Dashboard cards (compact summary), similar games section at bottom                                                |
+| 2   | **Details**  | Reviews, Activity chart, System Requirements, HowLongToBeat, Achievements, ProtonDB, Language, Controller Support |
+| 3   | **Weblinks** | Website links panel (PCGamingWiki, SteamDB, HowLongToBeat, etc. iframe tabs)                                      |
 
 ### 1.2 Tab Behavior
 
@@ -88,29 +88,34 @@ The Overview tab presents a **dashboard-style grid** of cards, arranged in a res
 ### 3.2 Dashboard Cards
 
 #### Card 1: Play / Status Card
+
 - **States**: Not owned, Owned (not installed), Installed (playable), Downloading (progress), Running, Extracting, Transferring
 - Shows game status prominently with contextual action button
 - Secondary actions: Favorite toggle, Pin toggle, Options gear icon
 - Download progress bar inline when downloading
 
 #### Card 2: Stats Card
+
 - Download count (with `DownloadIcon`)
 - Player count (with `PeopleIcon`)
 - Average rating (with `StarRating` component)
 - Compact vertical or horizontal layout adapting to card width
 
 #### Card 3: HowLongToBeat Card
+
 - Main story, Main + Extra, Completionist times
 - Visual time indicators (clock icon, formatted hours)
 - Loading skeleton while fetching
 
 #### Card 4: Description Card
+
 - "About the Game" HTML content from shop details
 - Collapsible with "Show more" / "Show less" toggle
 - Same overflow detection logic as current implementation
 - Date and publisher info from `DescriptionHeader` component integrated at top
 
 #### Card 5: Gallery / Media Card
+
 - Compact version of the current `GallerySlider`
 - Could be a horizontal preview row with click-to-expand or the full carousel
 - Thumbnail navigation strip
@@ -133,15 +138,15 @@ The Overview tab presents a **dashboard-style grid** of cards, arranged in a res
 
 All deep-dive sections displayed in a single scrollable column:
 
-| Section | Component | Notes |
-|---------|-----------|-------|
-| Reviews | `GameReviews` | Full review threads with sort options, reply composer |
-| Activity | `GameActivityPanel` | 90-day playtime bar chart, total/session/avg stats |
-| System Requirements | Inline (from sidebar) | Min/Recommended toggle, HTML requirement details |
-| Achievements | Inline (from sidebar) | Achievement list with unlock status |
-| ProtonDB | Inline (from sidebar) | Linux-only, ProtonDB tier badge and details |
-| Language | Inline (from sidebar) | Supported languages list |
-| Controller Support | Inline (from sidebar) | Controller icons and support badge |
+| Section             | Component             | Notes                                                 |
+| ------------------- | --------------------- | ----------------------------------------------------- |
+| Reviews             | `GameReviews`         | Full review threads with sort options, reply composer |
+| Activity            | `GameActivityPanel`   | 90-day playtime bar chart, total/session/avg stats    |
+| System Requirements | Inline (from sidebar) | Min/Recommended toggle, HTML requirement details      |
+| Achievements        | Inline (from sidebar) | Achievement list with unlock status                   |
+| ProtonDB            | Inline (from sidebar) | Linux-only, ProtonDB tier badge and details           |
+| Language            | Inline (from sidebar) | Supported languages list                              |
+| Controller Support  | Inline (from sidebar) | Controller icons and support badge                    |
 
 ### 4.2 Layout
 
@@ -162,19 +167,24 @@ All deep-dive sections displayed in a single scrollable column:
 ### 5.2 Content by Tab
 
 #### Overview Tab Sidebar
+
 Shows key info only:
+
 - **Stats** section (downloads, players, ratings — duplicated from dashboard for quick reference)
 - **HowLongToBeat** section
 - **Controller Support** section
 
 #### Details Tab Sidebar
+
 Shows supplementary info:
+
 - **System Requirements** (min/recommended toggle)
 - **Achievements** (top 4, with "See all" link)
 - **ProtonDB** (Linux only)
 - **Language** section
 
 #### Weblinks Tab Sidebar
+
 - Empty or minimal — the weblinks iframe takes full content width
 
 ### 5.3 Sidebar Visual Style
@@ -216,15 +226,15 @@ Shows supplementary info:
 
 ### 7.2 UI Component
 
-| Property | Value |
-|----------|-------|
-| Position | Bottom of Overview tab |
-| Layout | Horizontal scrollable row using embla-carousel (same library as gallery slider) |
-| Card size | ~160px wide, ~240px tall |
-| Card content | Cover image + game title |
-| Loading | Skeleton placeholders (3-5 cards) |
-| Empty | Subtle "No similar games found" message |
-| Max items | 10-15 games |
+| Property     | Value                                                                           |
+| ------------ | ------------------------------------------------------------------------------- |
+| Position     | Bottom of Overview tab                                                          |
+| Layout       | Horizontal scrollable row using embla-carousel (same library as gallery slider) |
+| Card size    | ~160px wide, ~240px tall                                                        |
+| Card content | Cover image + game title                                                        |
+| Loading      | Skeleton placeholders (3-5 cards)                                               |
+| Empty        | Subtle "No similar games found" message                                         |
+| Max items    | 10-15 games                                                                     |
 
 ### 7.3 Randomizer Integration
 
@@ -244,14 +254,14 @@ Shows supplementary info:
 
 The game page should adopt the polished card aesthetic seen in the settings sidebar and sidebar sections:
 
-| Element | Current | Target |
-|---------|---------|--------|
-| Card background | `$background-color` (#121212) | Same, with subtle inner highlight |
-| Card border | `rgba(255,255,255,0.08)` | `rgba(255,255,255,0.05)` for a softer look |
-| Card radius | Varies (8px, 10px, 12px) | Standardized **12px** for all cards |
-| Card shadow | Minimal | `0 4px 12px rgba(0,0,0,0.1)` |
-| Section gaps | Inconsistent | Standardized `$spacing-unit * 1.5` (12px) |
-| Typography | Mixed sizes | Consistent hierarchy: titles 14px bold, body 14px, meta 12px |
+| Element         | Current                       | Target                                                       |
+| --------------- | ----------------------------- | ------------------------------------------------------------ |
+| Card background | `$background-color` (#121212) | Same, with subtle inner highlight                            |
+| Card border     | `rgba(255,255,255,0.08)`      | `rgba(255,255,255,0.05)` for a softer look                   |
+| Card radius     | Varies (8px, 10px, 12px)      | Standardized **12px** for all cards                          |
+| Card shadow     | Minimal                       | `0 4px 12px rgba(0,0,0,0.1)`                                 |
+| Section gaps    | Inconsistent                  | Standardized `$spacing-unit * 1.5` (12px)                    |
+| Typography      | Mixed sizes                   | Consistent hierarchy: titles 14px bold, body 14px, meta 12px |
 
 ### 8.3 Gradients & Polish
 
@@ -339,36 +349,36 @@ GameDetails (page component)
 
 ### 10.1 Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src/renderer/src/pages/game-details/game-details.tsx` | Add tab state, restructure layout |
-| `src/renderer/src/pages/game-details/game-details.scss` | New grid/dashboard styles, tab styles |
-| `src/renderer/src/pages/game-details/game-details-content.tsx` | Split into tab components, remove old layout |
-| `src/renderer/src/pages/game-details/sidebar/sidebar.tsx` | Conditional rendering per active tab |
-| `src/renderer/src/pages/game-details/sidebar/sidebar.scss` | Visual polish |
+| File                                                                      | Changes                                         |
+| ------------------------------------------------------------------------- | ----------------------------------------------- |
+| `src/renderer/src/pages/game-details/game-details.tsx`                    | Add tab state, restructure layout               |
+| `src/renderer/src/pages/game-details/game-details.scss`                   | New grid/dashboard styles, tab styles           |
+| `src/renderer/src/pages/game-details/game-details-content.tsx`            | Split into tab components, remove old layout    |
+| `src/renderer/src/pages/game-details/sidebar/sidebar.tsx`                 | Conditional rendering per active tab            |
+| `src/renderer/src/pages/game-details/sidebar/sidebar.scss`                | Visual polish                                   |
 | `src/renderer/src/pages/game-details/sidebar-section/sidebar-section.tsx` | Add localStorage persistence for collapse state |
-| `src/renderer/src/pages/game-details/hero/hero-panel.tsx` | Move actions into dashboard card |
-| `src/renderer/src/pages/game-details/hero/hero-panel.scss` | Adjust styling |
-| `src/renderer/src/pages/game-details/game-details-skeleton.tsx` | Update skeleton to match new layout |
+| `src/renderer/src/pages/game-details/hero/hero-panel.tsx`                 | Move actions into dashboard card                |
+| `src/renderer/src/pages/game-details/hero/hero-panel.scss`                | Adjust styling                                  |
+| `src/renderer/src/pages/game-details/game-details-skeleton.tsx`           | Update skeleton to match new layout             |
 
 ### 10.2 Files to Create
 
-| File | Purpose |
-|------|---------|
-| `src/renderer/src/pages/game-details/tabs/tab-bar.tsx` | Tab navigation component |
-| `src/renderer/src/pages/game-details/tabs/tab-bar.scss` | Tab bar styles |
-| `src/renderer/src/pages/game-details/tabs/overview-tab.tsx` | Overview dashboard tab |
-| `src/renderer/src/pages/game-details/tabs/overview-tab.scss` | Dashboard grid styles |
-| `src/renderer/src/pages/game-details/tabs/details-tab.tsx` | Details tab (all deep-dive sections) |
-| `src/renderer/src/pages/game-details/tabs/details-tab.scss` | Details tab styles |
-| `src/renderer/src/pages/game-details/tabs/weblinks-tab.tsx` | Weblinks tab wrapper |
-| `src/renderer/src/pages/game-details/dashboard-cards/play-status-card.tsx` | Play/status dashboard card |
-| `src/renderer/src/pages/game-details/dashboard-cards/stats-card.tsx` | Stats dashboard card |
-| `src/renderer/src/pages/game-details/dashboard-cards/how-long-to-beat-card.tsx` | HLTB dashboard card |
-| `src/renderer/src/pages/game-details/dashboard-cards/description-card.tsx` | Description dashboard card |
-| `src/renderer/src/pages/game-details/dashboard-cards/gallery-card.tsx` | Gallery/media dashboard card |
-| `src/renderer/src/pages/game-details/similar-games/similar-games.tsx` | Similar games component |
-| `src/renderer/src/pages/game-details/similar-games/similar-games.scss` | Similar games styles |
+| File                                                                            | Purpose                              |
+| ------------------------------------------------------------------------------- | ------------------------------------ |
+| `src/renderer/src/pages/game-details/tabs/tab-bar.tsx`                          | Tab navigation component             |
+| `src/renderer/src/pages/game-details/tabs/tab-bar.scss`                         | Tab bar styles                       |
+| `src/renderer/src/pages/game-details/tabs/overview-tab.tsx`                     | Overview dashboard tab               |
+| `src/renderer/src/pages/game-details/tabs/overview-tab.scss`                    | Dashboard grid styles                |
+| `src/renderer/src/pages/game-details/tabs/details-tab.tsx`                      | Details tab (all deep-dive sections) |
+| `src/renderer/src/pages/game-details/tabs/details-tab.scss`                     | Details tab styles                   |
+| `src/renderer/src/pages/game-details/tabs/weblinks-tab.tsx`                     | Weblinks tab wrapper                 |
+| `src/renderer/src/pages/game-details/dashboard-cards/play-status-card.tsx`      | Play/status dashboard card           |
+| `src/renderer/src/pages/game-details/dashboard-cards/stats-card.tsx`            | Stats dashboard card                 |
+| `src/renderer/src/pages/game-details/dashboard-cards/how-long-to-beat-card.tsx` | HLTB dashboard card                  |
+| `src/renderer/src/pages/game-details/dashboard-cards/description-card.tsx`      | Description dashboard card           |
+| `src/renderer/src/pages/game-details/dashboard-cards/gallery-card.tsx`          | Gallery/media dashboard card         |
+| `src/renderer/src/pages/game-details/similar-games/similar-games.tsx`           | Similar games component              |
+| `src/renderer/src/pages/game-details/similar-games/similar-games.scss`          | Similar games styles                 |
 
 ---
 
@@ -395,21 +405,25 @@ GameDetails (page component)
 ## 12. Edge Cases & States
 
 ### 12.1 Loading State
+
 - Dashboard cards show skeleton placeholders while data loads
 - Similar games show skeleton cards (3-5 placeholders)
 - Tab content shows skeletons matching the target layout
 
 ### 12.2 Empty States
+
 - No similar games: "No similar games found" message
 - No reviews yet: Existing empty review prompt
 - No activity: "No activity yet" message (existing)
 - Custom games without shop details: Graceful fallbacks
 
 ### 12.3 Error States
+
 - API failure for similar games: Silently fallback to empty (no error toast)
 - Failed stats/HLTB fetch: Card shows "Unavailable" or similar
 
 ### 12.4 Game States
+
 - Not in library, no repacks: "No downloads available" + Add to library button
 - Not in library, has repacks: Download button + Add to library
 - In library, not installed, has executable: Play button

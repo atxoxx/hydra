@@ -73,7 +73,8 @@
     }
 
     &--icon {
-      padding: calc(globals.$spacing-unit * 0.75) calc(globals.$spacing-unit * 1);
+      padding: calc(globals.$spacing-unit * 0.75)
+        calc(globals.$spacing-unit * 1);
       min-width: 36px;
       justify-content: center;
     }

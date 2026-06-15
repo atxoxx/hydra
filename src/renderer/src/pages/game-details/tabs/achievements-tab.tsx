@@ -10,8 +10,7 @@ import "./achievements-tab.scss";
 export function AchievementsTab() {
   const { t } = useTranslation("game_details");
   const { userDetails } = useUserDetails();
-  const { achievements } =
-    useContext(gameDetailsContext);
+  const { achievements } = useContext(gameDetailsContext);
 
   if (!userDetails) {
     return (

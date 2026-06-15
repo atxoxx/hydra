@@ -10,11 +10,7 @@ import { StarRating } from "@renderer/components/star-rating/star-rating";
 
 import { gameDetailsContext } from "@renderer/context";
 import { useFormat } from "@renderer/hooks";
-import {
-  DownloadIcon,
-  PeopleIcon,
-  StarIcon,
-} from "@primer/octicons-react";
+import { DownloadIcon, PeopleIcon, StarIcon } from "@primer/octicons-react";
 import { HowLongToBeatSection } from "./how-long-to-beat-section";
 import { LaunchboxDetailsSection } from "./launchbox-details-section";
 import { SidebarSection } from "../sidebar-section/sidebar-section";
