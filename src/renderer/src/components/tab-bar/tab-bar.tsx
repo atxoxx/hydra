@@ -10,6 +10,7 @@ import {
   GearIcon,
   ListUnorderedIcon,
   PeopleIcon,
+  TagIcon,
   VideoIcon,
 } from "@primer/octicons-react";
 import cn from "classnames";
@@ -47,6 +48,11 @@ const TABS: Tab[] = [
     labelKey: "activity",
     path: "/activity",
     render: () => <ClockIcon size={16} />,
+  },
+  {
+    labelKey: "deals",
+    path: "/deals",
+    render: () => <TagIcon size={16} />,
   },
 ];
 

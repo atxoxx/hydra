@@ -1,0 +1,217 @@
+@use "../../../scss/globals.scss";
+
+.giveaway-panel {
+  display: flex;
+  flex-direction: column;
+  gap: calc(globals.$spacing-unit * 2);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__title {
+    font-size: 16px;
+    font-weight: 600;
+    color: globals.$body-color;
+    margin: 0;
+  }
+
+  &__refresh-button {
+    display: flex;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 0.5);
+    padding: calc(globals.$spacing-unit * 0.75) calc(globals.$spacing-unit * 1.5);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid globals.$border-color;
+    border-radius: 8px;
+    color: globals.$muted-color;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+      color: globals.$body-color;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__loading,
+  &__error,
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: calc(globals.$spacing-unit * 6) calc(globals.$spacing-unit * 2);
+    color: globals.$muted-color;
+    text-align: center;
+    gap: calc(globals.$spacing-unit * 1.5);
+  }
+
+  &__spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: globals.$brand-teal;
+    border-radius: 50%;
+    animation: giveaway-spin 0.8s linear infinite;
+  }
+
+  &__retry-button {
+    display: flex;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 0.5);
+    padding: calc(globals.$spacing-unit * 0.75) calc(globals.$spacing-unit * 2);
+    background: globals.$brand-teal;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+
+  &__grid {
+    display: flex;
+    flex-direction: column;
+    gap: calc(globals.$spacing-unit * 1);
+  }
+
+  &__card {
+    display: flex;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 1.5);
+    padding: calc(globals.$spacing-unit * 1.5);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid globals.$border-color;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    &--urgent {
+      border-color: rgba(globals.$warning-color, 0.25);
+      background: rgba(globals.$warning-color, 0.04);
+
+      &:hover {
+        border-color: rgba(globals.$warning-color, 0.4);
+        background: rgba(globals.$warning-color, 0.06);
+      }
+    }
+
+    &--expired {
+      opacity: 0.5;
+    }
+  }
+
+  &__card-boxart {
+    width: 48px;
+    height: 64px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  &__card-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: calc(globals.$spacing-unit * 0.25);
+  }
+
+  &__card-shop {
+    font-size: 11px;
+    color: globals.$brand-teal;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &__card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: globals.$body-color;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__card-count {
+    font-size: 12px;
+    color: globals.$muted-color;
+  }
+
+  &__card-expiry {
+    display: flex;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 0.5);
+    font-size: 12px;
+    color: globals.$muted-color;
+    margin-top: 2px;
+  }
+
+  &__card-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: globals.$muted-color;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: globals.$brand-teal;
+      color: #fff;
+    }
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: center;
+    padding-top: calc(globals.$spacing-unit * 1);
+  }
+
+  &__view-all {
+    display: flex;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 0.5);
+    font-size: 13px;
+    color: globals.$brand-teal;
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+@keyframes giveaway-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

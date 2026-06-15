@@ -1,0 +1,197 @@
+@use "../../../scss/globals.scss";
+
+.gamepass-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  padding: calc(globals.$spacing-unit * 2);
+}
+
+.gamepass-detail-modal {
+  position: relative;
+  max-width: 640px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: globals.$background-color;
+  border: 1px solid globals.$border-color;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: gamepass-modal-appear 0.2s ease;
+
+  &__close {
+    position: absolute;
+    top: calc(globals.$spacing-unit * 1);
+    right: calc(globals.$spacing-unit * 1);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.8);
+    }
+  }
+
+  &__hero {
+    width: 100%;
+    height: 280px;
+    overflow: hidden;
+    border-radius: 14px 14px 0 0;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  &__hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__hero-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      135deg,
+      rgba(globals.$brand-teal, 0.15),
+      rgba(globals.$brand-teal, 0.03)
+    );
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: calc(globals.$spacing-unit * 2);
+    padding: calc(globals.$spacing-unit * 2);
+  }
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: calc(globals.$spacing-unit * 1);
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: calc(globals.$spacing-unit * 2);
+  }
+
+  &__title {
+    font-size: 22px;
+    font-weight: 700;
+    color: globals.$body-color;
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  &__meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(globals.$spacing-unit * 1);
+  }
+
+  &__meta {
+    font-size: 13px;
+    color: globals.$muted-color;
+  }
+
+  &__description {
+    font-size: 14px;
+    color: globals.$muted-color;
+    line-height: 1.6;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  &__detail {
+    display: flex;
+    gap: calc(globals.$spacing-unit * 1);
+  }
+
+  &__detail-label {
+    font-size: 13px;
+    color: globals.$muted-color;
+    font-weight: 500;
+  }
+
+  &__detail-value {
+    font-size: 13px;
+    color: globals.$body-color;
+  }
+
+  &__actions {
+    display: flex;
+    gap: calc(globals.$spacing-unit * 1.5);
+    padding-top: calc(globals.$spacing-unit * 1);
+    border-top: 1px solid globals.$border-color;
+  }
+
+  &__play-button {
+    display: flex;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 0.75);
+    padding: calc(globals.$spacing-unit * 1.25) calc(globals.$spacing-unit * 3);
+    background: globals.$brand-teal;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+
+    &:hover {
+      opacity: 0.9;
+    }
+
+    &:active {
+      opacity: globals.$active-opacity;
+    }
+  }
+
+  &__store-link {
+    display: flex;
+    align-items: center;
+    padding: calc(globals.$spacing-unit * 1.25) calc(globals.$spacing-unit * 2);
+    background: rgba(255, 255, 255, 0.06);
+    color: globals.$body-color;
+    border: 1px solid globals.$border-color;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+@keyframes gamepass-modal-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

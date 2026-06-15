@@ -1,0 +1,47 @@
+@use "../../scss/globals.scss";
+
+.deals {
+  &__container {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    background-color: globals.$dark-background-color;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: calc(globals.$spacing-unit * 2) calc(globals.$spacing-unit * 3);
+    padding-bottom: calc(globals.$spacing-unit * 1);
+  }
+
+  &__title {
+    font-size: 24px;
+    font-weight: 700;
+    color: globals.$body-color;
+    margin: 0;
+  }
+
+  &__source-content {
+    flex: 1;
+    padding: calc(globals.$spacing-unit * 2) calc(globals.$spacing-unit * 3);
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: calc(globals.$spacing-unit * 8) calc(globals.$spacing-unit * 2);
+    color: globals.$muted-color;
+    font-size: 16px;
+    text-align: center;
+  }
+}

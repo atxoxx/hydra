@@ -1,0 +1,74 @@
+@use "../../../scss/globals.scss";
+
+.gamepass-browser {
+  position: relative;
+
+  &__loading,
+  &__error,
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: calc(globals.$spacing-unit * 8) calc(globals.$spacing-unit * 2);
+    color: globals.$muted-color;
+    font-size: 16px;
+    text-align: center;
+    gap: calc(globals.$spacing-unit * 2);
+  }
+
+  &__loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: globals.$brand-teal;
+    border-radius: 50%;
+    animation: gamepass-spin 0.8s linear infinite;
+  }
+
+  &__loading-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: calc(globals.$spacing-unit * 4);
+  }
+
+  &__retry-button,
+  &__clear-filters-button {
+    padding: calc(globals.$spacing-unit * 1) calc(globals.$spacing-unit * 3);
+    background: globals.$brand-teal;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+
+    &:hover {
+      opacity: 0.9;
+    }
+
+    &:active {
+      opacity: globals.$active-opacity;
+    }
+  }
+
+  &__count {
+    font-size: 13px;
+    color: globals.$muted-color;
+    margin: 0 0 calc(globals.$spacing-unit * 2) 0;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: calc(globals.$spacing-unit * 1.5);
+  }
+}
+
+@keyframes gamepass-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -61,6 +61,16 @@ import type {
 } from "@types";
 import type { AxiosProgressEvent } from "axios";
 
+export interface Giveaway {
+  title: string;
+  gameTitle: string;
+  link: string;
+  expiryDate: Date | null;
+  shopName: string;
+  gameCount: number;
+  boxartUrl: string | null;
+}
+
 export interface DriveInfo {
   root: string;
   label: string;
@@ -994,6 +1004,9 @@ declare global {
       values: (sublevelName: string) => Promise<unknown[]>;
       iterator: (sublevelName: string) => Promise<[string, unknown][]>;
     };
+
+    /* ITAD Giveaways */
+    getItadGiveaways: () => Promise<Giveaway[]>;
 
     /* Transfer Game */
     getAvailableDrives: () => Promise<DriveInfo[]>;

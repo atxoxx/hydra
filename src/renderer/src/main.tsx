@@ -33,6 +33,7 @@ import Achievements from "./pages/achievements/achievements";
 import ThemeEditor from "./pages/theme-editor/theme-editor";
 import Library from "./pages/library/library";
 import Activity from "./pages/activity/activity";
+import { Deals } from "./pages/deals";
 import WatchlistPage from "./pages/watchlist/watchlist";
 import Notifications from "./pages/notifications/notifications";
 import { AchievementNotification } from "./pages/achievements/notification/achievement-notification";
@@ -132,6 +133,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route path="/achievements" element={<Achievements />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/watchlist" element={<WatchlistPage />} />
+            <Route path="/deals" element={<Deals />} />
           </Route>
 
           <Route path="/theme-editor" element={<ThemeEditor />} />

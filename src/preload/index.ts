@@ -1329,4 +1329,7 @@ contextBridge.exposeInMainWorld("electron", {
   getAvailableDrives: () => ipcRenderer.invoke("getAvailableDrives"),
   transferGameFiles: (shop: GameShop, objectId: string, destParent: string) =>
     ipcRenderer.invoke("transferGameFiles", shop, objectId, destParent),
+
+  /* ITAD Giveaways */
+  getItadGiveaways: () => ipcRenderer.invoke("getItadGiveaways"),
 });

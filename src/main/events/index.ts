@@ -22,6 +22,7 @@ import "./user-preferences";
 import "./watchlist";
 import "./library/transfer-game-files";
 import "./emulators";
+import "./itad-giveaways";
 
 import { isPortableVersion } from "@main/helpers";
 
