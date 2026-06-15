@@ -1,5 +1,7 @@
+import { AxiosError } from "axios";
 import { darkenColor } from "@renderer/helpers";
 import { useAppSelector, useToast } from "@renderer/hooks";
+import { logger } from "@renderer/logger";
 import type { Badge, UserProfile, UserStats, UserGame } from "@types";
 import { MODERN_SHOPS } from "@types";
 import { average } from "color.js";
@@ -122,7 +124,7 @@ export function UserProfileContextProvider({
     async (
       sortBy?: string,
       reset = true,
-      shops = ["launchbox", ...MODERN_SHOPS]
+      _shops?: string[]
     ) => {
       if (reset) {
         setLibraryPage(0);
@@ -134,7 +136,6 @@ export function UserProfileContextProvider({
         const params = new URLSearchParams();
         params.append("take", "12");
         params.append("skip", "0");
-        shops.forEach((shop) => params.append("shop", shop));
         if (sortBy) {
           params.append("sortBy", sortBy);
         }
@@ -156,6 +157,7 @@ export function UserProfileContextProvider({
           setHasMoreLibraryGames(false);
         }
       } catch (error) {
+        logger.error("Failed to fetch user library games", { userId, error });
         setLibraryGames([]);
         setPinnedGames([]);
         setHasMoreLibraryGames(false);
@@ -169,7 +171,7 @@ export function UserProfileContextProvider({
   const loadMoreLibraryGames = useCallback(
     async (
       sortBy?: string,
-      shops = ["launchbox", ...MODERN_SHOPS]
+      _shops?: string[]
     ): Promise<boolean> => {
       if (isLoadingLibraryGames || !hasMoreLibraryGames) {
         return false;
@@ -181,7 +183,6 @@ export function UserProfileContextProvider({
         const params = new URLSearchParams();
         params.append("take", "12");
         params.append("skip", String(nextPage * 12));
-        shops.forEach((shop) => params.append("shop", shop));
         if (sortBy) {
           params.append("sortBy", sortBy);
         }
@@ -222,13 +223,8 @@ export function UserProfileContextProvider({
     getUserStats();
     getUserLibraryGames();
 
-    const profileParams = new URLSearchParams();
-    for (const shop of ["launchbox", ...MODERN_SHOPS]) {
-      profileParams.append("shop", shop);
-    }
-
     return window.electron.hydraApi
-      .get<UserProfile>(`/users/${userId}?${profileParams.toString()}`)
+      .get<UserProfile>(`/users/${userId}`)
       .then((userProfile) => {
         setUserProfile(userProfile);
 
@@ -238,9 +234,24 @@ export function UserProfileContextProvider({
           );
         }
       })
-      .catch(() => {
-        showErrorToast(t("user_not_found"));
-        navigate(-1);
+      .catch((error: unknown) => {
+        logger.error("Failed to fetch user profile", { userId, error });
+
+        if (error instanceof AxiosError) {
+          const status = error.response?.status;
+
+          if (status === 404) {
+            showErrorToast(t("user_not_found"));
+          } else if (status === 401 || status === 403) {
+            showErrorToast(t("profile_access_denied"));
+          } else {
+            showErrorToast(t("profile_load_error"));
+          }
+        } else {
+          showErrorToast(t("profile_load_error"));
+        }
+
+        navigate("/store");
       });
   }, [navigate, getUserStats, getUserLibraryGames, showErrorToast, userId, t]);
 

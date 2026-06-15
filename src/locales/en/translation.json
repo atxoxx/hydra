@@ -1376,6 +1376,8 @@
     "badges": "Badges",
     "friends_list": "Friends list",
     "user_not_found": "User not found",
+    "profile_access_denied": "You don't have permission to view this profile",
+    "profile_load_error": "Failed to load profile. Please try again.",
     "block_user": "Block user",
     "add_friend": "Add friend",
     "request_sent": "Request sent",
