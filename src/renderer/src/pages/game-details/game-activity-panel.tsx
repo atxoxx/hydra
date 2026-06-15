@@ -87,8 +87,7 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
     [dailyEntries]
   );
 
-  const avgSessionMs =
-    sessionCount > 0 ? totalMs / sessionCount : 0;
+  const avgSessionMs = sessionCount > 0 ? totalMs / sessionCount : 0;
 
   if (loading) {
     return (
@@ -103,9 +102,7 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
     return (
       <div className="game-activity-panel">
         <h3 className="game-activity-panel__title">{t("activity")}</h3>
-        <div className="game-activity-panel__empty">
-          {t("no_activity_yet")}
-        </div>
+        <div className="game-activity-panel__empty">{t("no_activity_yet")}</div>
       </div>
     );
   }

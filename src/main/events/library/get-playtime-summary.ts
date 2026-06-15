@@ -68,8 +68,7 @@ const getPlaytimeSummary = async (
   const daysInRange = Math.max(
     1,
     Math.ceil(
-      (new Date(endDate).getTime() - new Date(startDate).getTime()) /
-        86_400_000
+      (new Date(endDate).getTime() - new Date(startDate).getTime()) / 86_400_000
     ) + 1
   );
   const averageHoursPerDay = totalHours / daysInRange;

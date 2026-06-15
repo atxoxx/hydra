@@ -9,9 +9,9 @@ export interface DailyPlaytimeSnapshot {
   totalMilliseconds: number;
 }
 
-export const dailyPlaytimeSublevel = db.sublevel<
-  string,
-  DailyPlaytimeSnapshot
->(levelKeys.dailyPlaytime, {
-  valueEncoding: "json",
-});
+export const dailyPlaytimeSublevel = db.sublevel<string, DailyPlaytimeSnapshot>(
+  levelKeys.dailyPlaytime,
+  {
+    valueEncoding: "json",
+  }
+);

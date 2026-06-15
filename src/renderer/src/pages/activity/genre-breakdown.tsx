@@ -1,5 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import type { TopPlayedGame } from "./top-played-games";
 
 export interface GenreBreakdownProps {
@@ -8,8 +15,16 @@ export interface GenreBreakdownProps {
 }
 
 const GENRE_COLORS = [
-  "#16b195", "#3e62c0", "#f59e0b", "#ef4444", "#8b5cf6",
-  "#ec4899", "#06b6d4", "#84cc16", "#f97316", "#6366f1",
+  "#16b195",
+  "#3e62c0",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+  "#ec4899",
+  "#06b6d4",
+  "#84cc16",
+  "#f97316",
+  "#6366f1",
 ];
 
 export function GenreBreakdown({ loading }: GenreBreakdownProps) {
@@ -25,9 +40,7 @@ export function GenreBreakdown({ loading }: GenreBreakdownProps) {
   }
 
   // Placeholder data until genre data is available from shop details
-  const data = [
-    { name: t("other_genres"), value: 1 },
-  ];
+  const data = [{ name: t("other_genres"), value: 1 }];
 
   return (
     <div className="section-panel">

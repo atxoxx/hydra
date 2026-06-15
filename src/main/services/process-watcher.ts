@@ -3,7 +3,12 @@ import { updateGameExecutablePath } from "@main/helpers/update-executable-path";
 import { createGame, trackGamePlaytime } from "./library-sync";
 import type { Game, GameRunning, GameShop, UserPreferences } from "@types";
 import axios from "axios";
-import { db, gamesSublevel, levelKeys, dailyPlaytimeSublevel } from "@main/level";
+import {
+  db,
+  gamesSublevel,
+  levelKeys,
+  dailyPlaytimeSublevel,
+} from "@main/level";
 import { CloudSync } from "./cloud-sync";
 import { logger, networkLogger } from "./logger";
 import { PowerSaveBlockerManager } from "./power-save-blocker";
@@ -80,8 +85,7 @@ const updateDailyPlaytime = async (
       shop,
       objectId,
       date: today,
-      totalMilliseconds:
-        (existing ? existing.totalMilliseconds : 0) + deltaMs,
+      totalMilliseconds: (existing ? existing.totalMilliseconds : 0) + deltaMs,
     });
   } catch (error) {
     logger.error("Failed to update daily playtime snapshot", error);

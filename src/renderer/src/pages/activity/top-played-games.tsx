@@ -39,9 +39,7 @@ export function TopPlayedGames({
     <div className="section-panel">
       <h3 className="section-panel__title">{t("top_played_games")}</h3>
 
-      {loading && (
-        <div className="section-panel__empty">{t("loading")}</div>
-      )}
+      {loading && <div className="section-panel__empty">{t("loading")}</div>}
 
       {!loading && games.length === 0 && (
         <div className="section-panel__empty">{t("no_activity_yet")}</div>
@@ -57,9 +55,7 @@ export function TopPlayedGames({
                 "top-played-games__item--selected":
                   selectedGameId === game.objectId,
               })}
-              onClick={() =>
-                onGameSelect(game.objectId, game.shop, game.title)
-              }
+              onClick={() => onGameSelect(game.objectId, game.shop, game.title)}
             >
               <span className="top-played-games__rank">{index + 1}</span>
               {game.iconUrl && (

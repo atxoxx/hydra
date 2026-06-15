@@ -671,7 +671,8 @@ contextBridge.exposeInMainWorld("electron", {
     objectId: string,
     startDate: string,
     endDate: string
-  ) => ipcRenderer.invoke("getDailyPlaytime", shop, objectId, startDate, endDate),
+  ) =>
+    ipcRenderer.invoke("getDailyPlaytime", shop, objectId, startDate, endDate),
   getPlaytimeSummary: (startDate: string, endDate: string) =>
     ipcRenderer.invoke("getPlaytimeSummary", startDate, endDate),
   getFriendsStats: () => ipcRenderer.invoke("getFriendsStats"),

@@ -38,7 +38,6 @@ export function WeeklyHeatmap({ days, loading }: WeeklyHeatmapProps) {
     );
   }
 
-
   return (
     <div className="section-panel">
       <h3 className="section-panel__title">{t("weekly_activity")}</h3>

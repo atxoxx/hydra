@@ -43,11 +43,10 @@ export function PerGameDetails({
     }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
-  const totalMs = dailyEntries.reduce(
-    (sum, e) => sum + e.totalMilliseconds,
-    0
-  );
-  const sessionCount = dailyEntries.filter((e) => e.totalMilliseconds > 0).length;
+  const totalMs = dailyEntries.reduce((sum, e) => sum + e.totalMilliseconds, 0);
+  const sessionCount = dailyEntries.filter(
+    (e) => e.totalMilliseconds > 0
+  ).length;
   const avgSessionMs = sessionCount > 0 ? totalMs / sessionCount : 0;
 
   return (
@@ -93,10 +92,10 @@ export function PerGameDetails({
                     borderRadius: 6,
                     fontSize: 12,
                   }}
-              formatter={(value) => [
-                `${Math.round((value as number) * 10) / 10}h`,
-                t("total_hours"),
-              ]}
+                  formatter={(value) => [
+                    `${Math.round((value as number) * 10) / 10}h`,
+                    t("total_hours"),
+                  ]}
                 />
                 <Bar dataKey="hours" fill="#16b195" radius={[2, 2, 0, 0]} />
               </BarChart>
@@ -116,9 +115,7 @@ export function PerGameDetails({
               <div className="per-game-details__stat-label">
                 {t("session_count")}
               </div>
-              <div className="per-game-details__stat-value">
-                {sessionCount}
-              </div>
+              <div className="per-game-details__stat-value">{sessionCount}</div>
             </div>
             <div>
               <div className="per-game-details__stat-label">

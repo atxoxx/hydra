@@ -74,12 +74,12 @@ The Activity page is a full-page route rendered inside the existing `<App />` la
 
 Four cards in a horizontal row showing summary statistics for the selected date range:
 
-| Card             | Data Source                                                     |
-| ---------------- | --------------------------------------------------------------- |
-| **Total Hours**  | Sum of all playtime within date range, formatted as `Xh Ym`    |
-| **Games Played** | Distinct count of games with playtime > 0 in the date range     |
+| Card                | Data Source                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| **Total Hours**     | Sum of all playtime within date range, formatted as `Xh Ym`   |
+| **Games Played**    | Distinct count of games with playtime > 0 in the date range   |
 | **Most Active Day** | Day with highest total playtime in the range, with hour count |
-| **Average/Day**  | Total hours ÷ number of days in range (or days with activity)   |
+| **Average/Day**     | Total hours ÷ number of days in range (or days with activity) |
 
 ---
 
@@ -103,12 +103,14 @@ Four cards in a horizontal row showing summary statistics for the selected date 
 Two sub-sections:
 
 #### 3.3a Playtime by Genre (Donut/Pie Chart)
+
 - Aggregate total playtime by genre across all games
 - Genre data sourced from local game shop details cache (`SteamAppDetails.genres`)
 - Games without genre data are grouped as "Other/Unknown"
 - **Chart type**: Donut chart with legend
 
 #### 3.3b Games per Genre Count
+
 - Simple count of how many games in your library belong to each genre
 - Displayed as a secondary smaller chart or table alongside the playtime donut
 
@@ -203,9 +205,12 @@ Add a new sublevel for daily playtime snapshots:
 
 ```typescript
 // src/main/level/sublevels/keys.ts
-levelKeys.dailyPlaytime = "dailyPlaytime"
-levelKeys.dailyPlaytimeEntry = (shop: GameShop, objectId: string, date: string) =>
-  `${shop}:${objectId}:${date}`
+levelKeys.dailyPlaytime = "dailyPlaytime";
+levelKeys.dailyPlaytimeEntry = (
+  shop: GameShop,
+  objectId: string,
+  date: string
+) => `${shop}:${objectId}:${date}`;
 ```
 
 Where `date` is an ISO date string (`YYYY-MM-DD`).
@@ -216,8 +221,8 @@ Where `date` is an ISO date string (`YYYY-MM-DD`).
 interface DailyPlaytimeSnapshot {
   shop: GameShop;
   objectId: string;
-  date: string;           // "YYYY-MM-DD"
-  totalMilliseconds: number;  // cumulative playtime for that day
+  date: string; // "YYYY-MM-DD"
+  totalMilliseconds: number; // cumulative playtime for that day
 }
 ```
 
@@ -234,11 +239,11 @@ Extend `process-watcher.ts`:
 
 New IPC events to be registered:
 
-| Event Name                | Direction       | Purpose                                     |
-| ------------------------- | --------------- | ------------------------------------------- |
-| `getDailyPlaytime`        | renderer→main   | Get playtime for date range                 |
-| `getPlaytimeSummary`      | renderer→main   | Get aggregated stats for overview cards     |
-| `getFriendsStats`         | renderer→main   | Get friends' playtime stats for comparison  |
+| Event Name           | Direction     | Purpose                                    |
+| -------------------- | ------------- | ------------------------------------------ |
+| `getDailyPlaytime`   | renderer→main | Get playtime for date range                |
+| `getPlaytimeSummary` | renderer→main | Get aggregated stats for overview cards    |
+| `getFriendsStats`    | renderer→main | Get friends' playtime stats for comparison |
 
 ---
 

@@ -35,7 +35,10 @@ export function MonthlyTrend({
 
   const dayMap = new Map<string, number>();
   for (const entry of dailyEntries) {
-    dayMap.set(entry.date, (dayMap.get(entry.date) ?? 0) + entry.totalMilliseconds);
+    dayMap.set(
+      entry.date,
+      (dayMap.get(entry.date) ?? 0) + entry.totalMilliseconds
+    );
   }
 
   const data: { date: string; hours: number }[] = [];

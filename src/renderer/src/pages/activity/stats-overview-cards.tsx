@@ -48,18 +48,14 @@ export function StatsOverviewCards({
   return (
     <div className="stats-overview">
       <div className="stats-overview__card">
-        <span className="stats-overview__card-label">
-          {t("total_hours")}
-        </span>
+        <span className="stats-overview__card-label">{t("total_hours")}</span>
         <span className="stats-overview__card-value">
           {formatHours(totalHours)}
         </span>
       </div>
 
       <div className="stats-overview__card">
-        <span className="stats-overview__card-label">
-          {t("games_played")}
-        </span>
+        <span className="stats-overview__card-label">{t("games_played")}</span>
         <span className="stats-overview__card-value">{gamesPlayed}</span>
       </div>
 
@@ -78,15 +74,11 @@ export function StatsOverviewCards({
       </div>
 
       <div className="stats-overview__card">
-        <span className="stats-overview__card-label">
-          {t("avg_per_day")}
-        </span>
+        <span className="stats-overview__card-label">{t("avg_per_day")}</span>
         <span className="stats-overview__card-value">
           {formatHours(avgPerDay)}
         </span>
-        <span className="stats-overview__card-sub">
-          {t("avg_per_day")}
-        </span>
+        <span className="stats-overview__card-sub">{t("avg_per_day")}</span>
       </div>
     </div>
   );

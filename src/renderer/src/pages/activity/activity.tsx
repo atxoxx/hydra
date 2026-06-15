@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUserDetails } from "@renderer/hooks";
-import type { DailyPlaytimeEntry, PlaytimeSummary, FriendPlaytimeStats } from "../../declaration";
+import type {
+  DailyPlaytimeEntry,
+  PlaytimeSummary,
+  FriendPlaytimeStats,
+} from "../../declaration";
 import { DateRangeFilter, type DateRange } from "./date-range-filter";
 import { StatsOverviewCards } from "./stats-overview-cards";
 import { TopPlayedGames } from "./top-played-games";
@@ -127,7 +131,10 @@ export default function Activity() {
 
     const dayMap = new Map<string, number>();
     for (const entry of dailyEntries) {
-      dayMap.set(entry.date, (dayMap.get(entry.date) ?? 0) + entry.totalMilliseconds);
+      dayMap.set(
+        entry.date,
+        (dayMap.get(entry.date) ?? 0) + entry.totalMilliseconds
+      );
     }
 
     const days: HeatmapDay[] = [];
@@ -136,8 +143,7 @@ export default function Activity() {
     const cursor = new Date(start);
 
     while (cursor <= end) {
-      const dateStr =
-        `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
+      const dateStr = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
       days.push({
         date: dateStr,
         hours: (dayMap.get(dateStr) ?? 0) / 3_600_000,
@@ -186,10 +192,7 @@ export default function Activity() {
           loading={loading}
         />
 
-        <RecentTimeline
-          topGames={summary?.topGames ?? []}
-          loading={loading}
-        />
+        <RecentTimeline topGames={summary?.topGames ?? []} loading={loading} />
 
         <div className="activity__two-column">
           <FriendsComparison
