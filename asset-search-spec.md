@@ -70,11 +70,11 @@ interface SearchGameAssetsResponse {
 }
 
 interface AssetSearchResult {
-  id: string;           // Unique ID for this result (e.g., hash of URL)
+  id: string; // Unique ID for this result (e.g., hash of URL)
   thumbnailUrl: string; // Google thumbnail URL
   fullImageUrl: string; // Full-size image URL (from source website)
-  sourceUrl: string;    // The webpage the image appears on
-  sourceName: string;   // Domain name of the source
+  sourceUrl: string; // The webpage the image appears on
+  sourceName: string; // Domain name of the source
   width: number | null;
   height: number | null;
 }
@@ -102,11 +102,11 @@ searchGameAssets: (
 
 Queries are auto-tailored per asset type and game title:
 
-| Asset Type | Query Template                         | Example                                       |
-| ---------- | -------------------------------------- | --------------------------------------------- |
-| icon       | `"{gameTitle}" icon`                   | `"Grand Theft Auto V" icon`                   |
-| logo       | `"{gameTitle}" logo png transparent`   | `"Grand Theft Auto V" logo png transparent`   |
-| hero       | `"{gameTitle}" banner`                 | `"Grand Theft Auto V" banner`                 |
+| Asset Type | Query Template                       | Example                                     |
+| ---------- | ------------------------------------ | ------------------------------------------- |
+| icon       | `"{gameTitle}" icon`                 | `"Grand Theft Auto V" icon`                 |
+| logo       | `"{gameTitle}" logo png transparent` | `"Grand Theft Auto V" logo png transparent` |
+| hero       | `"{gameTitle}" banner`               | `"Grand Theft Auto V" banner`               |
 
 - The game title is the `game.title` from the current game
 - Quotes are included around the game title for exact matching
@@ -128,11 +128,13 @@ New file: `src/main/services/google-image-scraper.ts`
 ### Algorithm
 
 1. Construct a Google Images search URL:
+
    ```
    https://www.google.com/search?tbm=isch&q={encodedQuery}
    ```
 
 2. Fetch the page with appropriate headers:
+
    ```typescript
    {
      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ...",
@@ -151,9 +153,8 @@ New file: `src/main/services/google-image-scraper.ts`
    | Asset Type | Aspect Ratio Range | Orientation |
    | ---------- | ------------------ | ----------- |
    | icon       | 0.8 – 1.2          | square-ish  |
-   | logo       | > 1.5               | horizontal  |
-   | hero       | > 2.0               | wide        |
-
+   | logo       | > 1.5              | horizontal  |
+   | hero       | > 2.0              | wide        |
    - Images without dimension metadata are included but ranked lower
    - If fewer than 5 results pass filtering, relax the aspect ratio constraints
 
@@ -320,24 +321,24 @@ When the user clicks **Apply** in the preview modal:
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `src/main/services/google-image-scraper.ts` | Google Images scraping logic |
+| File                                              | Purpose                               |
+| ------------------------------------------------- | ------------------------------------- |
+| `src/main/services/google-image-scraper.ts`       | Google Images scraping logic          |
 | `src/main/events/catalogue/search-game-assets.ts` | IPC event handler (main process side) |
 
 ---
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src/renderer/src/pages/game-details/modals/game-assets-settings.tsx` | Major: add search panel, results grid, preview modal, split layout, session cache |
-| `src/renderer/src/pages/game-details/modals/game-assets-settings.scss` | Major: new split layout styles, search grid, preview modal, state styles |
-| `src/preload/index.ts` | Add `searchGameAssets` IPC bridge |
-| `src/main/events/index.ts` | Register new event (if needed) |
-| `src/renderer/src/declaration.d.ts` | Add type for `searchGameAssets` |
-| `src/locales/en/translation.json` | Add new i18n keys |
-| All locale files (`src/locales/*/translation.json`) | Add new i18n keys (English-only initially, others default to English) |
+| File                                                                   | Changes                                                                           |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `src/renderer/src/pages/game-details/modals/game-assets-settings.tsx`  | Major: add search panel, results grid, preview modal, split layout, session cache |
+| `src/renderer/src/pages/game-details/modals/game-assets-settings.scss` | Major: new split layout styles, search grid, preview modal, state styles          |
+| `src/preload/index.ts`                                                 | Add `searchGameAssets` IPC bridge                                                 |
+| `src/main/events/index.ts`                                             | Register new event (if needed)                                                    |
+| `src/renderer/src/declaration.d.ts`                                    | Add type for `searchGameAssets`                                                   |
+| `src/locales/en/translation.json`                                      | Add new i18n keys                                                                 |
+| All locale files (`src/locales/*/translation.json`)                    | Add new i18n keys (English-only initially, others default to English)             |
 
 ---
 
@@ -376,34 +377,41 @@ When the user clicks **Apply** in the preview modal:
 ## Edge Cases & Error Handling
 
 ### Network Errors
+
 - No internet: Show "No internet connection" message
 - Timeout (>10s): Show "Search timed out" with retry button
 - HTTP error (4xx/5xx): Show "Search failed" with retry button
 
 ### Google-Specific Issues
+
 - CAPTCHA page: Detect and show "Google requires verification. Please try again later."
 - Rate limiting: Show "Too many searches. Please wait a moment."
 - HTML structure change: Falling back gracefully — if cheerio parsing returns 0 results, show "No images found"
 
 ### Image Loading Errors
+
 - Broken thumbnail URL (`onError`): Show a placeholder icon instead
 - Full image fails to load in modal: Show "Image could not be loaded"
 - Invalid image format after download: Validate MIME type before applying
 
 ### Asset Type Switching
+
 - When user switches tabs (icon → logo → hero), if the new type has NOT been searched yet, auto-trigger search
 - If the new type HAS been searched (in cache), show cached results immediately
 
 ### Game Title Edge Cases
+
 - Very short titles (<3 chars): Still search but append "game" keyword
 - Titles with special characters: Properly URL-encode
 - Empty title (shouldn't happen but defensive): Show "Please provide a game title"
 
 ### Concurrent Requests
+
 - If user rapidly switches asset types, cancel any in-flight search requests
 - Use an AbortController or cancel mechanism
 
 ### File Size
+
 - Images >10MB: Warn user before downloading
 - Images <1KB: Likely invalid, skip
 
@@ -412,17 +420,20 @@ When the user clicks **Apply** in the preview modal:
 ## Non-Functional Requirements
 
 ### Performance
+
 - Search results should display within 5 seconds (typical)
 - Thumbnail grid should lazy-load images (using `loading="lazy"`)
 - Modal full-image load should show a spinner within 200ms
 
 ### Accessibility
+
 - All buttons have `aria-label` attributes
 - Thumbnails have `alt` text ("Search result for {gameTitle} {assetType}")
 - Keyboard navigation: Tab through thumbnails, Enter to open preview, Escape to close modal
 - Focus trap within the preview modal
 
 ### Security
+
 - Image downloads happen in the main process (sandboxed)
 - Validate image MIME types before writing to disk
 - Sanitize URLs before fetching
@@ -433,10 +444,12 @@ When the user clicks **Apply** in the preview modal:
 ## Testing Considerations
 
 ### Unit Tests (future)
+
 - `google-image-scraper.ts`: Test query construction, HTML parsing, aspect ratio filtering
 - `GameAssetsSettings`: Test session cache logic, state transitions
 
 ### Manual Testing
+
 1. Open a non-custom game with known assets → Assets tab → Verify search auto-runs
 2. Switch asset types → Verify new search triggers / cache returns
 3. Click a result → Preview modal → Apply → Verify asset is applied

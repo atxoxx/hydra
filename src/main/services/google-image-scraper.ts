@@ -36,10 +36,14 @@ const ASPECT_RATIO_RANGES: Record<
   hero: { min: 2.0, max: Infinity, orientation: "wide" },
 };
 
-function buildQuery(gameTitle: string, assetType: AssetType, withQuotes = true): string {
+function buildQuery(
+  gameTitle: string,
+  assetType: AssetType,
+  withQuotes = true
+): string {
   const template = QUERY_TEMPLATES[assetType];
   const title = withQuotes ? `"${gameTitle}"` : gameTitle;
-  return template.replace('"{title}"', title).replace('{title}', title);
+  return template.replace('"{title}"', title).replace("{title}", title);
 }
 
 function extractSourceName(url: string): string {
@@ -61,7 +65,10 @@ function hashCode(str: string): string {
   return Math.abs(hash).toString(36);
 }
 
-function getAspectRatio(width: number | null, height: number | null): number | null {
+function getAspectRatio(
+  width: number | null,
+  height: number | null
+): number | null {
   if (width === null || height === null || height === 0) return null;
   return width / height;
 }
@@ -116,7 +123,7 @@ async function scrapeDdgImages(query: string): Promise<any[]> {
       url: "https://duckduckgo.com",
       name: "consent",
       value: "true",
-      domain: ".duckduckgo.com"
+      domain: ".duckduckgo.com",
     });
   } catch (cookieErr) {
     logger.error("Failed to set DDG consent cookie:", cookieErr);
@@ -143,96 +150,110 @@ async function scrapeDdgImages(query: string): Promise<any[]> {
       });
     };
 
-    win.loadURL(searchUrl, {
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }).then(async () => {
-      // Wait for client-side JS to render and VQD to be available
-      await new Promise((resolveTimeout) => setTimeout(resolveTimeout, 2000));
-      if (completed) return;
-
-      try {
-        const html = await win.webContents.executeJavaScript("document.documentElement.outerHTML");
+    win
+      .loadURL(searchUrl, {
+        userAgent:
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      })
+      .then(async () => {
+        // Wait for client-side JS to render and VQD to be available
+        await new Promise((resolveTimeout) => setTimeout(resolveTimeout, 2000));
         if (completed) return;
 
-        // Parse VQD token
-        const vqdMatch = html.match(/vqd=["']?([^"']+)["']?/);
-        let vqd = vqdMatch ? vqdMatch[1] : null;
-        if (!vqd) {
-          const vqdMatch2 = html.match(/vqd:?["']?([^"']+)["']?/);
-          vqd = vqdMatch2 ? vqdMatch2[1] : null;
-        }
+        try {
+          const html = await win.webContents.executeJavaScript(
+            "document.documentElement.outerHTML"
+          );
+          if (completed) return;
 
-        if (!vqd) {
-          cleanup();
-          reject(new Error("Could not extract VQD token from DuckDuckGo page"));
-          return;
-        }
+          // Parse VQD token
+          const vqdMatch = html.match(/vqd=["']?([^"']+)["']?/);
+          let vqd = vqdMatch ? vqdMatch[1] : null;
+          if (!vqd) {
+            const vqdMatch2 = html.match(/vqd:?["']?([^"']+)["']?/);
+            vqd = vqdMatch2 ? vqdMatch2[1] : null;
+          }
 
-        logger.log(`Extracted VQD token: ${vqd}. Fetching images JSON...`);
+          if (!vqd) {
+            cleanup();
+            reject(
+              new Error("Could not extract VQD token from DuckDuckGo page")
+            );
+            return;
+          }
 
-        // Execute fetch inside page context to inherit cookies, user-agent and session context
-        const fetchUrl = `https://duckduckgo.com/i.js?l=wt-wt&o=json&q=${encodeURIComponent(query)}&vqd=${vqd}&f=,,,&p=1`;
-        const resultsJson = await win.webContents.executeJavaScript(`
+          logger.log(`Extracted VQD token: ${vqd}. Fetching images JSON...`);
+
+          // Execute fetch inside page context to inherit cookies, user-agent and session context
+          const fetchUrl = `https://duckduckgo.com/i.js?l=wt-wt&o=json&q=${encodeURIComponent(query)}&vqd=${vqd}&f=,,,&p=1`;
+          const resultsJson = await win.webContents.executeJavaScript(`
           fetch("${fetchUrl}")
             .then(res => res.json())
             .catch(err => ({ error: err.message }))
         `);
 
-        if (completed) return;
-
-        if (resultsJson.error) {
-          cleanup();
-          reject(new Error(resultsJson.error));
-        } else if (resultsJson.results) {
-          cleanup();
-          resolve(resultsJson.results);
-        } else {
-          cleanup();
-          resolve([]);
-        }
-      } catch (jsErr) {
-        cleanup();
-        reject(jsErr);
-      }
-    }).catch((loadErr) => {
-      // Electron might reject with ERR_ABORTED if there's a quick redirect
-      if (loadErr && loadErr.code === "ERR_ABORTED") {
-        logger.log("DuckDuckGo page load aborted due to redirect. Proceeding anyway...");
-        // Wait and attempt to scrape
-        setTimeout(async () => {
           if (completed) return;
-          try {
-            const html = await win.webContents.executeJavaScript("document.documentElement.outerHTML");
-            const vqdMatch = html.match(/vqd=["']?([^"']+)["']?/);
-            const vqd = vqdMatch ? vqdMatch[1] : null;
-            if (!vqd) {
-              cleanup();
-              reject(new Error("Could not extract VQD token after load abort"));
-              return;
-            }
-            const fetchUrl = `https://duckduckgo.com/i.js?l=wt-wt&o=json&q=${encodeURIComponent(query)}&vqd=${vqd}&f=,,,&p=1`;
-            const resultsJson = await win.webContents.executeJavaScript(`
+
+          if (resultsJson.error) {
+            cleanup();
+            reject(new Error(resultsJson.error));
+          } else if (resultsJson.results) {
+            cleanup();
+            resolve(resultsJson.results);
+          } else {
+            cleanup();
+            resolve([]);
+          }
+        } catch (jsErr) {
+          cleanup();
+          reject(jsErr);
+        }
+      })
+      .catch((loadErr) => {
+        // Electron might reject with ERR_ABORTED if there's a quick redirect
+        if (loadErr && loadErr.code === "ERR_ABORTED") {
+          logger.log(
+            "DuckDuckGo page load aborted due to redirect. Proceeding anyway..."
+          );
+          // Wait and attempt to scrape
+          setTimeout(async () => {
+            if (completed) return;
+            try {
+              const html = await win.webContents.executeJavaScript(
+                "document.documentElement.outerHTML"
+              );
+              const vqdMatch = html.match(/vqd=["']?([^"']+)["']?/);
+              const vqd = vqdMatch ? vqdMatch[1] : null;
+              if (!vqd) {
+                cleanup();
+                reject(
+                  new Error("Could not extract VQD token after load abort")
+                );
+                return;
+              }
+              const fetchUrl = `https://duckduckgo.com/i.js?l=wt-wt&o=json&q=${encodeURIComponent(query)}&vqd=${vqd}&f=,,,&p=1`;
+              const resultsJson = await win.webContents.executeJavaScript(`
               fetch("${fetchUrl}")
                 .then(res => res.json())
                 .catch(err => ({ error: err.message }))
             `);
-            if (completed) return;
-            cleanup();
-            if (resultsJson.error) {
-              reject(new Error(resultsJson.error));
-            } else {
-              resolve(resultsJson.results || []);
+              if (completed) return;
+              cleanup();
+              if (resultsJson.error) {
+                reject(new Error(resultsJson.error));
+              } else {
+                resolve(resultsJson.results || []);
+              }
+            } catch (retryErr) {
+              cleanup();
+              reject(retryErr);
             }
-          } catch (retryErr) {
-            cleanup();
-            reject(retryErr);
-          }
-        }, 2500);
-      } else {
-        cleanup();
-        reject(loadErr);
-      }
-    });
+          }, 2500);
+        } else {
+          cleanup();
+          reject(loadErr);
+        }
+      });
   });
 }
 
@@ -266,13 +287,21 @@ export async function searchGameAssets(
           fullImageUrl,
           sourceUrl,
           sourceName: extractSourceName(sourceUrl),
-          width: r.width && !isNaN(parseInt(r.width, 10)) ? parseInt(r.width, 10) : null,
-          height: r.height && !isNaN(parseInt(r.height, 10)) ? parseInt(r.height, 10) : null,
+          width:
+            r.width && !isNaN(parseInt(r.width, 10))
+              ? parseInt(r.width, 10)
+              : null,
+          height:
+            r.height && !isNaN(parseInt(r.height, 10))
+              ? parseInt(r.height, 10)
+              : null,
         };
       });
 
       const filtered = filterByAssetType(mappedResults, assetType);
-      logger.log(`Quoted search found ${filtered.length} matching results for "${quotedQuery}"`);
+      logger.log(
+        `Quoted search found ${filtered.length} matching results for "${quotedQuery}"`
+      );
       return { results: filtered, query: quotedQuery };
     }
   } catch (error) {
@@ -285,7 +314,9 @@ export async function searchGameAssets(
   // Attempt 2: Unquoted Fallback
   const unquotedQuery = buildQuery(effectiveTitle, assetType, false);
   try {
-    logger.log(`No results for quoted search, retrying unquoted search for "${unquotedQuery}"`);
+    logger.log(
+      `No results for quoted search, retrying unquoted search for "${unquotedQuery}"`
+    );
     const rawResults = await scrapeDdgImages(unquotedQuery);
     const mappedResults: AssetSearchResult[] = rawResults.map((r) => {
       const fullImageUrl = r.image;
@@ -297,13 +328,21 @@ export async function searchGameAssets(
         fullImageUrl,
         sourceUrl,
         sourceName: extractSourceName(sourceUrl),
-        width: r.width && !isNaN(parseInt(r.width, 10)) ? parseInt(r.width, 10) : null,
-        height: r.height && !isNaN(parseInt(r.height, 10)) ? parseInt(r.height, 10) : null,
+        width:
+          r.width && !isNaN(parseInt(r.width, 10))
+            ? parseInt(r.width, 10)
+            : null,
+        height:
+          r.height && !isNaN(parseInt(r.height, 10))
+            ? parseInt(r.height, 10)
+            : null,
       };
     });
 
     const filtered = filterByAssetType(mappedResults, assetType);
-    logger.log(`Unquoted search found ${filtered.length} matching results for "${unquotedQuery}"`);
+    logger.log(
+      `Unquoted search found ${filtered.length} matching results for "${unquotedQuery}"`
+    );
     return { results: filtered, query: unquotedQuery };
   } catch (retryError) {
     logger.error("DuckDuckGo unquoted search failed:", retryError);

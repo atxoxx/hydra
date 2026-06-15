@@ -449,7 +449,10 @@ export function GameAssetsSettings({
                     assetType
                   );
                   if (downloadedPath) {
-                    updatedPaths[assetType] = downloadedPath.replace("local:", "");
+                    updatedPaths[assetType] = downloadedPath.replace(
+                      "local:",
+                      ""
+                    );
                     updatedDisplayPaths[assetType] = result.fullImageUrl;
                     successCount++;
                     break;
@@ -463,7 +466,10 @@ export function GameAssetsSettings({
               }
             }
           } catch (searchError) {
-            console.error(`Auto-fetch: Failed to search for ${assetType}:`, searchError);
+            console.error(
+              `Auto-fetch: Failed to search for ${assetType}:`,
+              searchError
+            );
           }
         })
       );
@@ -876,9 +882,7 @@ export function GameAssetsSettings({
 
         <div className="game-assets-settings__search-input-row">
           <TextField
-            placeholder={
-              game.title || t("edit_game_modal_search_placeholder")
-            }
+            placeholder={game.title || t("edit_game_modal_search_placeholder")}
             value={searchQuery}
             onChange={handleSearchInputChange}
             onKeyDown={handleSearchInputKeyDown}
@@ -888,7 +892,9 @@ export function GameAssetsSettings({
                 type="button"
                 theme="outline"
                 onClick={() => {
-                  searchCache.current.delete(getCacheKey(selectedAssetType, searchQuery));
+                  searchCache.current.delete(
+                    getCacheKey(selectedAssetType, searchQuery)
+                  );
                   performSearch(selectedAssetType, searchQuery, true);
                 }}
                 disabled={!searchQuery.trim() || searchStatus === "loading"}
@@ -927,10 +933,7 @@ export function GameAssetsSettings({
           <div className="game-assets-settings__search-status">
             <div className="game-assets-settings__search-skeleton">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="game-assets-settings__skeleton-thumb"
-                />
+                <div key={i} className="game-assets-settings__skeleton-thumb" />
               ))}
             </div>
             <span className="game-assets-settings__search-status-text">
@@ -965,11 +968,7 @@ export function GameAssetsSettings({
             <span className="game-assets-settings__search-status-text">
               {t("edit_game_modal_search_error")}
             </span>
-            <Button
-              type="button"
-              theme="outline"
-              onClick={handleSearchRetry}
-            >
+            <Button type="button" theme="outline" onClick={handleSearchRetry}>
               {t("edit_game_modal_search_retry")}
             </Button>
           </div>
@@ -1063,8 +1062,7 @@ export function GameAssetsSettings({
                   {t("edit_game_modal_browse")}
                 </Button>
                 {(assetPath ||
-                  (isCustomGame(game) &&
-                    getOriginalAssetUrl(assetType))) && (
+                  (isCustomGame(game) && getOriginalAssetUrl(assetType))) && (
                   <Button
                     type="button"
                     theme="outline"
@@ -1087,9 +1085,7 @@ export function GameAssetsSettings({
               type="button"
               aria-label={t(getTranslationKey("_drop_zone"))}
               className={`game-assets-settings__image-preview ${
-                assetType === "icon"
-                  ? "game-assets-settings__icon-preview"
-                  : ""
+                assetType === "icon" ? "game-assets-settings__icon-preview" : ""
               } ${isDragOver ? "game-assets-settings__drop-zone--active" : ""}`}
               onDragOver={handleDragOver}
               onDragEnter={(event) => handleDragEnter(event, assetType)}
@@ -1115,9 +1111,7 @@ export function GameAssetsSettings({
               type="button"
               aria-label={t(getTranslationKey("_drop_zone_empty"))}
               className={`game-assets-settings__image-preview ${
-                assetType === "icon"
-                  ? "game-assets-settings__icon-preview"
-                  : ""
+                assetType === "icon" ? "game-assets-settings__icon-preview" : ""
               } game-assets-settings__drop-zone ${
                 isDragOver ? "game-assets-settings__drop-zone--active" : ""
               }`}
@@ -1129,9 +1123,7 @@ export function GameAssetsSettings({
             >
               <div className="game-assets-settings__drop-zone-content">
                 <ImageIcon />
-                <span>
-                  {t(`edit_game_modal_drop_${assetType}_image_here`)}
-                </span>
+                <span>{t(`edit_game_modal_drop_${assetType}_image_here`)}</span>
               </div>
             </button>
           )}
