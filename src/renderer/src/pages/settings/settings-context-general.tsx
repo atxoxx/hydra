@@ -65,6 +65,9 @@ export function SettingsContextGeneral({
     launchToLibraryPage: false,
     launchInBigPicture: false,
     enableAutoInstall: false,
+    sidebarShowPlaytimeBadge: true,
+    sidebarShowAchievementsBadge: true,
+    sidebarShowFriendsBadge: true,
   });
 
   useEffect(() => {
@@ -111,6 +114,12 @@ export function SettingsContextGeneral({
       launchToLibraryPage: userPreferences.launchToLibraryPage ?? false,
       launchInBigPicture: userPreferences.launchInBigPicture ?? false,
       enableAutoInstall: userPreferences.enableAutoInstall ?? false,
+      sidebarShowPlaytimeBadge:
+        userPreferences.sidebarShowPlaytimeBadge ?? true,
+      sidebarShowAchievementsBadge:
+        userPreferences.sidebarShowAchievementsBadge ?? true,
+      sidebarShowFriendsBadge:
+        userPreferences.sidebarShowFriendsBadge ?? true,
     });
   }, [userPreferences, defaultDownloadsPath]);
 
@@ -308,6 +317,41 @@ export function SettingsContextGeneral({
       <div className="settings-context-panel__group">
         <h3>{t("appearance")}</h3>
         <SettingsAppearance appearance={appearance} />
+      </div>
+
+      <div className="settings-context-panel__group">
+        <h3>{t("sidebar")}</h3>
+
+        <CheckboxField
+          label={t("sidebar_show_playtime_badge")}
+          checked={form.sidebarShowPlaytimeBadge}
+          onChange={() =>
+            handleChange({
+              sidebarShowPlaytimeBadge: !form.sidebarShowPlaytimeBadge,
+            })
+          }
+        />
+
+        <CheckboxField
+          label={t("sidebar_show_achievements_badge")}
+          checked={form.sidebarShowAchievementsBadge}
+          onChange={() =>
+            handleChange({
+              sidebarShowAchievementsBadge:
+                !form.sidebarShowAchievementsBadge,
+            })
+          }
+        />
+
+        <CheckboxField
+          label={t("sidebar_show_friends_badge")}
+          checked={form.sidebarShowFriendsBadge}
+          onChange={() =>
+            handleChange({
+              sidebarShowFriendsBadge: !form.sidebarShowFriendsBadge,
+            })
+          }
+        />
       </div>
 
       <DownloadDirectoryReplacementModal

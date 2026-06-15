@@ -19,6 +19,7 @@ import {
   useLibrary,
   useToast,
   useUserDetails,
+  useFriendGameOwnership,
 } from "@renderer/hooks";
 import { AuthPage } from "@shared";
 
@@ -40,16 +41,33 @@ import deckyIcon from "@renderer/assets/icons/decky.png";
 import { setCollections } from "@renderer/features";
 import { setFriendRequestCount } from "@renderer/features/user-details-slice";
 import cn from "classnames";
-import { sortBy } from "lodash-es";
 import { useDispatch } from "react-redux";
 import { SidebarAddingCustomGameModal } from "./sidebar-adding-custom-game-modal";
 import { SidebarGameItem } from "./sidebar-game-item";
 import { SidebarProfile } from "./sidebar-profile";
+import { SidebarSuggestions } from "./sidebar-suggestions";
 
 const SIDEBAR_MIN_WIDTH = 200;
 const SIDEBAR_INITIAL_WIDTH = 250;
 const SIDEBAR_MAX_WIDTH = 450;
 const FAVORITES_COLLECTION_ID = "__favorites__";
+
+type SidebarSort = "alphabetical" | "most_played" | "recently_played" | "installed_first";
+
+const SORT_OPTIONS: { value: SidebarSort; labelKey: string }[] = [
+  { value: "alphabetical", labelKey: "sort_alphabetical" },
+  { value: "most_played", labelKey: "sort_most_played" },
+  { value: "recently_played", labelKey: "sort_recently_played" },
+  { value: "installed_first", labelKey: "sort_installed_first" },
+];
+
+const getSavedSort = (): SidebarSort => {
+  const saved = localStorage.getItem("sidebar-sort-by");
+  if (saved && SORT_OPTIONS.some((o) => o.value === saved)) {
+    return saved as SidebarSort;
+  }
+  return "alphabetical";
+};
 
 const initialSidebarWidth = window.localStorage.getItem("sidebarWidth");
 
@@ -81,9 +99,46 @@ export function Sidebar() {
 
   const location = useLocation();
 
+  const [sortBy, setSortBy] = useState<SidebarSort>(getSavedSort);
+
   const sortedLibrary = useMemo(() => {
-    return sortBy(library, (game) => game.title);
-  }, [library]);
+    const sorted = [...library];
+
+    switch (sortBy) {
+      case "most_played":
+        sorted.sort(
+          (a, b) => (b.playTimeInMilliseconds ?? 0) - (a.playTimeInMilliseconds ?? 0)
+        );
+        break;
+      case "recently_played": {
+        const aHasPlayed = (a: LibraryGame) => a.lastTimePlayed !== null;
+        sorted.sort((a, b) => {
+          if (aHasPlayed(a) && aHasPlayed(b)) {
+            return new Date(b.lastTimePlayed!).getTime() - new Date(a.lastTimePlayed!).getTime();
+          }
+          if (aHasPlayed(a) !== aHasPlayed(b)) return aHasPlayed(a) ? -1 : 1;
+          return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+        });
+        break;
+      }
+      case "installed_first":
+        sorted.sort((a, b) => {
+          const aInstalled = Boolean(a.executablePath) || a.installedSizeInBytes != null;
+          const bInstalled = Boolean(b.executablePath) || b.installedSizeInBytes != null;
+          if (aInstalled !== bInstalled) return aInstalled ? -1 : 1;
+          return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+        });
+        break;
+      case "alphabetical":
+      default:
+        sorted.sort((a, b) =>
+          a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
+        );
+        break;
+    }
+
+    return sorted;
+  }, [library, sortBy]);
 
   const { hasActiveSubscription, userDetails } = useUserDetails();
 
@@ -93,6 +148,7 @@ export function Sidebar() {
 
   const [showPlayableOnly, setShowPlayableOnly] = useState(false);
   const [isCollectionsCollapsed, setIsCollectionsCollapsed] = useState(false);
+  const [isSuggestionsCollapsed, setIsSuggestionsCollapsed] = useState(false);
   const [isGamesCollapsed, setIsGamesCollapsed] = useState(false);
   const [showAddGameModal, setShowAddGameModal] = useState(false);
   const [showCreateCollectionModal, setShowCreateCollectionModal] =
@@ -117,10 +173,18 @@ export function Sidebar() {
     loadCollections,
   } = useGameCollections();
 
+  const { getOwnership } = useFriendGameOwnership();
+
   const selectedCollectionId = useMemo(() => {
     if (!location.pathname.startsWith("/library")) return null;
     return searchParams.get("collection");
   }, [location.pathname, searchParams]);
+
+  const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = event.target.value as SidebarSort;
+    setSortBy(value);
+    localStorage.setItem("sidebar-sort-by", value);
+  };
 
   const handlePlayButtonClick = () => {
     setShowPlayableOnly(!showPlayableOnly);
@@ -325,6 +389,16 @@ export function Sidebar() {
       } else {
         showWarningToast(t("game_has_no_executable"));
       }
+    }
+  };
+
+  const handleSuggestionClick = (game: LibraryGame) => {
+    const path = buildGameDetailsPath({
+      ...game,
+      objectId: game.objectId,
+    });
+    if (path !== location.pathname) {
+      navigate(path);
     }
   };
 
@@ -637,6 +711,13 @@ export function Sidebar() {
             )}
           </section>
 
+          <SidebarSuggestions
+            library={library}
+            isCollapsed={isSuggestionsCollapsed}
+            onToggle={() => setIsSuggestionsCollapsed(!isSuggestionsCollapsed)}
+            onGameClick={handleSuggestionClick}
+          />
+
           <section className="sidebar__section">
             <div className="sidebar__section-header">
               <button
@@ -659,6 +740,18 @@ export function Sidebar() {
               <div
                 style={{ display: "flex", gap: "8px", alignItems: "center" }}
               >
+                <select
+                  className="sidebar__sort-select"
+                  value={sortBy}
+                  onChange={handleSortChange}
+                  aria-label={t("sort_by")}
+                >
+                  {SORT_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {t(option.labelKey)}
+                    </option>
+                  ))}
+                </select>
                 <button
                   type="button"
                   className="sidebar__add-button"
@@ -702,6 +795,7 @@ export function Sidebar() {
                         game={game}
                         handleSidebarGameClick={handleSidebarGameClick}
                         getGameTitle={getGameTitle}
+                        getOwnership={getOwnership}
                       />
                     ))}
                 </ul>

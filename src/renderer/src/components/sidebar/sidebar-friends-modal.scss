@@ -1,0 +1,91 @@
+@use "../../scss/globals.scss";
+
+.sidebar-friends-modal {
+  display: flex;
+  flex-direction: column;
+  gap: calc(globals.$spacing-unit * 2);
+  min-width: 320px;
+
+  &__empty {
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+    padding: globals.$spacing-unit 0;
+    font-size: 13px;
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: globals.$spacing-unit;
+  }
+
+  &__section-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+
+  &__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__friend {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 8px 0;
+    cursor: pointer;
+    color: inherit;
+    border: none;
+    background: none;
+    border-radius: 4px;
+    transition: background-color 0.1s ease;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  &__friend-info {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex: 1;
+  }
+
+  &__friend-name {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.9);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__friend-status {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+
+    &--online {
+      color: globals.$success-color;
+    }
+  }
+
+  &__status-orb {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.15);
+    flex-shrink: 0;
+
+    &--online {
+      background-color: globals.$success-color;
+    }
+  }
+}

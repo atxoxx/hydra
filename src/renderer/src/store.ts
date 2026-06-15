@@ -11,6 +11,7 @@ import {
   catalogueSearchSlice,
   collectionsSlice,
   watchlistSlice,
+  friendGameOwnershipSlice,
 } from "@renderer/features";
 
 export const store = configureStore({
@@ -26,6 +27,7 @@ export const store = configureStore({
     catalogueSearch: catalogueSearchSlice.reducer,
     collections: collectionsSlice.reducer,
     watchlist: watchlistSlice.reducer,
+    friendGameOwnership: friendGameOwnershipSlice.reducer,
   },
 });
 

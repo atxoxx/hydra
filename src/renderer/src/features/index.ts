@@ -9,3 +9,4 @@ export * from "./subscription-slice";
 export * from "./catalogue-search";
 export * from "./collections-slice";
 export * from "./watchlist-slice";
+export * from "./friend-game-ownership-slice";

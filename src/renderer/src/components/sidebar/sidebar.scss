@@ -72,6 +72,12 @@
       }
     }
 
+    &--suggestion {
+      &:hover {
+        background-color: rgba(255, 215, 0, 0.08);
+      }
+    }
+
     &--decky {
       background: linear-gradient(
         135deg,
@@ -93,12 +99,21 @@
   &__menu-item-button {
     color: inherit;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: globals.$spacing-unit;
     cursor: pointer;
     overflow: hidden;
     width: 100%;
     padding: 9px globals.$spacing-unit;
+    text-align: left;
+  }
+
+  &__menu-item-button-content {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex: 1;
+    min-width: 0;
   }
 
   &__menu-item-button-label {
@@ -142,13 +157,47 @@
     min-height: 20px;
     border-radius: 4px;
     background-size: cover;
+    margin-top: 1px;
+    flex-shrink: 0;
   }
 
-  &__game-playtime {
+  &__game-badges-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 3px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  &__game-badge-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
     font-size: 10px;
     color: rgba(255, 255, 255, 0.4);
     white-space: nowrap;
     flex-shrink: 0;
+
+    &--empty {
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    &--completed {
+      color: globals.$brand-teal;
+    }
+
+    &--friends-online {
+      color: rgba(22, 177, 149, 0.8);
+    }
+
+    &--clickable {
+      cursor: pointer;
+
+      &:hover {
+        color: rgba(255, 255, 255, 0.7);
+      }
+    }
   }
 
   &__game-badge {
@@ -217,6 +266,12 @@
     font-weight: bold;
   }
 
+  &__section-title-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
   &__menu-empty {
     display: flex;
     justify-content: flex-start;
@@ -278,6 +333,31 @@
     border-radius: 50%;
   }
 
+  &__sort-select {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    color: globals.$muted-color;
+    font-size: 10px;
+    padding: 2px 4px;
+    cursor: pointer;
+    max-width: 100px;
+    outline: none;
+
+    option {
+      background-color: globals.$dark-background-color;
+      color: globals.$body-color;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    &:focus {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+  }
+
   &__play-button {
     background: none;
     border: none;
@@ -315,6 +395,70 @@
 
     svg {
       display: block;
+    }
+  }
+
+  &__friends-tooltip {
+    z-index: 99999 !important;
+    padding: 8px 0 !important;
+    border-radius: 8px !important;
+    background-color: #1c1c1c !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  &__friends-tooltip-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 180px;
+    max-width: 260px;
+  }
+
+  &__friends-tooltip-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+  }
+
+  &__friends-tooltip-name {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+  }
+
+  &__friends-tooltip-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+
+    &--online {
+      background-color: globals.$success-color;
+    }
+  }
+
+  &__friends-tooltip-overflow {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 4px 12px 0;
+  }
+
+  &__suggestion-reason {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.4);
+    white-space: nowrap;
+
+    &--new {
+      color: globals.$brand-teal;
+    }
+
+    &--continue {
+      color: rgba(255, 215, 0, 0.7);
     }
   }
 

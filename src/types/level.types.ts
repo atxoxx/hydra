@@ -218,6 +218,12 @@ export interface UserPreferences {
   >;
   /** Import discovery preference: "wizard" to show modal, "auto" to auto-import */
   importDiscoveryPreference?: "wizard" | "auto";
+  /** Show playtime badge on sidebar game items */
+  sidebarShowPlaytimeBadge?: boolean;
+  /** Show achievements badge on sidebar game items */
+  sidebarShowAchievementsBadge?: boolean;
+  /** Show friends badge on sidebar game items */
+  sidebarShowFriendsBadge?: boolean;
 }
 
 export interface ScreenState {
