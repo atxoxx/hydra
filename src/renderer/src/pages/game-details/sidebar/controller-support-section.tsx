@@ -16,7 +16,8 @@ import "./sidebar.scss";
 
 export function ControllerSupportSection() {
   const { t } = useTranslation("game_details");
-  const { effectiveShop, shopDetails, isLoading } = useContext(gameDetailsContext);
+  const { effectiveShop, shopDetails, isLoading } =
+    useContext(gameDetailsContext);
 
   const controllerSupport = useMemo(() => {
     if (!shopDetails || effectiveShop !== "steam") return null;

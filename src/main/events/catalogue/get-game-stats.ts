@@ -15,7 +15,11 @@ const getGameStats = async (
     const gameKey = levelKeys.game(shop, objectId);
     const game = await gamesSublevel.get(gameKey).catch(() => null);
     if (game?.linkedShop && game?.linkedObjectId) {
-      return getGameStats(_event, game.linkedObjectId, game.linkedShop as GameShop);
+      return getGameStats(
+        _event,
+        game.linkedObjectId,
+        game.linkedShop as GameShop
+      );
     }
     return null;
   }

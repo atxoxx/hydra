@@ -184,7 +184,11 @@ export function GameDetailsContextProvider({
     abortControllerRef.current = abortController;
 
     const shopDetailsPromise = window.electron
-      .getGameShopDetails(effectiveObjectId, effectiveShop, getSteamLanguage(i18n.language))
+      .getGameShopDetails(
+        effectiveObjectId,
+        effectiveShop,
+        getSteamLanguage(i18n.language)
+      )
       .then((result) => {
         if (abortController.signal.aborted) return;
 
@@ -205,12 +209,17 @@ export function GameDetailsContextProvider({
       });
 
     // Fetch stats using effective shop (will redirect linked custom games via IPC)
-    window.electron.getGameStats(effectiveObjectId, effectiveShop).then((result) => {
-      if (abortController.signal.aborted) return;
-      setStats(result);
-    });
+    window.electron
+      .getGameStats(effectiveObjectId, effectiveShop)
+      .then((result) => {
+        if (abortController.signal.aborted) return;
+        setStats(result);
+      });
 
-    const assetsPromise = window.electron.getGameAssets(effectiveObjectId, effectiveShop);
+    const assetsPromise = window.electron.getGameAssets(
+      effectiveObjectId,
+      effectiveShop
+    );
 
     Promise.all([shopDetailsPromise, assetsPromise])
       .then(([_, assets]) => {
@@ -378,7 +387,7 @@ export function GameDetailsContextProvider({
     };
   }, [effectiveObjectId, effectiveShop, userDetails]);
 
-  // Don't fetch download sources for custom games (even with linked source — 
+  // Don't fetch download sources for custom games (even with linked source —
   // the linked game may have different download options)
   useEffect(() => {
     if (shop === "custom") return;

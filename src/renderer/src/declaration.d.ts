@@ -239,17 +239,19 @@ declare global {
       linkedShop?: GameShop | null,
       linkedObjectId?: string | null
     ) => Promise<Game>;
-    bulkAddCustomGamesToLibrary: (entries: {
-      title: string;
-      executablePath: string;
-      iconUrl?: string;
-      logoImageUrl?: string;
-      libraryHeroImageUrl?: string;
-      libraryImageUrl?: string;
-      coverImageUrl?: string;
-      linkedShop?: GameShop | null;
-      linkedObjectId?: string | null;
-    }[]) => Promise<{
+    bulkAddCustomGamesToLibrary: (
+      entries: {
+        title: string;
+        executablePath: string;
+        iconUrl?: string;
+        logoImageUrl?: string;
+        libraryHeroImageUrl?: string;
+        libraryImageUrl?: string;
+        coverImageUrl?: string;
+        linkedShop?: GameShop | null;
+        linkedObjectId?: string | null;
+      }[]
+    ) => Promise<{
       success: boolean;
       games: Game[];
       errors: { title: string; executablePath: string; error: string }[];

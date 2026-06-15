@@ -46,7 +46,9 @@
     text-align: left;
     color: inherit;
     font: inherit;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease;
 
     &:hover {
       background: rgba(255, 255, 255, 0.04);

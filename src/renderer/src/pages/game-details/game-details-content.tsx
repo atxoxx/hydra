@@ -445,7 +445,10 @@ export function GameDetailsContent() {
             <WebsiteLinksPanel />
 
             {effectiveShop !== "custom" && shop && objectId && (
-              <GameActivityPanel shop={effectiveShop} objectId={effectiveObjectId} />
+              <GameActivityPanel
+                shop={effectiveShop}
+                objectId={effectiveObjectId}
+              />
             )}
 
             {effectiveShop !== "custom" && shop && objectId && (

@@ -23,7 +23,10 @@ const scanFolderForExes = async (
 
         if (entry.isDirectory()) {
           await scanDir(fullPath);
-        } else if (entry.isFile() && entry.name.toLowerCase().endsWith(".exe")) {
+        } else if (
+          entry.isFile() &&
+          entry.name.toLowerCase().endsWith(".exe")
+        ) {
           results.push({
             filePath: fullPath,
             fileName: entry.name,

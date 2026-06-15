@@ -185,8 +185,7 @@ export function SidebarAddingCustomGameModal({
     if (filePaths && filePaths.length > 0) {
       const selectedPath = filePaths[0];
       const fileName = selectedPath.split(/[\\/]/).pop() || "";
-      const folderName =
-        selectedPath.split(/[\\/]/).slice(-2, -1)[0] || "";
+      const folderName = selectedPath.split(/[\\/]/).slice(-2, -1)[0] || "";
 
       const exe: FoundExe = {
         filePath: selectedPath,
@@ -346,10 +345,7 @@ export function SidebarAddingCustomGameModal({
     []
   );
 
-  const handleGameNameChange = (
-    index: number,
-    value: string
-  ) => {
+  const handleGameNameChange = (index: number, value: string) => {
     setGameEntries((prev) => {
       const next = [...prev];
       if (next[index]) {
@@ -367,7 +363,8 @@ export function SidebarAddingCustomGameModal({
     const prevTimeout = nameTimeoutRefs.current.get(index);
     if (prevTimeout) clearTimeout(prevTimeout);
 
-    const timeout = setTimeout(() => {                  searchNameSuggestions(index, value);
+    const timeout = setTimeout(() => {
+      searchNameSuggestions(index, value);
     }, 300);
     nameTimeoutRefs.current.set(index, timeout);
   };

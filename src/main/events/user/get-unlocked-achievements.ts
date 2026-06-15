@@ -1,7 +1,12 @@
 import type { GameShop, UserAchievement, UserPreferences } from "@types";
 import { registerEvent } from "../register-event";
 import { getGameAchievementData } from "@main/services/achievements/get-game-achievement-data";
-import { db, gameAchievementsSublevel, gamesSublevel, levelKeys } from "@main/level";
+import {
+  db,
+  gameAchievementsSublevel,
+  gamesSublevel,
+  levelKeys,
+} from "@main/level";
 import { AchievementWatcherManager } from "@main/services/achievements/achievement-watcher-manager";
 
 export const getUnlockedAchievements = async (
@@ -89,7 +94,11 @@ const getUnlockedAchievementsEvent = async (
         game.linkedShop as GameShop,
         game.linkedObjectId
       );
-      return getUnlockedAchievements(game.linkedObjectId, game.linkedShop as GameShop, false);
+      return getUnlockedAchievements(
+        game.linkedObjectId,
+        game.linkedShop as GameShop,
+        false
+      );
     }
   }
 

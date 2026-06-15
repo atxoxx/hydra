@@ -177,10 +177,7 @@ export function MetadataSearchModal({
         <div className="metadata-search-modal__results">
           {isSearching && (
             <div className="metadata-search-modal__status">
-              <SyncIcon
-                size={24}
-                className="metadata-search-modal__spinner"
-              />
+              <SyncIcon size={24} className="metadata-search-modal__spinner" />
               <span>{t("edit_game_modal_searching")}</span>
             </div>
           )}

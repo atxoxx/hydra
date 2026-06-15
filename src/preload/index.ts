@@ -670,18 +670,19 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("importSteamFamilyGames", games),
   scanFolderForExes: (folderPath: string) =>
     ipcRenderer.invoke("scanFolderForExes", folderPath) as Promise<FoundExe[]>,
-  bulkAddCustomGamesToLibrary: (entries: {
-    title: string;
-    executablePath: string;
-    iconUrl?: string;
-    logoImageUrl?: string;
-    libraryHeroImageUrl?: string;
-    libraryImageUrl?: string;
-    coverImageUrl?: string;
-    linkedShop?: GameShop | null;
-    linkedObjectId?: string | null;
-  }[]) =>
-    ipcRenderer.invoke("bulkAddCustomGamesToLibrary", entries),
+  bulkAddCustomGamesToLibrary: (
+    entries: {
+      title: string;
+      executablePath: string;
+      iconUrl?: string;
+      logoImageUrl?: string;
+      libraryHeroImageUrl?: string;
+      libraryImageUrl?: string;
+      coverImageUrl?: string;
+      linkedShop?: GameShop | null;
+      linkedObjectId?: string | null;
+    }[]
+  ) => ipcRenderer.invoke("bulkAddCustomGamesToLibrary", entries),
   scanPlatforms: () => ipcRenderer.invoke("scanPlatforms"),
   importPlatformGames: (games: PlatformGame[]) =>
     ipcRenderer.invoke("importPlatformGames", games),
