@@ -5,6 +5,7 @@ import {
   HomeIcon,
   BookIcon,
   ClockIcon,
+  ListUnorderedIcon,
 } from "@primer/octicons-react";
 
 export const routes = [
@@ -27,6 +28,11 @@ export const routes = [
     path: "/downloads",
     nameKey: "downloads",
     render: () => <DownloadIcon />,
+  },
+  {
+    path: "/watchlist",
+    nameKey: "watchlist",
+    render: () => <ListUnorderedIcon />,
   },
   {
     path: "/settings",

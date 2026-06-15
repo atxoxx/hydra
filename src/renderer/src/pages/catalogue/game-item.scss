@@ -72,6 +72,36 @@
     opacity: 0.5;
   }
 
+  &__watchlist-wrapper {
+    position: absolute;
+    top: 44px;
+    right: 8px;
+    opacity: 0.6;
+    transition: opacity 0.2s ease-in-out;
+    cursor: pointer;
+    z-index: 1;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    padding: 2px;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    &:focus-visible {
+      opacity: 1;
+      outline: 2px solid var(--color-primary);
+      outline-offset: 1px;
+    }
+
+    &--watchlisted {
+      color: var(--color-primary, #58a6ff);
+      opacity: 1;
+    }
+  }
+
   &__cover {
     width: 200px;
     height: 100%;

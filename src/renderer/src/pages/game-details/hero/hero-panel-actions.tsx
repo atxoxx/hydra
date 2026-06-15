@@ -3,18 +3,20 @@ import {
   GearIcon,
   HeartFillIcon,
   HeartIcon,
+  ListUnorderedIcon,
   PinIcon,
   PinSlashIcon,
   PlayIcon,
   PlusCircleIcon,
 } from "@primer/octicons-react";
-import { Button, ConfirmationModal } from "@renderer/components";
+import { Button, ConfirmationModal, WatchlistModal } from "@renderer/components";
 import { XCircle } from "lucide-react";
 import {
   useDownload,
   useLibrary,
   useToast,
   useUserDetails,
+  useWatchlist,
 } from "@renderer/hooks";
 import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -61,10 +63,20 @@ export function HeroPanelActions() {
 
   const navigate = useNavigate();
 
+  const { isGameWatchlisted, loadWatchlist, hasLoaded: watchlistHasLoaded } =
+    useWatchlist();
+
+  const [showWatchlistModal, setShowWatchlistModal] = useState(false);
   const [showDiscSelectionModal, setShowDiscSelectionModal] = useState(false);
   const [pendingClassicsLaunch, setPendingClassicsLaunch] = useState<{
     discPath: string | undefined;
   } | null>(null);
+
+  useEffect(() => {
+    if (!watchlistHasLoaded) {
+      loadWatchlist();
+    }
+  }, [watchlistHasLoaded, loadWatchlist]);
 
   const { t } = useTranslation("game_details");
 
@@ -311,6 +323,36 @@ export function HeroPanelActions() {
     </Button>
   );
 
+  const watchlisted = isGameWatchlisted(shop, objectId ?? "");
+
+  const watchlistGame = {
+    id: `${shop}:${objectId}`,
+    objectId: objectId ?? "",
+    title: gameTitle,
+    shop,
+    genres: (shopDetails?.genres ?? []).map((g) =>
+      typeof g === "string" ? g : g.name
+    ),
+    releaseYear: shopDetails?.release_date?.date
+      ? new Date(shopDetails.release_date.date).getFullYear()
+      : null,
+    libraryImageUrl: shopDetails?.assets?.libraryImageUrl ?? game?.libraryImageUrl ?? null,
+    downloadSources: shopDetails?.assets?.downloadSources ?? [],
+  };
+
+  const watchlistButton = (
+    <Button
+      theme={watchlisted ? "outline" : "outline"}
+      onClick={() => setShowWatchlistModal(true)}
+      className="hero-panel-actions__action"
+    >
+      <ListUnorderedIcon />
+      {watchlisted
+        ? t("in_watchlist", { defaultValue: "In watchlist" })
+        : t("add_to_watchlist", { defaultValue: "Add to watchlist" })}
+    </Button>
+  );
+
   const showDownloadOptionsButton = (
     <Button
       onClick={() => setShowRepacksModal(true)}
@@ -387,7 +429,14 @@ export function HeroPanelActions() {
     return (
       <>
         {addGameToLibraryButton}
+        {watchlistButton}
         {showDownloadOptionsButton}
+
+        <WatchlistModal
+          visible={showWatchlistModal}
+          game={watchlistGame as any}
+          onClose={() => setShowWatchlistModal(false)}
+        />
       </>
     );
   }
@@ -430,6 +479,16 @@ export function HeroPanelActions() {
           {t("options")}
         </Button>
 
+        <div className="hero-panel-actions__separator" />
+
+        {watchlistButton}
+
+        <WatchlistModal
+          visible={showWatchlistModal}
+          game={watchlistGame as any}
+          onClose={() => setShowWatchlistModal(false)}
+        />
+
         {game.shop === "launchbox" && (
           <DiscSelectionModal
             visible={showDiscSelectionModal}
@@ -460,5 +519,16 @@ export function HeroPanelActions() {
     );
   }
 
-  return addGameToLibraryButton;
+  return (
+    <>
+      {addGameToLibraryButton}
+      {watchlistButton}
+
+      <WatchlistModal
+        visible={showWatchlistModal}
+        game={watchlistGame as any}
+        onClose={() => setShowWatchlistModal(false)}
+      />
+    </>
+  );
 }

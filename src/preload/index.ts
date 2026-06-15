@@ -35,6 +35,7 @@ import type {
   SteamFamilyGame,
   PlatformGame,
   FoundExe,
+  WatchlistEntry,
 } from "@types";
 import type { AuthPage } from "@shared";
 import type { AxiosProgressEvent } from "axios";
@@ -552,6 +553,30 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("addGameToFavorites", shop, objectId),
   removeGameFromFavorites: (shop: GameShop, objectId: string) =>
     ipcRenderer.invoke("removeGameFromFavorites", shop, objectId),
+
+  /* Watchlist */
+  getWatchlist: () =>
+    ipcRenderer.invoke("getWatchlist") as Promise<WatchlistEntry[]>,
+  addToWatchlist: (data: {
+    shop: GameShop;
+    objectId: string;
+    title: string;
+    priority: WatchlistEntry["priority"];
+    notes: string;
+    initialDownloadSources?: string[];
+    libraryImageUrl?: string | null;
+  }) => ipcRenderer.invoke("addToWatchlist", data),
+  removeFromWatchlist: (shop: GameShop, objectId: string) =>
+    ipcRenderer.invoke("removeFromWatchlist", shop, objectId),
+  isGameWatchlisted: (shop: GameShop, objectId: string) =>
+    ipcRenderer.invoke("isGameWatchlisted", shop, objectId) as Promise<boolean>,
+  getWatchlistGamesSources: (
+    entries: Array<{ shop: GameShop; objectId: string; title: string }>
+  ) =>
+    ipcRenderer.invoke(
+      "getWatchlistGamesSources",
+      entries
+    ) as Promise<Record<string, string[]>>,
   assignGameToCollection: (
     shop: GameShop,
     objectId: string,

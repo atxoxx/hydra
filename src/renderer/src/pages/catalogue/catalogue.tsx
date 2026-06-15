@@ -4,7 +4,7 @@ import type {
   DownloadSource,
 } from "@types";
 
-import { useAppDispatch, useAppSelector, useFormat } from "@renderer/hooks";
+import { useAppDispatch, useAppSelector, useFormat, useWatchlist } from "@renderer/hooks";
 import {
   lazy,
   Suspense,
@@ -66,6 +66,7 @@ const filterCategoryColors = {
   deckCompatibility: "#F50057",
   releaseYear: "hsl(38deg 50% 40%)",
   platforms: "hsl(170deg 50% 36%)",
+  watchlist: "hsl(280deg 60% 50%)",
 };
 
 const PAGE_SIZE = 30;
@@ -150,6 +151,17 @@ export default function Catalogue() {
   const [itemsCount, setItemsCount] = useState(0);
 
   const [showClassicsOnboarding, setShowClassicsOnboarding] = useState(false);
+
+  // Watchlist filter state
+  const [watchlistFilterEnabled, setWatchlistFilterEnabled] = useState(false);
+  const { isGameWatchlisted, loadWatchlist, hasLoaded: watchlistHasLoaded } =
+    useWatchlist();
+
+  useEffect(() => {
+    if (!watchlistHasLoaded) {
+      loadWatchlist();
+    }
+  }, [watchlistHasLoaded, loadWatchlist]);
   const classicsOnboardingTriggeredRef = useRef(false);
 
   useEffect(() => {
@@ -230,6 +242,14 @@ export default function Catalogue() {
   useEffect(() => {
     hasResultsRef.current = results.length > 0;
   }, [results.length]);
+
+  // Client-side filter for watchlisted games
+  const filteredResults = useMemo(() => {
+    if (!watchlistFilterEnabled) return results;
+    return results.filter((game) =>
+      isGameWatchlisted(game.shop, game.objectId)
+    );
+  }, [results, watchlistFilterEnabled, isGameWatchlisted]);
 
   const isModeTransitioning = resultsMode !== mode;
   const showSkeleton = isLoading || isModeTransitioning;
@@ -398,6 +418,18 @@ export default function Catalogue() {
         key: "downloadSourceFingerprints",
         value: fingerprint,
       })),
+
+      ...(watchlistFilterEnabled
+        ? [
+            {
+              label: t("watchlist", { defaultValue: "Watchlist" }),
+              filterType: t("watchlist", { defaultValue: "Watchlist" }),
+              orbColor: filterCategoryColors.watchlist,
+              key: "watchlist",
+              value: "on",
+            },
+          ]
+        : []),
     ];
   }, [
     classicsPlatforms,
@@ -407,6 +439,7 @@ export default function Catalogue() {
     filters.downloadSourceFingerprints,
     downloadSources,
     launchboxFilters.platforms,
+    watchlistFilterEnabled,
     t,
   ]);
 
@@ -503,6 +536,18 @@ export default function Catalogue() {
             },
           ]
         : []),
+
+      ...(watchlistFilterEnabled
+        ? [
+            {
+              label: t("watchlist", { defaultValue: "Watchlist" }),
+              filterType: t("watchlist", { defaultValue: "Watchlist" }),
+              orbColor: filterCategoryColors.watchlist,
+              key: "watchlist",
+              value: "on",
+            },
+          ]
+        : []),
     ];
   }, [
     filters,
@@ -511,6 +556,7 @@ export default function Catalogue() {
     steamGenresMapping,
     language,
     shouldShowProtonFeatures,
+    watchlistFilterEnabled,
     t,
   ]);
 
@@ -637,7 +683,11 @@ export default function Catalogue() {
           <div className="catalogue__header-summary">
             <span className="catalogue__result-count">
               {t("result_count", {
-                resultCount: formatNumber(itemsCount),
+                resultCount: formatNumber(
+                  watchlistFilterEnabled
+                    ? filteredResults.length
+                    : itemsCount
+                ),
               })}
             </span>
             {selectedFiltersCount === 0 && (
@@ -685,6 +735,11 @@ export default function Catalogue() {
                       filterType={filter.filterType}
                       orbColor={filter.orbColor}
                       onRemove={() => {
+                        if (filter.key === "watchlist") {
+                          setWatchlistFilterEnabled(false);
+                          return;
+                        }
+
                         if (filter.value === "range") {
                           dispatch(setFilters({ releaseYear: undefined }));
                           return;
@@ -718,7 +773,10 @@ export default function Catalogue() {
               type="button"
               theme="outline"
               className="catalogue__clear-all-button"
-              onClick={() => dispatch(setFilters(clearAllCategoryFilters))}
+              onClick={() => {
+                dispatch(setFilters(clearAllCategoryFilters));
+                setWatchlistFilterEnabled(false);
+              }}
             >
               {t("clear_filters", {
                 filterCount: formatNumber(selectedFiltersCount),
@@ -746,11 +804,11 @@ export default function Catalogue() {
               ))}
             </SkeletonTheme>
           ) : mode === "classics" ? (
-            results.map((game) => (
+            filteredResults.map((game) => (
               <GameItemClassics key={game.id} game={game} />
             ))
           ) : (
-            results.map((game) => <GameItem key={game.id} game={game} />)
+            filteredResults.map((game) => <GameItem key={game.id} game={game} />)
           )}
 
           {isFetching && !showSkeleton && (
@@ -760,7 +818,11 @@ export default function Catalogue() {
           <div className="catalogue__pagination-container">
             <Pagination
               page={page}
-              totalPages={Math.ceil(itemsCount / PAGE_SIZE)}
+              totalPages={Math.ceil(
+                (watchlistFilterEnabled
+                  ? filteredResults.length
+                  : itemsCount) / PAGE_SIZE
+              )}
               onPageChange={(page) => {
                 dispatch(setPage(page));
                 if (cataloguePageRef.current) {
@@ -774,6 +836,28 @@ export default function Catalogue() {
         <div className="catalogue__filters-container">
           <div className="catalogue__filters-sections">
             <CatalogueModeToggle />
+
+            <div className="catalogue__watchlist-filter">
+              <button
+                type="button"
+                className={cn("catalogue__watchlist-toggle", {
+                  "catalogue__watchlist-toggle--active": watchlistFilterEnabled,
+                })}
+                onClick={() => {
+                  dispatch(setPage(1));
+                  setWatchlistFilterEnabled(!watchlistFilterEnabled);
+                }}
+                aria-pressed={watchlistFilterEnabled}
+              >
+                <span
+                  className="catalogue__watchlist-toggle-orb"
+                  style={{
+                    backgroundColor: filterCategoryColors.watchlist,
+                  }}
+                />
+                <span>{t("watchlist", { defaultValue: "Watchlist" })}</span>
+              </button>
+            </div>
 
             {mode === "modern" && shouldShowProtonFeatures && (
               <Suspense fallback={null}>

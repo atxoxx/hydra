@@ -53,6 +53,41 @@
     opacity: 0.5;
   }
 
+  &__watchlist-wrapper {
+    position: absolute;
+    top: 44px;
+    right: 8px;
+    z-index: 3;
+    opacity: 0.6;
+    transition: opacity 0.2s ease-in-out;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    color: #fafafa;
+    padding: 4px;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    &:focus-visible {
+      opacity: 1;
+      outline: 2px solid var(--color-primary);
+      outline-offset: 1px;
+    }
+
+    &--watchlisted {
+      color: var(--color-primary, #58a6ff);
+      border-color: var(--color-primary, #58a6ff);
+      opacity: 1;
+    }
+  }
+
   &__link {
     display: flex;
     flex-direction: column;

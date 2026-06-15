@@ -1,12 +1,12 @@
-import { QuestionIcon, PlusIcon, CheckIcon } from "@primer/octicons-react";
+import { QuestionIcon, PlusIcon, CheckIcon, ListUnorderedIcon } from "@primer/octicons-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import cn from "classnames";
 
-import { Badge } from "@renderer/components/badge/badge";
+import { Badge, WatchlistModal } from "@renderer/components";
 import { Link } from "@renderer/components/link/link";
 import { buildGameDetailsPath } from "@renderer/helpers";
-import { useAppSelector, useLibrary } from "@renderer/hooks";
+import { useAppSelector, useLibrary, useWatchlist } from "@renderer/hooks";
 
 import type { CatalogueSearchResult } from "@types";
 
@@ -93,8 +93,19 @@ export function GameItemClassics({ game }: GameItemClassicsProps) {
   const { steamGenres } = useAppSelector((state) => state.catalogueSearch);
 
   const { library, updateLibrary } = useLibrary();
+  const { isGameWatchlisted, loadWatchlist, hasLoaded } = useWatchlist();
   const [isAddingToLibrary, setIsAddingToLibrary] = useState(false);
   const [added, setAdded] = useState(false);
+  const [showWatchlistModal, setShowWatchlistModal] = useState(false);
+
+  const isWatchlisted = isGameWatchlisted(game.shop, game.objectId);
+
+  // Load watchlist on first render
+  useEffect(() => {
+    if (!hasLoaded) {
+      loadWatchlist();
+    }
+  }, [hasLoaded, loadWatchlist]);
 
   useEffect(() => {
     const exists = library.some(
@@ -208,6 +219,42 @@ export function GameItemClassics({ game }: GameItemClassicsProps) {
       >
         {added ? <CheckIcon size={16} /> : <PlusIcon size={16} />}
       </button>
+
+      <button
+        type="button"
+        className={cn("game-item-classics__watchlist-wrapper", {
+          "game-item-classics__watchlist-wrapper--watchlisted": isWatchlisted,
+        })}
+        onClick={() => {
+          if (added) {
+            return;
+          }
+          setShowWatchlistModal(true);
+        }}
+        title={
+          added
+            ? t("already_in_library")
+            : isWatchlisted
+              ? t("edit_watchlist", { ns: "watchlist" })
+              : t("add_to_watchlist", { ns: "watchlist" })
+        }
+        aria-label={
+          added
+            ? t("already_in_library")
+            : isWatchlisted
+              ? t("edit_watchlist", { ns: "watchlist" })
+              : t("add_to_watchlist", { ns: "watchlist" })
+        }
+        disabled={added}
+      >
+        <ListUnorderedIcon size={16} />
+      </button>
+
+      <WatchlistModal
+        visible={showWatchlistModal}
+        game={game}
+        onClose={() => setShowWatchlistModal(false)}
+      />
     </article>
   );
 }

@@ -1,13 +1,18 @@
-import { Badge } from "@renderer/components/badge/badge";
+import { Badge, WatchlistModal } from "@renderer/components";
 import { buildGameDetailsPath } from "@renderer/helpers";
-import { useAppSelector, useLibrary } from "@renderer/hooks";
+import { useAppSelector, useLibrary, useWatchlist } from "@renderer/hooks";
 import { lazy, Suspense, useMemo, useState, useEffect } from "react";
 import { Link } from "@renderer/components/link/link";
 
 import "./game-item.scss";
 import { useTranslation } from "react-i18next";
-import { CatalogueSearchResult } from "@types";
-import { QuestionIcon, PlusIcon, CheckIcon } from "@primer/octicons-react";
+import type { CatalogueSearchResult } from "@types";
+import {
+  QuestionIcon,
+  PlusIcon,
+  CheckIcon,
+  ListUnorderedIcon,
+} from "@primer/octicons-react";
 import cn from "classnames";
 
 const ProtonDBBadge = lazy(async () => {
@@ -29,9 +34,21 @@ export function GameItem({ game }: GameItemProps) {
   const [isAddingToLibrary, setIsAddingToLibrary] = useState(false);
 
   const [added, setAdded] = useState(false);
+  const [showWatchlistModal, setShowWatchlistModal] = useState(false);
 
   const { library, updateLibrary } = useLibrary();
+  const { isGameWatchlisted, loadWatchlist, hasLoaded } =
+    useWatchlist();
   const shouldShowProtonFeatures = window.electron.platform === "linux";
+
+  const isWatchlisted = isGameWatchlisted(game.shop, game.objectId);
+
+  // Load watchlist on first render
+  useEffect(() => {
+    if (!hasLoaded) {
+      loadWatchlist();
+    }
+  }, [hasLoaded, loadWatchlist]);
 
   useEffect(() => {
     const exists = library.some(
@@ -157,6 +174,42 @@ export function GameItem({ game }: GameItemProps) {
       >
         {added ? <CheckIcon size={16} /> : <PlusIcon size={16} />}
       </button>
+
+      <button
+        type="button"
+        className={cn("game-item__watchlist-wrapper", {
+          "game-item__watchlist-wrapper--watchlisted": isWatchlisted,
+        })}
+        onClick={() => {
+          if (added) {
+            return;
+          }
+          setShowWatchlistModal(true);
+        }}
+        title={
+          added
+            ? t("already_in_library")
+            : isWatchlisted
+              ? t("edit_watchlist", { ns: "watchlist" })
+              : t("add_to_watchlist", { ns: "watchlist" })
+        }
+        aria-label={
+          added
+            ? t("already_in_library")
+            : isWatchlisted
+              ? t("edit_watchlist", { ns: "watchlist" })
+              : t("add_to_watchlist", { ns: "watchlist" })
+        }
+        disabled={added}
+      >
+        <ListUnorderedIcon size={16} />
+      </button>
+
+      <WatchlistModal
+        visible={showWatchlistModal}
+        game={game}
+        onClose={() => setShowWatchlistModal(false)}
+      />
     </article>
   );
 }

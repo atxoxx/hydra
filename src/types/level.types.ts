@@ -89,6 +89,23 @@ export interface Game {
   linkedShop?: GameShop | null;
   /** When a custom game is linked to a catalogue entry, the original objectId */
   linkedObjectId?: string | null;
+  /** Whether the game is on the user's watchlist */
+  watched?: boolean;
+}
+
+export type WatchlistPriority = "must-play" | "want" | "later";
+
+export interface WatchlistEntry {
+  shop: GameShop;
+  objectId: string;
+  title: string;
+  addedAt: string; // ISO date string
+  priority: WatchlistPriority;
+  notes: string;
+  /** Download source IDs available when this game was added to the watchlist */
+  initialDownloadSources: string[];
+  /** Game image URL (libraryImageUrl from catalogue search result) */
+  libraryImageUrl: string | null;
 }
 
 export interface Download {

@@ -57,6 +57,7 @@ import type {
   SteamFamilyScanResult,
   PlatformGame,
   AllPlatformsScanResult,
+  WatchlistEntry,
 } from "@types";
 import type { AxiosProgressEvent } from "axios";
 
@@ -305,6 +306,29 @@ declare global {
       shop: GameShop,
       objectId: string
     ) => Promise<void>;
+
+    /* Watchlist */
+    getWatchlist: () => Promise<WatchlistEntry[]>;
+    addToWatchlist: (data: {
+      shop: GameShop;
+      objectId: string;
+      title: string;
+      priority: WatchlistEntry["priority"];
+      notes: string;
+      initialDownloadSources?: string[];
+      libraryImageUrl?: string | null;
+    }) => Promise<void>;
+    removeFromWatchlist: (
+      shop: GameShop,
+      objectId: string
+    ) => Promise<void>;
+    isGameWatchlisted: (
+      shop: GameShop,
+      objectId: string
+    ) => Promise<boolean>;
+    getWatchlistGamesSources: (
+      entries: Array<{ shop: GameShop; objectId: string; title: string }>
+    ) => Promise<Record<string, string[]>>;
     assignGameToCollection: (
       shop: GameShop,
       objectId: string,

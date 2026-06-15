@@ -10,6 +10,7 @@ import {
   subscriptionSlice,
   catalogueSearchSlice,
   collectionsSlice,
+  watchlistSlice,
 } from "@renderer/features";
 
 export const store = configureStore({
@@ -24,6 +25,7 @@ export const store = configureStore({
     subscription: subscriptionSlice.reducer,
     catalogueSearch: catalogueSearchSlice.reducer,
     collections: collectionsSlice.reducer,
+    watchlist: watchlistSlice.reducer,
   },
 });
 
