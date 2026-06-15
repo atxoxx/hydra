@@ -30,6 +30,7 @@
 ## Root Cause Analysis
 
 The `.catch()` handler in `src/renderer/src/context/user-profile/user-profile.context.tsx` (line ~242) is **too broad** — it catches ALL errors and always shows "User not found", even if the real error is:
+
 - Network connectivity issue
 - Auth token expired
 - Server error (500)
@@ -49,6 +50,7 @@ Since the user can't access DevTools, we need to add diagnostic logging first:
 3. **Check what URL is constructed** for the API call
 
 These logs will reveal whether:
+
 - `userId` is undefined/null → the route params aren't being extracted correctly
 - `userId` contains unexpected characters → URL encoding issue
 - The API returns a specific HTTP status → tells us the real problem
@@ -73,7 +75,7 @@ Replace the broad `.catch()` with proper error handling:
   // Check if it's an Axios error with a status code
   if (error instanceof AxiosError) {
     const status = error.response?.status;
-    
+
     if (status === 404) {
       showErrorToast(t("user_not_found"));
     } else if (status === 401 || status === 403) {
@@ -84,7 +86,7 @@ Replace the broad `.catch()` with proper error handling:
   } else {
     showErrorToast(t("profile_load_error"));
   }
-  
+
   // Navigate to store instead of going back (more predictable UX)
   navigate("/store");
 });
@@ -109,10 +111,10 @@ Add new translation keys in the `user_profile` namespace:
 
 ## Files Affected
 
-| File | Change |
-|------|--------|
+| File                                                             | Change                             |
+| ---------------------------------------------------------------- | ---------------------------------- |
 | `src/renderer/src/context/user-profile/user-profile.context.tsx` | Replace catch handler, add imports |
-| `src/locales/en/translation.json` | Add 2 new translation keys |
+| `src/locales/en/translation.json`                                | Add 2 new translation keys         |
 
 ## Validation
 

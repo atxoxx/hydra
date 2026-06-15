@@ -121,11 +121,7 @@ export function UserProfileContextProvider({
   );
 
   const getUserLibraryGames = useCallback(
-    async (
-      sortBy?: string,
-      reset = true,
-      _shops?: string[]
-    ) => {
+    async (sortBy?: string, reset = true, _shops?: string[]) => {
       if (reset) {
         setLibraryPage(0);
         setHasMoreLibraryGames(true);
@@ -169,10 +165,7 @@ export function UserProfileContextProvider({
   );
 
   const loadMoreLibraryGames = useCallback(
-    async (
-      sortBy?: string,
-      _shops?: string[]
-    ): Promise<boolean> => {
+    async (sortBy?: string, _shops?: string[]): Promise<boolean> => {
       if (isLoadingLibraryGames || !hasMoreLibraryGames) {
         return false;
       }
