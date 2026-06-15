@@ -4,7 +4,12 @@ import type {
   DownloadSource,
 } from "@types";
 
-import { useAppDispatch, useAppSelector, useFormat, useWatchlist } from "@renderer/hooks";
+import {
+  useAppDispatch,
+  useAppSelector,
+  useFormat,
+  useWatchlist,
+} from "@renderer/hooks";
 import {
   lazy,
   Suspense,
@@ -154,8 +159,11 @@ export default function Catalogue() {
 
   // Watchlist filter state
   const [watchlistFilterEnabled, setWatchlistFilterEnabled] = useState(false);
-  const { isGameWatchlisted, loadWatchlist, hasLoaded: watchlistHasLoaded } =
-    useWatchlist();
+  const {
+    isGameWatchlisted,
+    loadWatchlist,
+    hasLoaded: watchlistHasLoaded,
+  } = useWatchlist();
 
   useEffect(() => {
     if (!watchlistHasLoaded) {
@@ -684,9 +692,7 @@ export default function Catalogue() {
             <span className="catalogue__result-count">
               {t("result_count", {
                 resultCount: formatNumber(
-                  watchlistFilterEnabled
-                    ? filteredResults.length
-                    : itemsCount
+                  watchlistFilterEnabled ? filteredResults.length : itemsCount
                 ),
               })}
             </span>
@@ -808,7 +814,9 @@ export default function Catalogue() {
               <GameItemClassics key={game.id} game={game} />
             ))
           ) : (
-            filteredResults.map((game) => <GameItem key={game.id} game={game} />)
+            filteredResults.map((game) => (
+              <GameItem key={game.id} game={game} />
+            ))
           )}
 
           {isFetching && !showSkeleton && (
@@ -819,9 +827,8 @@ export default function Catalogue() {
             <Pagination
               page={page}
               totalPages={Math.ceil(
-                (watchlistFilterEnabled
-                  ? filteredResults.length
-                  : itemsCount) / PAGE_SIZE
+                (watchlistFilterEnabled ? filteredResults.length : itemsCount) /
+                  PAGE_SIZE
               )}
               onPageChange={(page) => {
                 dispatch(setPage(page));

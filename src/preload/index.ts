@@ -573,10 +573,9 @@ contextBridge.exposeInMainWorld("electron", {
   getWatchlistGamesSources: (
     entries: Array<{ shop: GameShop; objectId: string; title: string }>
   ) =>
-    ipcRenderer.invoke(
-      "getWatchlistGamesSources",
-      entries
-    ) as Promise<Record<string, string[]>>,
+    ipcRenderer.invoke("getWatchlistGamesSources", entries) as Promise<
+      Record<string, string[]>
+    >,
   assignGameToCollection: (
     shop: GameShop,
     objectId: string,

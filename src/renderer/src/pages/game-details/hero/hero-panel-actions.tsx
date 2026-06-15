@@ -9,7 +9,11 @@ import {
   PlayIcon,
   PlusCircleIcon,
 } from "@primer/octicons-react";
-import { Button, ConfirmationModal, WatchlistModal } from "@renderer/components";
+import {
+  Button,
+  ConfirmationModal,
+  WatchlistModal,
+} from "@renderer/components";
 import { XCircle } from "lucide-react";
 import {
   useDownload,
@@ -63,8 +67,11 @@ export function HeroPanelActions() {
 
   const navigate = useNavigate();
 
-  const { isGameWatchlisted, loadWatchlist, hasLoaded: watchlistHasLoaded } =
-    useWatchlist();
+  const {
+    isGameWatchlisted,
+    loadWatchlist,
+    hasLoaded: watchlistHasLoaded,
+  } = useWatchlist();
 
   const [showWatchlistModal, setShowWatchlistModal] = useState(false);
   const [showDiscSelectionModal, setShowDiscSelectionModal] = useState(false);
@@ -336,7 +343,8 @@ export function HeroPanelActions() {
     releaseYear: shopDetails?.release_date?.date
       ? new Date(shopDetails.release_date.date).getFullYear()
       : null,
-    libraryImageUrl: shopDetails?.assets?.libraryImageUrl ?? game?.libraryImageUrl ?? null,
+    libraryImageUrl:
+      shopDetails?.assets?.libraryImageUrl ?? game?.libraryImageUrl ?? null,
     downloadSources: shopDetails?.assets?.downloadSources ?? [],
   };
 

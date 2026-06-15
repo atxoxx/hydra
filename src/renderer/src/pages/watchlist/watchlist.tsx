@@ -20,7 +20,12 @@ import { useLibrary, useToast, useWatchlist } from "@renderer/hooks";
 
 import "./watchlist.scss";
 
-type WatchlistSort = "date-desc" | "date-asc" | "priority" | "title-asc" | "title-desc";
+type WatchlistSort =
+  | "date-desc"
+  | "date-asc"
+  | "priority"
+  | "title-asc"
+  | "title-desc";
 
 const SORT_OPTIONS: { key: string; value: WatchlistSort; label: string }[] = [
   { key: "date-desc", value: "date-desc", label: "Date added (newest)" },
@@ -40,7 +45,10 @@ const PRIORITY_CONFIG: Record<
   WatchlistPriority,
   { label: string; className: string }
 > = {
-  "must-play": { label: "Must-play", className: "watchlist-page__priority-badge--must-play" },
+  "must-play": {
+    label: "Must-play",
+    className: "watchlist-page__priority-badge--must-play",
+  },
   want: { label: "Want", className: "watchlist-page__priority-badge--want" },
   later: { label: "Later", className: "watchlist-page__priority-badge--later" },
 };
@@ -48,13 +56,8 @@ const PRIORITY_CONFIG: Record<
 export default function WatchlistPage() {
   const { t } = useTranslation("watchlist");
   const { showSuccessToast, showErrorToast, showWarningToast } = useToast();
-  const {
-    entries,
-    isLoading,
-    hasLoaded,
-    loadWatchlist,
-    removeFromWatchlist,
-  } = useWatchlist();
+  const { entries, isLoading, hasLoaded, loadWatchlist, removeFromWatchlist } =
+    useWatchlist();
   const { library, updateLibrary } = useLibrary();
 
   const [sort, setSort] = useState<WatchlistSort>("date-desc");
@@ -63,9 +66,9 @@ export default function WatchlistPage() {
   const [editingGame, setEditingGame] = useState<WatchlistEntry | null>(null);
 
   // Track which games have new download sources since they were added
-  const [gamesWithNewSources, setGamesWithNewSources] = useState<
-    Set<string>
-  >(new Set());
+  const [gamesWithNewSources, setGamesWithNewSources] = useState<Set<string>>(
+    new Set()
+  );
   const sourcesCheckRef = useRef(false);
 
   // Load watchlist on mount
@@ -100,9 +103,7 @@ export default function WatchlistPage() {
           // Check if there are any sources available now that weren't initially
           const hasNewSources =
             currentSources.length > 0 &&
-            currentSources.some(
-              (source) => !initialSources.includes(source)
-            );
+            currentSources.some((source) => !initialSources.includes(source));
 
           if (hasNewSources) {
             newSources.add(key);
@@ -130,12 +131,14 @@ export default function WatchlistPage() {
     switch (sort) {
       case "date-desc":
         sorted.sort(
-          (a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()
+          (a, b) =>
+            new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()
         );
         break;
       case "date-asc":
         sorted.sort(
-          (a, b) => new Date(a.addedAt).getTime() - new Date(b.addedAt).getTime()
+          (a, b) =>
+            new Date(a.addedAt).getTime() - new Date(b.addedAt).getTime()
         );
         break;
       case "priority":
@@ -161,10 +164,17 @@ export default function WatchlistPage() {
       try {
         await removeFromWatchlist(entry.shop, entry.objectId);
         showSuccessToast(
-          t("removed_from_watchlist", { title: entry.title, defaultValue: `Removed ${entry.title} from your watchlist` })
+          t("removed_from_watchlist", {
+            title: entry.title,
+            defaultValue: `Removed ${entry.title} from your watchlist`,
+          })
         );
       } catch {
-        showErrorToast(t("failed_to_remove", { defaultValue: "Failed to remove from watchlist" }));
+        showErrorToast(
+          t("failed_to_remove", {
+            defaultValue: "Failed to remove from watchlist",
+          })
+        );
       } finally {
         setRemovingId(null);
       }
@@ -175,24 +185,47 @@ export default function WatchlistPage() {
   const handleAddToLibrary = useCallback(
     async (entry: WatchlistEntry) => {
       if (libraryMap.has(`${entry.shop}:${entry.objectId}`)) {
-        showWarningToast(t("already_in_library", { defaultValue: "This game is already in your library" }));
+        showWarningToast(
+          t("already_in_library", {
+            defaultValue: "This game is already in your library",
+          })
+        );
         return;
       }
 
       setAddingId(`${entry.shop}:${entry.objectId}`);
       try {
-        await window.electron.addGameToLibrary(entry.shop, entry.objectId, entry.title, null);
+        await window.electron.addGameToLibrary(
+          entry.shop,
+          entry.objectId,
+          entry.title,
+          null
+        );
         await updateLibrary();
         showSuccessToast(
-          t("added_to_library", { title: entry.title, defaultValue: `Added ${entry.title} to your library` })
+          t("added_to_library", {
+            title: entry.title,
+            defaultValue: `Added ${entry.title} to your library`,
+          })
         );
       } catch {
-        showErrorToast(t("failed_to_add_to_library", { defaultValue: "Failed to add to library" }));
+        showErrorToast(
+          t("failed_to_add_to_library", {
+            defaultValue: "Failed to add to library",
+          })
+        );
       } finally {
         setAddingId(null);
       }
     },
-    [libraryMap, updateLibrary, showSuccessToast, showErrorToast, showWarningToast, t]
+    [
+      libraryMap,
+      updateLibrary,
+      showSuccessToast,
+      showErrorToast,
+      showWarningToast,
+      t,
+    ]
   );
 
   const formatDate = (iso: string) => {
@@ -211,7 +244,9 @@ export default function WatchlistPage() {
   if (isLoading && !hasLoaded) {
     return (
       <section className="watchlist-page">
-        <div className="watchlist-page__loading">{t("loading", { defaultValue: "Loading..." })}</div>
+        <div className="watchlist-page__loading">
+          {t("loading", { defaultValue: "Loading..." })}
+        </div>
       </section>
     );
   }
@@ -226,7 +261,10 @@ export default function WatchlistPage() {
           </h2>
           {entries.length > 0 && (
             <span className="watchlist-page__count">
-              {t("count", { count: entries.length, defaultValue: `${entries.length} games` })}
+              {t("count", {
+                count: entries.length,
+                defaultValue: `${entries.length} games`,
+              })}
             </span>
           )}
         </div>
@@ -251,10 +289,13 @@ export default function WatchlistPage() {
           <div className="watchlist-page__empty-icon">
             <ListUnorderedIcon size={32} />
           </div>
-          <h2>{t("empty_title", { defaultValue: "Your watchlist is empty" })}</h2>
+          <h2>
+            {t("empty_title", { defaultValue: "Your watchlist is empty" })}
+          </h2>
           <p>
             {t("empty_description", {
-              defaultValue: "Browse the catalogue to add games you want to play later.",
+              defaultValue:
+                "Browse the catalogue to add games you want to play later.",
             })}
           </p>
           <Link to="/catalogue">
@@ -311,12 +352,16 @@ export default function WatchlistPage() {
                 </div>
 
                 <div className="watchlist-page__card-body">
-                  <h3 className="watchlist-page__card-title" title={entry.title}>
+                  <h3
+                    className="watchlist-page__card-title"
+                    title={entry.title}
+                  >
                     {entry.title}
                   </h3>
 
                   <span className="watchlist-page__card-date">
-                    {t("added_on", { defaultValue: "Added" })} {formatDate(entry.addedAt)}
+                    {t("added_on", { defaultValue: "Added" })}{" "}
+                    {formatDate(entry.addedAt)}
                   </span>
 
                   {entry.notes && (
@@ -353,8 +398,12 @@ export default function WatchlistPage() {
                     onClick={() => handleAddToLibrary(entry)}
                     tooltip={
                       isInLibrary
-                        ? t("already_in_library", { defaultValue: "Already in library" })
-                        : t("add_to_library_btn", { defaultValue: "Add to library" })
+                        ? t("already_in_library", {
+                            defaultValue: "Already in library",
+                          })
+                        : t("add_to_library_btn", {
+                            defaultValue: "Add to library",
+                          })
                     }
                   >
                     {isAdding ? (
@@ -364,14 +413,18 @@ export default function WatchlistPage() {
                     ) : (
                       <PlusIcon size={14} />
                     )}
-                    {t("add_to_library_btn", { defaultValue: "Add to library" })}
+                    {t("add_to_library_btn", {
+                      defaultValue: "Add to library",
+                    })}
                   </Button>
 
                   <Button
                     theme="danger"
                     disabled={isRemoving || isAdding}
                     onClick={() => handleRemove(entry)}
-                    tooltip={t("remove_from_watchlist", { defaultValue: "Remove" })}
+                    tooltip={t("remove_from_watchlist", {
+                      defaultValue: "Remove",
+                    })}
                   >
                     <TrashIcon size={14} />
                   </Button>

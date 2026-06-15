@@ -54,8 +54,10 @@ export const watchlistSlice = createSlice({
     ) => {
       state.entries = state.entries.filter(
         (e) =>
-          !(e.shop === action.payload.shop &&
-            e.objectId === action.payload.objectId)
+          !(
+            e.shop === action.payload.shop &&
+            e.objectId === action.payload.objectId
+          )
       );
     },
     clearWatchlist: (state) => {

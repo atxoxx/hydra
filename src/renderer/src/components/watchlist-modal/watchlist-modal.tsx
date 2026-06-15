@@ -13,7 +13,11 @@ export interface WatchlistModalProps {
   onClose: () => void;
 }
 
-const PRIORITY_OPTIONS: { key: string; value: WatchlistPriority; label: string }[] = [
+const PRIORITY_OPTIONS: {
+  key: string;
+  value: WatchlistPriority;
+  label: string;
+}[] = [
   { key: "must-play", value: "must-play", label: "Must-play" },
   { key: "want", value: "want", label: "Want" },
   { key: "later", value: "later", label: "Later" },
@@ -75,14 +79,24 @@ export function WatchlistModal({
 
       showSuccessToast(
         isEditing
-          ? t("updated_watchlist", { title: game.title, defaultValue: `Updated ${game.title} watchlist` })
-          : t("added_to_watchlist", { title: game.title, defaultValue: `Added ${game.title} to your watchlist` })
+          ? t("updated_watchlist", {
+              title: game.title,
+              defaultValue: `Updated ${game.title} watchlist`,
+            })
+          : t("added_to_watchlist", {
+              title: game.title,
+              defaultValue: `Added ${game.title} to your watchlist`,
+            })
       );
 
       handleClose();
     } catch (error) {
       console.error(error);
-      showErrorToast(t("failed_to_save_watchlist", { defaultValue: "Failed to save watchlist" }));
+      showErrorToast(
+        t("failed_to_save_watchlist", {
+          defaultValue: "Failed to save watchlist",
+        })
+      );
     } finally {
       setIsSaving(false);
     }
@@ -95,8 +109,14 @@ export function WatchlistModal({
       visible={visible}
       title={
         isEditing
-          ? t("edit_watchlist_title", { title: game.title, defaultValue: `Edit ${game.title} in watchlist` })
-          : t("add_watchlist_title", { title: game.title, defaultValue: `Add ${game.title} to your watchlist` })
+          ? t("edit_watchlist_title", {
+              title: game.title,
+              defaultValue: `Edit ${game.title} in watchlist`,
+            })
+          : t("add_watchlist_title", {
+              title: game.title,
+              defaultValue: `Add ${game.title} to your watchlist`,
+            })
       }
       onClose={handleClose}
     >
@@ -117,7 +137,9 @@ export function WatchlistModal({
         </label>
         <textarea
           className="watchlist-modal__notes-input"
-          placeholder={t("notes_placeholder", { defaultValue: "Why do you want to play this game? (optional)" })}
+          placeholder={t("notes_placeholder", {
+            defaultValue: "Why do you want to play this game? (optional)",
+          })}
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           disabled={isSaving}

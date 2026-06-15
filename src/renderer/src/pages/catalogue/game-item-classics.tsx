@@ -1,4 +1,9 @@
-import { QuestionIcon, PlusIcon, CheckIcon, ListUnorderedIcon } from "@primer/octicons-react";
+import {
+  QuestionIcon,
+  PlusIcon,
+  CheckIcon,
+  ListUnorderedIcon,
+} from "@primer/octicons-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import cn from "classnames";

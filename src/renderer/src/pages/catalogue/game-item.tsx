@@ -37,8 +37,7 @@ export function GameItem({ game }: GameItemProps) {
   const [showWatchlistModal, setShowWatchlistModal] = useState(false);
 
   const { library, updateLibrary } = useLibrary();
-  const { isGameWatchlisted, loadWatchlist, hasLoaded } =
-    useWatchlist();
+  const { isGameWatchlisted, loadWatchlist, hasLoaded } = useWatchlist();
   const shouldShowProtonFeatures = window.electron.platform === "linux";
 
   const isWatchlisted = isGameWatchlisted(game.shop, game.objectId);

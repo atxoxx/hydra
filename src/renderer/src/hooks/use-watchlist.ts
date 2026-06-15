@@ -1,9 +1,5 @@
 import { useCallback, useRef } from "react";
-import type {
-  GameShop,
-  WatchlistEntry,
-  WatchlistPriority,
-} from "@types";
+import type { GameShop, WatchlistEntry, WatchlistPriority } from "@types";
 import { useAppDispatch, useAppSelector } from "./redux";
 import {
   addWatchlistEntry,
@@ -77,9 +73,7 @@ export function useWatchlist() {
           data.initialDownloadSources ??
           [],
         libraryImageUrl:
-          existingEntry?.libraryImageUrl ??
-          data.libraryImageUrl ??
-          null,
+          existingEntry?.libraryImageUrl ?? data.libraryImageUrl ?? null,
       };
 
       dispatch(addWatchlistEntry(localEntry));
@@ -97,18 +91,14 @@ export function useWatchlist() {
 
   const isGameWatchlisted = useCallback(
     (shop: string, objectId: string): boolean => {
-      return entries.some(
-        (e) => e.shop === shop && e.objectId === objectId
-      );
+      return entries.some((e) => e.shop === shop && e.objectId === objectId);
     },
     [entries]
   );
 
   const getWatchlistEntry = useCallback(
     (shop: string, objectId: string): WatchlistEntry | undefined => {
-      return entries.find(
-        (e) => e.shop === shop && e.objectId === objectId
-      );
+      return entries.find((e) => e.shop === shop && e.objectId === objectId);
     },
     [entries]
   );

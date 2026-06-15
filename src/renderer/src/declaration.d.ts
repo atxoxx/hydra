@@ -318,14 +318,8 @@ declare global {
       initialDownloadSources?: string[];
       libraryImageUrl?: string | null;
     }) => Promise<void>;
-    removeFromWatchlist: (
-      shop: GameShop,
-      objectId: string
-    ) => Promise<void>;
-    isGameWatchlisted: (
-      shop: GameShop,
-      objectId: string
-    ) => Promise<boolean>;
+    removeFromWatchlist: (shop: GameShop, objectId: string) => Promise<void>;
+    isGameWatchlisted: (shop: GameShop, objectId: string) => Promise<boolean>;
     getWatchlistGamesSources: (
       entries: Array<{ shop: GameShop; objectId: string; title: string }>
     ) => Promise<Record<string, string[]>>;
