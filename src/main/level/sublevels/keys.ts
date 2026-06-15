@@ -30,4 +30,7 @@ export const levelKeys = {
   ps1MemoryCardSaves: "ps1MemoryCardSaves",
   ps1MemoryCardSave: (cardFilePath: string, identifier: string) =>
     `${cardFilePath}::${identifier}`,
+  dailyPlaytime: "dailyPlaytime",
+  dailyPlaytimeEntry: (shop: GameShop, objectId: string, date: string) =>
+    `${shop}:${objectId}:${date}`,
 };

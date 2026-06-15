@@ -13,6 +13,7 @@
   },
   "sidebar": {
     "catalogue": "Catalogue",
+    "activity": "Activity",
     "library": "Library",
     "downloads": "Downloads",
     "settings": "Settings",
@@ -1550,5 +1551,32 @@
     "copied": "Copied!",
     "minimize": "Minimize",
     "close": "Close"
+  },
+  "activity": {
+    "activity": "Activity",
+    "weekly_activity": "Weekly Activity",
+    "top_played_games": "Top Played Games",
+    "games_played": "Games Played",
+    "most_active_day": "Most Active Day",
+    "avg_per_day": "Average per Day",
+    "recently_played": "Recently Played",
+    "genre_breakdown": "Genre Breakdown",
+    "playtime_by_genre": "Playtime by Genre",
+    "per_game_details": "Per Game Details",
+    "total_playtime": "Total Playtime",
+    "session_count": "Sessions",
+    "avg_session_duration": "Avg Session Duration",
+    "friends_comparison": "Friends Comparison",
+    "monthly_trend": "Monthly Trend",
+    "no_activity_yet": "No activity yet",
+    "total_hours": "Total Hours",
+    "other_genres": "Other Genres",
+    "last_7_days": "Last 7 Days",
+    "last_30_days": "Last 30 Days",
+    "last_90_days": "Last 90 Days",
+    "all_time": "All Time",
+    "sign_in_to_compare": "Sign in to compare with friends",
+    "no_friends_data": "No friends data available",
+    "loading": "Loading..."
   }
 }

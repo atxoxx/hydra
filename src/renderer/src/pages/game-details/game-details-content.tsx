@@ -18,6 +18,7 @@ import { Sidebar } from "./sidebar/sidebar";
 import { GameReviews } from "./game-reviews";
 import { GameLogo } from "./game-logo";
 import { WebsiteLinksPanel } from "./website-links-panel";
+import { GameActivityPanel } from "./game-activity-panel";
 
 import { AuthPage } from "@shared";
 import { cloudSyncContext, gameDetailsContext } from "@renderer/context";
@@ -440,6 +441,10 @@ export function GameDetailsContent() {
             )}
 
             <WebsiteLinksPanel />
+
+            {shop !== "custom" && shop && objectId && (
+              <GameActivityPanel shop={shop} objectId={objectId} />
+            )}
 
             {shop !== "custom" && shop && objectId && (
               <div ref={reviewsRef}>

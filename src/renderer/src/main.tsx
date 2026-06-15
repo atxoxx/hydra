@@ -33,6 +33,7 @@ import Profile from "./pages/profile/profile";
 import Achievements from "./pages/achievements/achievements";
 import ThemeEditor from "./pages/theme-editor/theme-editor";
 import Library from "./pages/library/library";
+import Activity from "./pages/activity/activity";
 import Notifications from "./pages/notifications/notifications";
 import { AchievementNotification } from "./pages/achievements/notification/achievement-notification";
 import { AchievementNotificationOverlay } from "./components/achievements/notification/achievement-notification-overlay";
@@ -119,6 +120,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route path="/" element={<Home />} />
             <Route path="/catalogue" element={<Catalogue />} />
             <Route path="/library" element={<Library />} />
+            <Route path="/activity" element={<Activity />} />
             <Route path="/downloads" element={<Downloads />} />
             <Route path="/game/:shop/:objectId" element={<GameDetails />} />
             <Route path="/settings" element={<Settings />} />

@@ -1,9 +1,9 @@
 import { WindowManager } from "./window-manager";
 import { updateGameExecutablePath } from "@main/helpers/update-executable-path";
 import { createGame, trackGamePlaytime } from "./library-sync";
-import type { Game, GameRunning, UserPreferences } from "@types";
+import type { Game, GameRunning, GameShop, UserPreferences } from "@types";
 import axios from "axios";
-import { db, gamesSublevel, levelKeys } from "@main/level";
+import { db, gamesSublevel, levelKeys, dailyPlaytimeSublevel } from "@main/level";
 import { CloudSync } from "./cloud-sync";
 import { logger, networkLogger } from "./logger";
 import { PowerSaveBlockerManager } from "./power-save-blocker";
@@ -60,6 +60,33 @@ const TICKS_TO_UPDATE_API = (3 * 60 * 1000) / INTERVALS.processWatcher; // 3 min
 let currentTick = 1;
 
 const platform = process.platform;
+
+const getTodayDateString = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+const updateDailyPlaytime = async (
+  shop: GameShop,
+  objectId: string,
+  deltaMs: number
+) => {
+  const today = getTodayDateString();
+  const key = levelKeys.dailyPlaytimeEntry(shop, objectId, today);
+
+  try {
+    const existing = await dailyPlaytimeSublevel.get(key);
+    await dailyPlaytimeSublevel.put(key, {
+      shop,
+      objectId,
+      date: today,
+      totalMilliseconds:
+        (existing ? existing.totalMilliseconds : 0) + deltaMs,
+    });
+  } catch (error) {
+    logger.error("Failed to update daily playtime snapshot", error);
+  }
+};
 
 const logPlaytimeTrace = (
   event: string,
@@ -375,6 +402,8 @@ function onTickGame(game: Game) {
 
   const delta = now - gamePlaytime.lastTick;
 
+  updateDailyPlaytime(game.shop, game.objectId, delta);
+
   const updatedGame: Game = {
     ...game,
     playTimeInMilliseconds: (game.playTimeInMilliseconds ?? 0) + delta,
@@ -448,6 +477,8 @@ const onCloseGame = (game: Game) => {
   PowerSaveBlockerManager.markGameClosed(gameKey);
 
   const delta = now - gamePlaytime.lastTick;
+
+  updateDailyPlaytime(game.shop, game.objectId, delta);
 
   logPlaytimeTrace("session-close", game, {
     performanceNow: now,

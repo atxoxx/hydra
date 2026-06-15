@@ -666,6 +666,15 @@ contextBridge.exposeInMainWorld("electron", {
   checkSteamShortcut: (shop: GameShop, objectId: string) =>
     ipcRenderer.invoke("checkSteamShortcut", shop, objectId),
   getGamesRunning: () => ipcRenderer.invoke("getGamesRunning"),
+  getDailyPlaytime: (
+    shop: GameShop,
+    objectId: string,
+    startDate: string,
+    endDate: string
+  ) => ipcRenderer.invoke("getDailyPlaytime", shop, objectId, startDate, endDate),
+  getPlaytimeSummary: (startDate: string, endDate: string) =>
+    ipcRenderer.invoke("getPlaytimeSummary", startDate, endDate),
+  getFriendsStats: () => ipcRenderer.invoke("getFriendsStats"),
   onGamesRunning: (
     cb: (
       gamesRunning: Pick<GameRunning, "id" | "sessionDurationInMillis">[]

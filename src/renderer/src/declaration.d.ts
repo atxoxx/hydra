@@ -63,6 +63,36 @@ export interface DriveInfo {
   total: number;
 }
 
+export interface DailyPlaytimeEntry {
+  shop: GameShop;
+  objectId: string;
+  date: string;
+  totalMilliseconds: number;
+}
+
+export interface FriendPlaytimeStats {
+  userId: string;
+  displayName: string;
+  profileImageUrl: string | null;
+  totalPlaytimeHours: number;
+  gamesPlayed: number;
+}
+
+export interface PlaytimeSummary {
+  totalHours: number;
+  gamesPlayed: number;
+  mostActiveDate: string | null;
+  mostActiveDateHours: number;
+  averageHoursPerDay: number;
+  topGames: {
+    objectId: string;
+    shop: string;
+    title: string;
+    iconUrl: string | null;
+    totalMilliseconds: number;
+  }[];
+}
+
 declare global {
   declare module "*.svg" {
     const content: React.FunctionComponent<React.SVGAttributes<SVGElement>>;
@@ -341,6 +371,17 @@ declare global {
     getGamesRunning: () => Promise<
       Pick<GameRunning, "id" | "sessionDurationInMillis">[]
     >;
+    getDailyPlaytime: (
+      shop: GameShop,
+      objectId: string,
+      startDate: string,
+      endDate: string
+    ) => Promise<DailyPlaytimeEntry[]>;
+    getPlaytimeSummary: (
+      startDate: string,
+      endDate: string
+    ) => Promise<PlaytimeSummary>;
+    getFriendsStats: () => Promise<FriendPlaytimeStats[]>;
     onGamesRunning: (
       cb: (
         gamesRunning: Pick<GameRunning, "id" | "sessionDurationInMillis">[]
