@@ -1,0 +1,47 @@
+@use "../../../scss/globals.scss";
+
+.hltb-card {
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: calc(globals.$spacing-unit * 1.5);
+  }
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: calc(globals.$spacing-unit * 0.25);
+  }
+
+  &__item-title {
+    font-size: globals.$small-font-size;
+    font-weight: 600;
+    color: globals.$muted-color;
+  }
+
+  &__item-duration {
+    font-size: globals.$body-font-size;
+    font-weight: 400;
+    color: globals.$body-color;
+  }
+
+  &__item-accuracy {
+    font-size: 11px;
+    color: globals.$muted-color;
+    opacity: 0.7;
+  }
+
+  &__skeleton {
+    border: solid 1px globals.$border-color;
+    border-radius: 4px;
+    height: 52px;
+  }
+
+  &__empty {
+    color: globals.$muted-color;
+    font-size: globals.$small-font-size;
+    text-align: center;
+    padding: calc(globals.$spacing-unit * 1);
+    opacity: 0.6;
+  }
+}

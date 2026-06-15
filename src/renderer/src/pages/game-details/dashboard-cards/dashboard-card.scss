@@ -1,0 +1,38 @@
+@use "../../../scss/globals.scss";
+
+.dashboard-card {
+  background-color: globals.$background-color;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 1);
+    padding: calc(globals.$spacing-unit * 1.5) calc(globals.$spacing-unit * 2);
+    border-bottom: 1px solid globals.$border-color;
+    background-color: rgba(255, 255, 255, 0.02);
+  }
+
+  &__header-icon {
+    color: globals.$muted-color;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  &__header-title {
+    font-size: globals.$body-font-size;
+    font-weight: 600;
+    color: globals.$muted-color;
+    margin: 0;
+    line-height: 1;
+  }
+
+  &__body {
+    padding: calc(globals.$spacing-unit * 2);
+  }
+}

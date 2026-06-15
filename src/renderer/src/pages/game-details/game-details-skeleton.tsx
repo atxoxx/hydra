@@ -5,9 +5,10 @@ export function GameDetailsSkeleton() {
   return (
     <div className="game-details__wrapper game-details__skeleton">
       <section className="game-details__container">
+        {/* Hero skeleton */}
         <div className="game-details__hero">
           <Skeleton
-            height={350}
+            height={280}
             style={{
               borderRadius: "0px 0px 8px 8px",
               position: "absolute",
@@ -21,65 +22,135 @@ export function GameDetailsSkeleton() {
               <div className="game-details__game-logo" />
               <div className="game-details__hero-buttons game-details__hero-buttons--right" />
             </div>
+          </div>
+        </div>
 
-            <div className="game-details__hero-panel">
-              <div className="hero-panel__container">
-                <div className="hero-panel">
-                  <div className="hero-panel__content">
-                    <Skeleton height={16} width={150} />
-                    <Skeleton height={16} width={120} />
+        {/* Tab bar skeleton */}
+        <div className="tab-bar" style={{ pointerEvents: "none" }}>
+          <div className="tab-bar__tab tab-bar__tab--active">
+            <Skeleton height={14} width={14} />
+            <Skeleton height={14} width={60} />
+          </div>
+          <div className="tab-bar__tab">
+            <Skeleton height={14} width={14} />
+            <Skeleton height={14} width={50} />
+          </div>
+          <div className="tab-bar__tab">
+            <Skeleton height={14} width={14} />
+            <Skeleton height={14} width={55} />
+          </div>
+        </div>
+
+        {/* Content area */}
+        <div className="game-details__description-container">
+          <div className="game-details__description-content">
+            <div className="overview-tab">
+              <div className="overview-tab__dashboard-grid">
+                {/* Play/Status card */}
+                <div className="dashboard-card">
+                  <div className="dashboard-card__header">
+                    <Skeleton height={16} width={16} />
+                    <Skeleton height={14} width={80} />
                   </div>
-                  <div className="hero-panel__actions" style={{ gap: "16px" }}>
+                  <div className="dashboard-card__body">
+                    <Skeleton height={18} width={150} />
                     <Skeleton
-                      height={36}
-                      width={36}
-                      style={{ borderRadius: "6px" }}
-                    />
-                    <Skeleton
-                      height={36}
-                      width={36}
-                      style={{ borderRadius: "6px" }}
-                    />
-                    <Skeleton
-                      height={36}
+                      height={14}
                       width={100}
-                      style={{ borderRadius: "6px" }}
+                      style={{ marginTop: 4 }}
                     />
+                    <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+                      <Skeleton
+                        height={36}
+                        width={80}
+                        style={{ borderRadius: 8 }}
+                      />
+                      <Skeleton
+                        height={36}
+                        width={36}
+                        style={{ borderRadius: 8 }}
+                      />
+                      <Skeleton
+                        height={36}
+                        width={36}
+                        style={{ borderRadius: 8 }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats card */}
+                <div className="dashboard-card">
+                  <div className="dashboard-card__header">
+                    <Skeleton height={16} width={16} />
+                    <Skeleton height={14} width={50} />
+                  </div>
+                  <div className="dashboard-card__body">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: 12,
+                        }}
+                      >
+                        <Skeleton height={14} width={80} />
+                        <Skeleton height={14} width={40} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* HLTB card */}
+                <div className="dashboard-card">
+                  <div className="dashboard-card__header">
+                    <Skeleton height={16} width={16} />
+                    <Skeleton height={14} width={100} />
+                  </div>
+                  <div className="dashboard-card__body">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton
+                        key={i}
+                        height={52}
+                        style={{ marginBottom: 8, borderRadius: 4 }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Description card (full width) */}
+                <div
+                  className="dashboard-card"
+                  style={{ gridColumn: "1 / -1" }}
+                >
+                  <div className="dashboard-card__header">
+                    <Skeleton height={16} width={16} />
+                    <Skeleton height={14} width={100} />
+                  </div>
+                  <div className="dashboard-card__body">
+                    <Skeleton
+                      count={6}
+                      height={22}
+                      style={{ marginBottom: 4 }}
+                    />
+                  </div>
+                </div>
+
+                {/* Gallery card (full width) */}
+                <div
+                  className="dashboard-card"
+                  style={{ gridColumn: "1 / -1" }}
+                >
+                  <div className="dashboard-card__body" style={{ padding: 8 }}>
+                    <Skeleton height={250} width="100%" />
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="game-details__description-container">
-          <div className="game-details__description-content">
-            <div className="description-header">
-              <section className="description-header__info">
-                <Skeleton height={16} width={200} />
-                <Skeleton height={16} width={150} />
-              </section>
-            </div>
-
-            <div className="gallery-slider__container">
-              <div
-                className="gallery-slider__viewport"
-                style={{ height: "250px" }}
-              >
-                <Skeleton
-                  height="100%"
-                  width="100%"
-                  className="gallery-slider__media"
-                />
-              </div>
-            </div>
-
-            <div className="game-details__description">
-              <Skeleton count={8} height={22} style={{ marginBottom: "8px" }} />
-              <Skeleton height={22} width="60%" />
-            </div>
-          </div>
-
+          {/* Sidebar skeleton */}
           <aside className="content-sidebar">
             <div className="sidebar-section">
               <div className="sidebar-section__header">
@@ -91,32 +162,17 @@ export function GameDetailsSkeleton() {
                   <Skeleton height={18} width={88} />
                 </div>
               </div>
-
               <div className="sidebar-section__content">
                 <div className="stats__section">
-                  <div className="stats__category">
-                    <div className="stats__category-title">
-                      <Skeleton height={14} width={14} />
-                      <Skeleton height={14} width={80} />
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="stats__category">
+                      <div className="stats__category-title">
+                        <Skeleton height={14} width={14} />
+                        <Skeleton height={14} width={70} />
+                      </div>
+                      <Skeleton height={14} width={35} />
                     </div>
-                    <Skeleton height={14} width={40} />
-                  </div>
-
-                  <div className="stats__category">
-                    <div className="stats__category-title">
-                      <Skeleton height={14} width={14} />
-                      <Skeleton height={14} width={70} />
-                    </div>
-                    <Skeleton height={14} width={35} />
-                  </div>
-
-                  <div className="stats__category">
-                    <div className="stats__category-title">
-                      <Skeleton height={14} width={14} />
-                      <Skeleton height={14} width={60} />
-                    </div>
-                    <Skeleton height={14} width={30} />
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -131,10 +187,9 @@ export function GameDetailsSkeleton() {
                   <Skeleton height={18} width={136} />
                 </div>
               </div>
-
               <div className="sidebar-section__content">
                 <ul className="list">
-                  {Array.from({ length: 4 }).map((_, index) => (
+                  {Array.from({ length: 3 }).map((_, index) => (
                     <li key={index}>
                       <div
                         className="list__item"
@@ -143,15 +198,15 @@ export function GameDetailsSkeleton() {
                         <Skeleton
                           height={54}
                           width={54}
-                          style={{ borderRadius: "4px" }}
+                          style={{ borderRadius: 4 }}
                         />
                         <div>
                           <Skeleton
                             height={14}
-                            width={120}
-                            style={{ marginBottom: "4px" }}
+                            width={100}
+                            style={{ marginBottom: 4 }}
                           />
-                          <Skeleton height={12} width={80} />
+                          <Skeleton height={12} width={60} />
                         </div>
                       </div>
                     </li>

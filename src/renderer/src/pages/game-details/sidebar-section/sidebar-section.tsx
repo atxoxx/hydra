@@ -8,6 +8,29 @@ export interface SidebarSectionProps {
   subtitle?: string;
   subtitleHref?: string;
   children: React.ReactNode;
+  /** Unique key for persisting collapse state. If omitted, no persistence. */
+  collapseStorageKey?: string;
+}
+
+function getCollapsedSet(): Set<string> {
+  try {
+    const raw = localStorage.getItem("hydra_sidebar_collapsed");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return new Set(parsed);
+    }
+  } catch {
+    // nothing
+  }
+  return new Set();
+}
+
+function saveCollapsedSet(set: Set<string>) {
+  try {
+    localStorage.setItem("hydra_sidebar_collapsed", JSON.stringify([...set]));
+  } catch {
+    // nothing
+  }
 }
 
 export function SidebarSection({
@@ -15,9 +38,17 @@ export function SidebarSection({
   subtitle,
   subtitleHref,
   children,
+  collapseStorageKey,
 }: SidebarSectionProps) {
   const content = useRef<HTMLDivElement>(null);
-  const [isOpen, setIsOpen] = useState(true);
+
+  const [isOpen, setIsOpen] = useState(() => {
+    if (collapseStorageKey) {
+      return !getCollapsedSet().has(collapseStorageKey);
+    }
+    return true;
+  });
+
   const [height, setHeight] = useState(0);
 
   useEffect(() => {
@@ -28,12 +59,26 @@ export function SidebarSection({
     }
   }, [isOpen, children, height]);
 
+  const handleToggle = () => {
+    const next = !isOpen;
+    setIsOpen(next);
+    if (collapseStorageKey) {
+      const set = getCollapsedSet();
+      if (next) {
+        set.delete(collapseStorageKey);
+      } else {
+        set.add(collapseStorageKey);
+      }
+      saveCollapsedSet(set);
+    }
+  };
+
   return (
     <div className="sidebar-section">
       <div className="sidebar-section__header">
         <button
           type="button"
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={handleToggle}
           className="sidebar-section__button"
         >
           <ChevronDownIcon

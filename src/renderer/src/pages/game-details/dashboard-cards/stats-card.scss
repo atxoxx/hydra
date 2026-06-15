@@ -1,0 +1,31 @@
+@use "../../../scss/globals.scss";
+
+.stats-card {
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: calc(globals.$spacing-unit * 1.5);
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: calc(globals.$spacing-unit * 1);
+  }
+
+  &__item-label {
+    display: flex;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 1);
+    font-size: globals.$small-font-size;
+    font-weight: 500;
+    color: globals.$muted-color;
+  }
+
+  &__item-value {
+    font-size: globals.$body-font-size;
+    font-weight: 600;
+    color: globals.$body-color;
+  }
+}

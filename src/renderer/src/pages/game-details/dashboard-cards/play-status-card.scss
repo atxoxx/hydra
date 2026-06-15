@@ -1,0 +1,106 @@
+@use "../../../scss/globals.scss";
+
+.play-status-card {
+  &__status {
+    display: flex;
+    flex-direction: column;
+    gap: calc(globals.$spacing-unit * 0.5);
+    margin-bottom: calc(globals.$spacing-unit * 2);
+  }
+
+  &__status-text {
+    font-size: globals.$body-font-size;
+    color: globals.$body-color;
+    font-weight: 600;
+  }
+
+  &__status-subtext {
+    font-size: globals.$small-font-size;
+    color: globals.$muted-color;
+  }
+
+  &__primary-action {
+    margin-bottom: calc(globals.$spacing-unit * 1.5);
+
+    .play-status-card__action {
+      width: 100%;
+      justify-content: center;
+      padding: calc(globals.$spacing-unit * 1.5) calc(globals.$spacing-unit * 2);
+      font-size: 15px;
+      font-weight: 700;
+      border: 1px solid globals.$brand-teal;
+      background: linear-gradient(
+        135deg,
+        rgba(globals.$brand-teal, 0.15) 0%,
+        rgba(globals.$brand-teal, 0.05) 100%
+      );
+      color: globals.$brand-teal;
+      border-radius: 10px;
+      transition: all 0.25s ease;
+
+      &:hover {
+        background: linear-gradient(
+          135deg,
+          rgba(globals.$brand-teal, 0.25) 0%,
+          rgba(globals.$brand-teal, 0.1) 100%
+        );
+        border-color: lighten(#16b195, 10%);
+        box-shadow: 0 0 20px rgba(globals.$brand-teal, 0.15);
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 0 8px rgba(globals.$brand-teal, 0.1);
+      }
+    }
+  }
+
+  &__secondary-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(globals.$spacing-unit * 1);
+  }
+
+  &__action {
+    border: solid 1px rgba(globals.$muted-color, 0.3);
+    font-size: globals.$small-font-size;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: rgba(globals.$muted-color, 0.6);
+    }
+
+    &--icon {
+      padding: calc(globals.$spacing-unit * 0.75) calc(globals.$spacing-unit * 1);
+      min-width: 36px;
+      justify-content: center;
+    }
+  }
+
+  &__progress-bar {
+    width: 100%;
+    height: 3px;
+    margin-top: calc(globals.$spacing-unit * 1.5);
+    transition: all ease 0.2s;
+    border-radius: 2px;
+
+    &::-webkit-progress-bar {
+      background-color: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+    }
+
+    &::-webkit-progress-value {
+      background-color: globals.$brand-teal;
+      border-radius: 2px;
+    }
+
+    &--disabled {
+      &::-webkit-progress-value {
+        background-color: globals.$muted-color;
+        opacity: globals.$disabled-opacity;
+      }
+    }
+  }
+}

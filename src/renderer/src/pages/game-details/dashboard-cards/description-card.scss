@@ -1,0 +1,86 @@
+@use "../../../scss/globals.scss";
+
+.description-card {
+  &__body {
+    user-select: text;
+    line-height: 22px;
+    font-size: globals.$body-font-size;
+    width: 100%;
+    overflow-x: auto;
+    transition: max-height 0.3s ease-in-out;
+
+    &--collapsed {
+      max-height: 250px;
+      overflow: hidden;
+      position: relative;
+
+      &::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: linear-gradient(transparent, globals.$background-color);
+        pointer-events: none;
+      }
+    }
+
+    &--expanded {
+      max-height: none;
+    }
+
+    img,
+    video {
+      border-radius: 5px;
+      margin-top: globals.$spacing-unit;
+      margin-bottom: calc(globals.$spacing-unit * 3);
+      display: block !important;
+      max-width: 100% !important;
+      width: auto !important;
+      height: auto !important;
+      object-fit: contain !important;
+      box-sizing: border-box !important;
+    }
+
+    a {
+      color: globals.$body-color;
+    }
+  }
+
+  &__meta {
+    display: flex;
+    gap: calc(globals.$spacing-unit * 0.5);
+    flex-direction: column;
+    margin-bottom: calc(globals.$spacing-unit * 1.5);
+
+    p {
+      font-size: globals.$small-font-size;
+      color: globals.$muted-color;
+      font-weight: 400;
+      margin: 0;
+
+      &:first-child {
+        font-weight: 600;
+      }
+    }
+  }
+
+  &__toggle {
+    width: 100%;
+    background: none;
+    border: none;
+    border-top: 1px solid globals.$border-color;
+    color: globals.$muted-color;
+    padding: calc(globals.$spacing-unit * 1) calc(globals.$spacing-unit * 2);
+    cursor: pointer;
+    font-size: globals.$small-font-size;
+    text-align: center;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.03);
+      color: globals.$body-color;
+    }
+  }
+}
