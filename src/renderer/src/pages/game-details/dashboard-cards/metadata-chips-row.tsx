@@ -27,16 +27,18 @@ export function MetadataChipsRow() {
   // border with no text).
   const stripEmpty = (arr: unknown[]): string[] =>
     arr
-      .map((v) => (typeof v === "string" ? v : (v as { name?: string } | null)?.name ?? ""))
+      .map((v) =>
+        typeof v === "string"
+          ? v
+          : ((v as { name?: string } | null)?.name ?? "")
+      )
       .filter((s) => typeof s === "string" && s.trim().length > 0);
 
   const genres = stripEmpty(shopDetails.genres ?? []);
   const developers = stripEmpty(shopDetails.developers ?? []);
   const publishers = stripEmpty(shopDetails.publishers ?? []);
   const releaseDate = shopDetails.release_date?.date ?? null;
-  const releaseYear = releaseDate
-    ? new Date(releaseDate).getFullYear()
-    : null;
+  const releaseYear = releaseDate ? new Date(releaseDate).getFullYear() : null;
 
   if (
     genres.length === 0 &&
@@ -82,9 +84,7 @@ export function MetadataChipsRow() {
       )}
 
       {releaseYear && (
-        <span className="metadata-chip metadata-chip--year">
-          {releaseYear}
-        </span>
+        <span className="metadata-chip metadata-chip--year">{releaseYear}</span>
       )}
 
       {effectiveShop && (

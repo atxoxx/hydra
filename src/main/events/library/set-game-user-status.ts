@@ -18,8 +18,7 @@ ipcMain.handle(
       const updated: Game = {
         ...game,
         userStatus: status === "none" ? null : status,
-        userStatusUpdatedAt:
-          status === "none" ? null : new Date(),
+        userStatusUpdatedAt: status === "none" ? null : new Date(),
       };
 
       await gamesSublevel.put(gameKey, updated);

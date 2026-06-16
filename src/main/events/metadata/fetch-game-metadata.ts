@@ -89,7 +89,10 @@ ipcMain.handle(
       // If the user's `shop` parameter is set (e.g. game is on "steam"), keep
       // matching candidates ahead; otherwise preserve the merged order.
       const filtered = shop
-        ? [...broad.filter((r) => r.shop === shop), ...broad.filter((r) => r.shop !== shop)]
+        ? [
+            ...broad.filter((r) => r.shop === shop),
+            ...broad.filter((r) => r.shop !== shop),
+          ]
         : broad;
       return [...filtered, ...vn].slice(0, limit);
     } catch (error) {

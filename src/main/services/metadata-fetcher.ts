@@ -7,11 +7,7 @@ import { SteamTagsImporter } from "./steam-tags-importer";
 import { db } from "@main/level";
 import { levelKeys } from "@main/level/sublevels";
 import { ALL_SHOPS } from "@types";
-import type {
-  GameMetadata,
-  GameShop,
-  ImageAsset,
-} from "@types";
+import type { GameMetadata, GameShop, ImageAsset } from "@types";
 
 const METADATA_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
@@ -43,10 +39,7 @@ export class MetadataFetcher {
     }
 
     try {
-      const existing = await MetadataFetcher.getExistingDetails(
-        shop,
-        objectId
-      );
+      const existing = await MetadataFetcher.getExistingDetails(shop, objectId);
 
       const results = await Promise.allSettled([
         MetadataFetcher.fetchSteamGridDBImages(gameTitle),
@@ -115,9 +108,7 @@ export class MetadataFetcher {
         metadata.sources.vndbRating = "vndb";
 
         const vnTags = vndbResult.value.tags.map((t) => t.name);
-        metadata.tags = [
-          ...new Set([...metadata.tags, ...vnTags]),
-        ];
+        metadata.tags = [...new Set([...metadata.tags, ...vnTags])];
         metadata.sources.tags = "vndb";
       }
 
@@ -185,7 +176,11 @@ export class MetadataFetcher {
       const userLang = userPrefs?.language?.trim();
 
       const languageCandidates = Array.from(
-        new Set([userLang, userLang?.split("-")[0], "en", "english"].filter(Boolean) as string[])
+        new Set(
+          [userLang, userLang?.split("-")[0], "en", "english"].filter(
+            Boolean
+          ) as string[]
+        )
       );
 
       let gameDetails: any = null;
@@ -213,8 +208,7 @@ export class MetadataFetcher {
         releaseDate: gameDetails.release_date?.date ?? null,
         developers: gameDetails.developers ?? [],
         publishers: gameDetails.publishers ?? [],
-        genres:
-          gameDetails.genres?.map((g: { name: string }) => g.name) ?? [],
+        genres: gameDetails.genres?.map((g: { name: string }) => g.name) ?? [],
         platform:
           gameDetails.platform ?? gameDetails.release_date?.platform ?? null,
         supportedLanguages:
@@ -223,11 +217,7 @@ export class MetadataFetcher {
             .map((l: string) => l.trim()) ?? [],
         screenshots:
           gameDetails.screenshots?.map(
-            (s: {
-              id: number;
-              path_thumbnail: string;
-              path_full: string;
-            }) => ({
+            (s: { id: number; path_thumbnail: string; path_full: string }) => ({
               id: String(s.id),
               thumbnailUrl: s.path_thumbnail,
               fullUrl: s.path_full,
@@ -241,9 +231,7 @@ export class MetadataFetcher {
     }
   }
 
-  private static async fetchSteamGridDBImages(
-    gameTitle: string
-  ): Promise<{
+  private static async fetchSteamGridDBImages(gameTitle: string): Promise<{
     grids: ImageAsset[];
     heroes: ImageAsset[];
     logos: ImageAsset[];

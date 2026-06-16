@@ -18,8 +18,7 @@ function parseDurationToSeconds(duration: string): number {
   const [value, unit] = duration.split(" ");
   const num = parseFloat(value);
   if (unit === "Hours" || unit === "hours") return num * 3600;
-  if (unit === "Mins" || unit === "mins" || unit === "minutes")
-    return num * 60;
+  if (unit === "Mins" || unit === "mins" || unit === "minutes") return num * 60;
   return 0;
 }
 
@@ -50,10 +49,7 @@ export function HowLongToBeatCard({
   const getProgressPercent = (duration: string): number => {
     const estimated = parseDurationToSeconds(duration);
     if (estimated <= 0) return 0;
-    return Math.min(
-      Math.round((userPlaytimeSeconds / estimated) * 100),
-      100
-    );
+    return Math.min(Math.round((userPlaytimeSeconds / estimated) * 100), 100);
   };
 
   const handleSubmitPlaytime = async () => {
@@ -102,9 +98,7 @@ export function HowLongToBeatCard({
                     style={{ width: `${progress}%` }}
                   />
                 </div>
-                <span className="hltb-card__progress-label">
-                  {progress}%
-                </span>
+                <span className="hltb-card__progress-label">{progress}%</span>
               </div>
             )}
           </div>

@@ -26,11 +26,7 @@ export async function searchIGDB(
         releaseYear: number | null;
         description: string;
       }>
-    >(
-      "/catalogue/search/suggestions",
-      { query, limit },
-      { needsAuth: false }
-    );
+    >("/catalogue/search/suggestions", { query, limit }, { needsAuth: false });
 
     if (!Array.isArray(results)) return [];
 

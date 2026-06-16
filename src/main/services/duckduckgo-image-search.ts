@@ -271,9 +271,7 @@ function mapResult(row: RawDdgRow): AssetSearchResult | null {
  * Returns an empty array on any error rather than throwing — callers decide
  * whether to escalate.
  */
-async function runSingleQuery(
-  query: string
-): Promise<AssetSearchResult[]> {
+async function runSingleQuery(query: string): Promise<AssetSearchResult[]> {
   const vqd = await fetchVqdToken(query);
   if (!vqd) return [];
 

@@ -45,9 +45,7 @@ export function GameStatusDropdown({
   const { t } = useTranslation("game_details");
 
   const currentStatus: UserGameStatus = value ?? "none";
-  const currentOption = STATUS_OPTIONS.find(
-    (o) => o.value === currentStatus
-  );
+  const currentOption = STATUS_OPTIONS.find((o) => o.value === currentStatus);
 
   return (
     <span

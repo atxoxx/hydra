@@ -135,9 +135,7 @@ export function MetadataSearchModal({
       } catch (err) {
         if (!controller.signal.aborted) {
           setResults([]);
-          setSearchError(
-            err instanceof Error ? err.message : "Search failed"
-          );
+          setSearchError(err instanceof Error ? err.message : "Search failed");
           logger.error("Metadata search failed:", err);
         }
       } finally {
@@ -259,18 +257,14 @@ export function MetadataSearchModal({
           await window.electron.updateCustomGame({
             shop: game.shop,
             objectId: game.objectId,
-            title: checkedFields.title
-              ? selectedResult.title
-              : game.title,
+            title: checkedFields.title ? selectedResult.title : game.title,
             iconUrl: selectedResult.iconUrl || undefined,
           });
         } else {
           await window.electron.updateGameCustomAssets({
             shop: game.shop,
             objectId: game.objectId,
-            title: checkedFields.title
-              ? selectedResult.title
-              : game.title,
+            title: checkedFields.title ? selectedResult.title : game.title,
             customIconUrl: selectedResult.iconUrl || undefined,
             customLogoImageUrl: null,
             customHeroImageUrl: null,
@@ -285,17 +279,11 @@ export function MetadataSearchModal({
           shop: game.shop,
           objectId: game.objectId,
           metadata: {
-            description:
-              (metadata.description as string | null) ?? undefined,
-            genres:
-              (metadata.genres as string[] | null) ?? undefined,
-            developers:
-              (metadata.developers as string[] | null) ?? undefined,
-            publishers:
-              (metadata.publishers as string[] | null) ?? undefined,
-            releaseDate:
-              (metadata.releaseDate as string | null) ?? undefined,
-
+            description: (metadata.description as string | null) ?? undefined,
+            genres: (metadata.genres as string[] | null) ?? undefined,
+            developers: (metadata.developers as string[] | null) ?? undefined,
+            publishers: (metadata.publishers as string[] | null) ?? undefined,
+            releaseDate: (metadata.releaseDate as string | null) ?? undefined,
           },
         });
 
@@ -422,51 +410,49 @@ export function MetadataSearchModal({
                 const genres = safeGenres(result);
                 const developers = safeDevelopers(result);
                 return (
-                <button
-                  key={`${result.shop}-${result.objectId}`}
-                  type="button"
-                  className={`metadata-search-modal__result-item ${
-                    selectedResult?.objectId === result.objectId &&
-                    selectedResult?.shop === result.shop
-                      ? "metadata-search-modal__result-item--selected"
-                      : ""
-                  }`}
-                  onClick={() => handleSelectResult(result)}
-                >
-                  {result.iconUrl && (
-                    <img
-                      src={result.iconUrl}
-                      alt=""
-                      className="metadata-search-modal__result-icon"
-                    />
-                  )}
-                  <div className="metadata-search-modal__result-info">
-                    <span className="metadata-search-modal__result-title">
-                      {result.title}
-                    </span>
-                    <span className="metadata-search-modal__result-shop">
-                      {result.shop} · {SOURCE_LABELS[result.source] || result.source}
-                      {result.releaseYear &&
-                        ` · ${result.releaseYear}`}
-                    </span>
-                    {genres.length > 0 && (
-                      <span className="metadata-search-modal__result-genres">
-                        {genres.slice(0, 3).join(", ")}
-                        {genres.length > 3
-                          ? ` +${genres.length - 3}`
-                          : ""}
-                      </span>
+                  <button
+                    key={`${result.shop}-${result.objectId}`}
+                    type="button"
+                    className={`metadata-search-modal__result-item ${
+                      selectedResult?.objectId === result.objectId &&
+                      selectedResult?.shop === result.shop
+                        ? "metadata-search-modal__result-item--selected"
+                        : ""
+                    }`}
+                    onClick={() => handleSelectResult(result)}
+                  >
+                    {result.iconUrl && (
+                      <img
+                        src={result.iconUrl}
+                        alt=""
+                        className="metadata-search-modal__result-icon"
+                      />
                     )}
-                    {developers.length > 0 && (
-                      <span className="metadata-search-modal__result-meta">
-                        {developers.slice(0, 2).join(", ")}
-                        {developers.length > 2
-                          ? ` +${developers.length - 2}`
-                          : ""}
+                    <div className="metadata-search-modal__result-info">
+                      <span className="metadata-search-modal__result-title">
+                        {result.title}
                       </span>
-                    )}
-                  </div>
-                </button>
+                      <span className="metadata-search-modal__result-shop">
+                        {result.shop} ·{" "}
+                        {SOURCE_LABELS[result.source] || result.source}
+                        {result.releaseYear && ` · ${result.releaseYear}`}
+                      </span>
+                      {genres.length > 0 && (
+                        <span className="metadata-search-modal__result-genres">
+                          {genres.slice(0, 3).join(", ")}
+                          {genres.length > 3 ? ` +${genres.length - 3}` : ""}
+                        </span>
+                      )}
+                      {developers.length > 0 && (
+                        <span className="metadata-search-modal__result-meta">
+                          {developers.slice(0, 2).join(", ")}
+                          {developers.length > 2
+                            ? ` +${developers.length - 2}`
+                            : ""}
+                        </span>
+                      )}
+                    </div>
+                  </button>
                 );
               })}
             </div>
@@ -495,7 +481,8 @@ export function MetadataSearchModal({
                 </span>
                 <span className="metadata-search-modal__preview-shop">
                   {selectedResult.shop} ·{" "}
-                  {SOURCE_LABELS[selectedResult.source] || selectedResult.source}
+                  {SOURCE_LABELS[selectedResult.source] ||
+                    selectedResult.source}
                 </span>
                 {selectedResult.releaseYear && (
                   <span className="metadata-search-modal__preview-year">
@@ -533,9 +520,7 @@ export function MetadataSearchModal({
                       type="checkbox"
                       className="metadata-search-modal__preview-checkbox"
                       checked={checkedFields[field.key as MergeFieldKey]}
-                      onChange={() =>
-                        toggleField(field.key as MergeFieldKey)
-                      }
+                      onChange={() => toggleField(field.key as MergeFieldKey)}
                       disabled={isApplying}
                     />
                     <div className="metadata-search-modal__preview-field-body">

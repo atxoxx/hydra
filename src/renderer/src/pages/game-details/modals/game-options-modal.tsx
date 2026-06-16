@@ -892,9 +892,7 @@ export function GameOptionsModal({
                     onClick={() => setMetadataSubTab("general")}
                   >
                     <PencilIcon size={14} />
-                    <span>
-                      {t("metadata_subtab_general", "General")}
-                    </span>
+                    <span>{t("metadata_subtab_general", "General")}</span>
                   </button>
                   <button
                     type="button"
@@ -914,9 +912,7 @@ export function GameOptionsModal({
                   <MetadataGeneralSection
                     game={game}
                     shopDetails={shopDetails}
-                    onDownloadMetadata={() =>
-                      setShowMetadataSearchModal(true)
-                    }
+                    onDownloadMetadata={() => setShowMetadataSearchModal(true)}
                     onSaved={updateGame}
                   />
                 )}

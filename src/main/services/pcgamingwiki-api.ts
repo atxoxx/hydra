@@ -93,9 +93,7 @@ export class PCGamingWikiAPI {
     }
   }
 
-  private static async getPageContent(
-    pageId: number
-  ): Promise<string | null> {
+  private static async getPageContent(pageId: number): Promise<string | null> {
     try {
       const response = await axios.get(BASE_URL, {
         params: {
@@ -138,7 +136,11 @@ export class PCGamingWikiAPI {
     if (text.includes("widescreen") || text.includes("16:9")) {
       info.widescreenSupport = true;
     }
-    if (text.includes("4K") || text.includes("3840") || text.includes("2160p")) {
+    if (
+      text.includes("4K") ||
+      text.includes("3840") ||
+      text.includes("2160p")
+    ) {
       info.fourKSupport = true;
     }
     if (text.includes("HDR")) {

@@ -55,9 +55,12 @@ export class SteamGridDBApi {
     gameName: string
   ): Promise<{ id: number; name: string } | null> {
     try {
-      const response = await axios.get(`${BASE_URL}/search/autocomplete/${encodeURIComponent(gameName)}`, {
-        headers: this.getHeaders(),
-      });
+      const response = await axios.get(
+        `${BASE_URL}/search/autocomplete/${encodeURIComponent(gameName)}`,
+        {
+          headers: this.getHeaders(),
+        }
+      );
 
       if (response.data?.success && response.data?.data?.length > 0) {
         return response.data.data[0];
@@ -108,10 +111,9 @@ export class SteamGridDBApi {
         gameId = game.id;
       }
 
-      const response = await axios.get(
-        `${BASE_URL}/${type}/game/${gameId}`,
-        { headers: this.getHeaders() }
-      );
+      const response = await axios.get(`${BASE_URL}/${type}/game/${gameId}`, {
+        headers: this.getHeaders(),
+      });
 
       return response.data as SteamGridDBSearchResponse;
     } catch (error) {
@@ -120,9 +122,7 @@ export class SteamGridDBApi {
     }
   }
 
-  static async getAllImages(
-    gameName: string
-  ): Promise<{
+  static async getAllImages(gameName: string): Promise<{
     grids: SteamGridDBImage[];
     heroes: SteamGridDBImage[];
     logos: SteamGridDBImage[];

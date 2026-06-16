@@ -42,7 +42,10 @@ function initializeState(
     title: game.title ?? "",
     releaseDate: getReleaseDate(game, shopDetails),
     description: getDescription(game, shopDetails),
-    genres: getArray(game.genres, shopDetails?.genres?.map((g) => g.name)),
+    genres: getArray(
+      game.genres,
+      shopDetails?.genres?.map((g) => g.name)
+    ),
     developers: getArray(game.developers, shopDetails?.developers),
     publishers: getArray(game.publishers, shopDetails?.publishers),
     tags: game.tags ?? [],
@@ -297,11 +300,7 @@ export function MetadataGeneralSection({
 
       {/* Action buttons */}
       <div className="metadata-general-section__actions">
-        <Button
-          theme="outline"
-          onClick={onDownloadMetadata}
-          disabled={saving}
-        >
+        <Button theme="outline" onClick={onDownloadMetadata} disabled={saving}>
           <SearchIcon size={14} />
           {t("metadata_download_button", "Download Metadata")}
         </Button>

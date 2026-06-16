@@ -78,9 +78,7 @@ export class VNDBApi {
   private static readonly CACHE_TTL = 24 * 60 * 60 * 1000;
   private static readonly CACHE_TIMESTAMPS = new Map<string, number>();
 
-  static async searchGame(
-    gameTitle: string
-  ): Promise<VNDBGameData | null> {
+  static async searchGame(gameTitle: string): Promise<VNDBGameData | null> {
     const cacheKey = gameTitle.toLowerCase().trim();
 
     const cached = this.CACHE.get(cacheKey);

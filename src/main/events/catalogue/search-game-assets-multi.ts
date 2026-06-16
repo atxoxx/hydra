@@ -6,7 +6,10 @@ import { searchSteamCDNImages } from "@main/services/steam-cdn-image-search";
 import { db } from "@main/level";
 import { levelKeys } from "@main/level/sublevels";
 import { networkLogger as logger } from "@main/services/logger";
-import type { AssetType, SearchGameAssetsResponse } from "@main/services/duckduckgo-image-search";
+import type {
+  AssetType,
+  SearchGameAssetsResponse,
+} from "@main/services/duckduckgo-image-search";
 import type { UserPreferences } from "@types";
 
 export type ImageSearchSource = "google" | "steamgriddb" | "igdb" | "steamcdn";
@@ -132,7 +135,9 @@ const searchGameAssetsMultiEvent = async (
       }
 
       default:
-        logger.warn(`Unknown image search source: ${source}, falling back to google`);
+        logger.warn(
+          `Unknown image search source: ${source}, falling back to google`
+        );
         response = await searchGameAssets(trimmedTitle, assetType);
     }
   } catch (error) {

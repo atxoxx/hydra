@@ -32,7 +32,9 @@
     font-size: 13px;
     font-family: inherit;
     cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease;
+    transition:
+      color 0.15s ease,
+      border-color 0.15s ease;
     margin-bottom: -1px;
 
     &:hover {

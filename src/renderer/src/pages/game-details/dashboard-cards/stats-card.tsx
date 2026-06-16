@@ -1,10 +1,6 @@
 import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  DownloadIcon,
-  PeopleIcon,
-  StarIcon,
-} from "@primer/octicons-react";
+import { DownloadIcon, PeopleIcon, StarIcon } from "@primer/octicons-react";
 import { StarRating } from "@renderer/components/star-rating/star-rating";
 import { GameStatusDropdown } from "@renderer/components";
 import { gameDetailsContext } from "@renderer/context";
@@ -25,9 +21,7 @@ export function StatsCard() {
   // Normalize legacy "to_play" from existing LevelDB data
   const rawStatus = game?.userStatus;
   const currentStatus: UserGameStatus =
-    String(rawStatus) === "to_play"
-      ? "plan_to_play"
-      : (rawStatus ?? "none");
+    String(rawStatus) === "to_play" ? "plan_to_play" : (rawStatus ?? "none");
 
   const handleStatusChange = async (status: UserGameStatus) => {
     if (!shop || !objectId || isUpdatingStatus) return;
@@ -40,9 +34,7 @@ export function StatsCard() {
       );
       if (result.ok) {
         showSuccessToast(
-          t(
-            status === "none" ? "status_cleared" : "status_updated"
-          )
+          t(status === "none" ? "status_cleared" : "status_updated")
         );
         await updateGame();
       } else {

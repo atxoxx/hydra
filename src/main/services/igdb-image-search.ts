@@ -83,9 +83,7 @@ function pickAssetUrl(
         assets.coverImageUrl
       );
     case "grid":
-      return (
-        assets.coverImageUrl || assets.libraryImageUrl || assets.iconUrl
-      );
+      return assets.coverImageUrl || assets.libraryImageUrl || assets.iconUrl;
     default:
       return assets.iconUrl || assets.libraryImageUrl;
   }

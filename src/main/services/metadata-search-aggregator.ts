@@ -124,21 +124,14 @@ async function enrichHydraCandidate(
     return {
       title: response.title,
       description: response.description ?? "",
-      developers: Array.isArray(response.developers)
-        ? response.developers
-        : [],
-      publishers: Array.isArray(response.publishers)
-        ? response.publishers
-        : [],
+      developers: Array.isArray(response.developers) ? response.developers : [],
+      publishers: Array.isArray(response.publishers) ? response.publishers : [],
       genres: Array.isArray(response.genres) ? response.genres : [],
       releaseYear:
         typeof response.releaseYear === "number" ? response.releaseYear : null,
     };
   } catch (err) {
-    logger.error(
-      `Hydra enrichment failed for ${shop}:${objectId}:`,
-      err
-    );
+    logger.error(`Hydra enrichment failed for ${shop}:${objectId}:`, err);
     return {};
   }
 }

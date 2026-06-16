@@ -150,8 +150,11 @@ export function GameAssetsSettings({
   const searchCache = useRef<Map<string, SearchGameAssetsResponse>>(new Map());
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const getCacheKey = (assetType: AssetType, query: string, source: ImageSource) =>
-    `${game.id}:${source}:${query}:${assetType}`;
+  const getCacheKey = (
+    assetType: AssetType,
+    query: string,
+    source: ImageSource
+  ) => `${game.id}:${source}:${query}:${assetType}`;
 
   const isCustomGame = useCallback(
     (currentGame: LibraryGame | Game): boolean => {

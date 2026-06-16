@@ -37,9 +37,7 @@ function extractReleaseYear(dateStr: string): number | null {
 /**
  * Get app details for a single Steam app ID.
  */
-async function getAppDetails(
-  appId: number
-): Promise<SteamAppDetails | null> {
+async function getAppDetails(appId: number): Promise<SteamAppDetails | null> {
   try {
     const response = await axios.get<AppDetailsResponse>(
       `${STEAM_STORE_API}/api/appdetails`,
@@ -78,8 +76,12 @@ async function withConcurrencyLimit<T>(
     const task = tasks[i];
     const p = task()
       .then(
-        (value) => { results[i] = { status: "fulfilled", value }; },
-        (reason) => { results[i] = { status: "rejected", reason }; }
+        (value) => {
+          results[i] = { status: "fulfilled", value };
+        },
+        (reason) => {
+          results[i] = { status: "rejected", reason };
+        }
       )
       .finally(() => {
         const idx = executing.indexOf(p);
@@ -131,53 +133,59 @@ export async function searchSteamStore(
     // Step 2: Fetch details for each result with concurrency limit (max 3 parallel)
     const topItems = items.slice(0, limit);
 
-    const tasks = topItems.map((item) => async (): Promise<MetadataSearchResult> => {
-      // Stagger requests slightly to avoid rate limiting
-      const details = await getAppDetails(item.id);
+    const tasks = topItems.map(
+      (item) => async (): Promise<MetadataSearchResult> => {
+        // Stagger requests slightly to avoid rate limiting
+        const details = await getAppDetails(item.id);
 
-      if (!details) {
+        if (!details) {
+          return {
+            title: item.name,
+            objectId: String(item.id),
+            shop: "steam",
+            source: "steam",
+            iconUrl: item.tiny_image || null,
+            genres: [] as string[],
+            developers: [] as string[],
+            publishers: [] as string[],
+            releaseYear: null,
+            description: "",
+            similarityScore: 1,
+          };
+        }
+
+        const tags = Array.isArray(details.categories)
+          ? details.categories.map((c) => c.description)
+          : [];
+
         return {
-          title: item.name,
-          objectId: String(item.id),
+          title: details.name,
+          objectId: String(details.steam_appid),
           shop: "steam",
           source: "steam",
-          iconUrl: item.tiny_image || null,
-          genres: [] as string[],
-          developers: [] as string[],
-          publishers: [] as string[],
-          releaseYear: null,
-          description: "",
+          iconUrl:
+            item.tiny_image ||
+            `https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/${details.steam_appid}/header.jpg`,
+          genres: (Array.isArray(details.genres)
+            ? details.genres.map((g) => g.name)
+            : []) as string[],
+          developers: (Array.isArray(details.developers)
+            ? details.developers
+            : []) as string[],
+          publishers: (Array.isArray(details.publishers)
+            ? details.publishers
+            : []) as string[],
+          releaseYear: extractReleaseYear(details.release_date?.date ?? ""),
+          description:
+            details.short_description ||
+            details.about_the_game ||
+            details.detailed_description ||
+            "",
           similarityScore: 1,
+          tags,
         };
       }
-
-      const tags = Array.isArray(details.categories)
-        ? details.categories.map((c) => c.description)
-        : [];
-
-      return {
-        title: details.name,
-        objectId: String(details.steam_appid),
-        shop: "steam",
-        source: "steam",
-        iconUrl:
-          item.tiny_image ||
-          `https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/${details.steam_appid}/header.jpg`,
-        genres: (Array.isArray(details.genres)
-          ? details.genres.map((g) => g.name)
-          : []) as string[],
-        developers: (Array.isArray(details.developers) ? details.developers : []) as string[],
-        publishers: (Array.isArray(details.publishers) ? details.publishers : []) as string[],
-        releaseYear: extractReleaseYear(details.release_date?.date ?? ""),
-        description:
-          details.short_description ||
-          details.about_the_game ||
-          details.detailed_description ||
-          "",
-        similarityScore: 1,
-        tags,
-      };
-    });
+    );
 
     const results = await withConcurrencyLimit(tasks, 3);
 

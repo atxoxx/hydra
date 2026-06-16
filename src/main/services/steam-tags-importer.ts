@@ -33,10 +33,7 @@ export class SteamTagsImporter {
       const data = await HydraApi.get<{
         tags: string[];
         categories: string[];
-      } | null>(
-        `/games/${shop}/${objectId}/steam-tags`,
-        { needsAuth: false }
-      );
+      } | null>(`/games/${shop}/${objectId}/steam-tags`, { needsAuth: false });
 
       if (data === null || data === undefined) {
         this.CACHE.set(cacheKey, null);

@@ -30,10 +30,10 @@ export class IGNMetadataService {
         score: number | null;
         summary: string | null;
         verdict: string | null;
-      } | null>(
-        `/games/search/ign-review`,
-        { params: { title: gameTitle }, needsAuth: false }
-      );
+      } | null>(`/games/search/ign-review`, {
+        params: { title: gameTitle },
+        needsAuth: false,
+      });
 
       if (data === null || data === undefined) {
         this.CACHE.set(cacheKey, null);

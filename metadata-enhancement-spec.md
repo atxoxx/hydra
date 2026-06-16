@@ -12,16 +12,17 @@ Comprehensive refactor of how game metadata is obtained, stored, and displayed. 
 
 All available metadata sources are queried **in parallel**, and results are **merged** into a unified metadata object. When multiple sources provide the same field, the priority is:
 
-| Priority | Source        | Primary Data Provided                                     |
-| -------- | ------------- | --------------------------------------------------------- |
-| 1        | Hydra API     | Core game data (title, description, devs, publishers)     |
-| 2        | Steam Store   | descriptions, genres, screenshots, release date, movies   |
-| 3        | SteamGridDB   | Cover art, hero images, icons, logos, grid covers         |
-| 4        | PCGamingWiki  | Technical specs, fix guides, compatibility data           |
-| 5        | IGN           | Reviews, ratings, editorial descriptions                  |
-| 6        | VNDB          | Visual novel metadata (last resort for all games)         |
+| Priority | Source       | Primary Data Provided                                   |
+| -------- | ------------ | ------------------------------------------------------- |
+| 1        | Hydra API    | Core game data (title, description, devs, publishers)   |
+| 2        | Steam Store  | descriptions, genres, screenshots, release date, movies |
+| 3        | SteamGridDB  | Cover art, hero images, icons, logos, grid covers       |
+| 4        | PCGamingWiki | Technical specs, fix guides, compatibility data         |
+| 5        | IGN          | Reviews, ratings, editorial descriptions                |
+| 6        | VNDB         | Visual novel metadata (last resort for all games)       |
 
 **Merging rules**:
+
 - First non-null/non-empty value wins (Higher priority source takes precedence)
 - Arrays (genres, developers, publishers, tags) are union-merged (all unique values combined)
 - Images are best-quality-wins (highest resolution available)
@@ -30,6 +31,7 @@ All available metadata sources are queried **in parallel**, and results are **me
 ### 1.2 New Metadata Sources
 
 #### SteamGridDB (`src/main/services/steamgriddb-api.ts` — NEW)
+
 - **API**: https://www.steamgriddb.com/api/v2
 - **Requires**: User-provided API key (configured in Settings → Integrations)
 - **Data fetched**:
@@ -41,6 +43,7 @@ All available metadata sources are queried **in parallel**, and results are **me
 - **Rate limiting**: Respect API rate limits; key-based authentication.
 
 #### PCGamingWiki (`src/main/services/pcgamingwiki-api.ts` — NEW)
+
 - **API**: https://www.pcgamingwiki.com/w/api.php (MediaWiki API)
 - **Data fetched**:
   - Technical specifications (resolution support, FPS caps, widescreen, 4K, HDR)
@@ -51,6 +54,7 @@ All available metadata sources are queried **in parallel**, and results are **me
 - **Matching**: Search by game title → parse MediaWiki page for structured data.
 
 #### IGN Metadata (`src/main/services/ign-metadata.ts` — NEW)
+
 - **API**: IGDB API (via Hydra backend) or IGN scraping
 - **Data fetched**:
   - IGN review score/rating
@@ -59,6 +63,7 @@ All available metadata sources are queried **in parallel**, and results are **me
 - **Matching**: IGDB ID lookup from game title.
 
 #### VNDB (`src/main/services/vndb-api.ts` — NEW)
+
 - **API**: https://api.vndb.org/kana (REST API)
 - **Activation**: Tried for all games as a last-resort fallback
 - **Data fetched**:
@@ -72,6 +77,7 @@ All available metadata sources are queried **in parallel**, and results are **me
 - **Matching**: Search by title → match by closest Levenshtein distance.
 
 #### Steam Tags Importer (`src/main/services/steam-tags-importer.ts` — NEW)
+
 - **API**: Steam Store web scraping or internal Steam API
 - **Data fetched**: User-defined tags (e.g., "Roguelike", "Open World", "Cute", "Difficult")
 - **Storage**: Merged into the game's tags alongside other metadata tags.
@@ -194,7 +200,7 @@ export interface VNTag {
 }
 
 export interface MetadataSources {
-  title?: string;           // source name
+  title?: string; // source name
   description?: string;
   shortDescription?: string;
   releaseDate?: string;
@@ -249,9 +255,9 @@ Extended `HowLongToBeatCategory` in `src/types/how-long-to-beat.types.ts`:
 
 ```ts
 export interface HowLongToBeatCategory {
-  title: string;          // "Main Story", "Main + Extra", "Completionist"
-  duration: string;       // "40 Hours"
-  accuracy: string;       // "00"
+  title: string; // "Main Story", "Main + Extra", "Completionist"
+  duration: string; // "40 Hours"
+  accuracy: string; // "00"
 }
 
 export interface HowLongToBeatGameData {
@@ -261,14 +267,14 @@ export interface HowLongToBeatGameData {
   reviewScore: number;
   platforms: string[];
   imageUrl: string | null;
-  similarityScore: number;    // How well the match is (0-1)
+  similarityScore: number; // How well the match is (0-1)
 }
 
 export interface HowLongToBeatProgress {
-  category: string;           // "Main Story"
+  category: string; // "Main Story"
   userPlaytimeSeconds: number;
   estimatedSeconds: number;
-  progressPercent: number;    // 0-100
+  progressPercent: number; // 0-100
   remainingSeconds: number;
 }
 ```
@@ -300,6 +306,7 @@ Displays a horizontal row of styled chips:
 **Modify**: `StatsCard` component (`src/renderer/src/pages/game-details/dashboard-cards/stats-card.tsx`)
 
 Add a **user status display** at the top of the Stats card:
+
 - Shows current status as a prominent badge with icon
 - Clicking opens a dropdown/popover to change status
 - Status options with icons:
@@ -314,6 +321,7 @@ Add a **user status display** at the top of the Stats card:
 **Modify**: `HowLongToBeatCard` component (`src/renderer/src/pages/game-details/dashboard-cards/how-long-to-beat-card.tsx`)
 
 Add progress visualization:
+
 - For each HLTB category, show a thin progress bar beneath the duration
 - Progress = `userPlaytime / estimatedTime * 100` (capped at 100%)
 - Color gradient: teal (0%) → amber (50%) → green (100%)
@@ -335,13 +343,14 @@ New sub-component: `HLTBProgressBar` — thin animated progress bar beneath each
 
 The metadata panel uses **3 sub-tabs** (internal to the panel, not the sidebar categories):
 
-| Sub-tab | Name      | Content                                                         |
-| ------- | --------- | --------------------------------------------------------------- |
-| 1       | **Images** | Existing image editing (icon, logo, hero) + new image types    |
-| 2       | **Details**| All text metadata fields (editable)                             |
-| 3       | **Tags**   | Genre, user tags, status management                             |
+| Sub-tab | Name        | Content                                                     |
+| ------- | ----------- | ----------------------------------------------------------- |
+| 1       | **Images**  | Existing image editing (icon, logo, hero) + new image types |
+| 2       | **Details** | All text metadata fields (editable)                         |
+| 3       | **Tags**    | Genre, user tags, status management                         |
 
 #### Images Sub-tab
+
 - **Expanded** from current `GameAssetsSettings`:
   - Icon (existing)
   - Logo (existing)
@@ -354,6 +363,7 @@ The metadata panel uses **3 sub-tabs** (internal to the panel, not the sidebar c
 - "Auto-fetch all" button fetches images for all types from SteamGridDB
 
 #### Details Sub-tab
+
 - **Form fields** (all editable):
   - Title (text input)
   - Short description (text area, 2 rows)
@@ -367,6 +377,7 @@ The metadata panel uses **3 sub-tabs** (internal to the panel, not the sidebar c
 - **Revert to original** link per field (when metadata was fetched from a source)
 
 #### Tags Sub-tab
+
 - **Genre chips**: Toggle on/off from available genres
 - **Custom tags**: Tag input to add/remove custom tags
 - **User status**: Dropdown with all status options
@@ -378,12 +389,14 @@ The metadata panel uses **3 sub-tabs** (internal to the panel, not the sidebar c
 **Refactored**: Becomes a comprehensive metadata search tool.
 
 #### Search UI
+
 - **Per-source tabs** at the top: Hydra | Steam | SteamGridDB | IGDB | VNDB
 - Search bar queries the selected source
 - Results show: game title, source, preview of key metadata (genres, year, dev)
 - Selecting a result opens a **diff preview** overlay
 
 #### Selective Merge Preview (Diff Overlay)
+
 - Shows two columns: "Current" vs "Found"
 - Each metadata field is listed with:
   - **Checkbox** to include/exclude from merge
@@ -395,6 +408,7 @@ The metadata panel uses **3 sub-tabs** (internal to the panel, not the sidebar c
 - **"Cancel"** to discard
 
 #### Images from Search
+
 - When searching SteamGridDB, results show **image grids** (not just metadata text)
 - User can select individual images to apply to specific slots (icon, hero, etc.)
 - Preview shows image at full resolution before applying
@@ -428,6 +442,7 @@ Game Options Modal
 **Current**: The Hydra API handles matching. Client just displays results.
 
 **Improvement**: Add client-side fallback matching when API returns no results:
+
 - Clean game title (remove editions, platform suffixes)
 - Try alternative titles from `alternateNames` if available
 - Levenshtein distance fuzzy matching with HLTB search results
@@ -444,12 +459,14 @@ Completionist   80 Hours    ██████░░░░░░░░░░░�
 ```
 
 **Calculation**: `userPlaytimeSeconds / estimatedTimeSeconds * 100`
+
 - Parsed from HLTB "X Hours" or "X Mins" strings
 - Capped at 100% (complete)
 
 ### 5.3 Playtime Submission to HLTB
 
 "Submit playtime" button on the HLTB card:
+
 - **Visible only when**: user is logged in to Hydra (cloud sync not required)
 - **Flow**: User clicks → confirmation dialog → Hydra API proxy submits to HLTB
 - **Requires**: Backend endpoint `POST /games/:shop/:objectId/hltb/submit` that bridges to HLTB
@@ -496,77 +513,77 @@ Completionist   80 Hours    ██████░░░░░░░░░░░�
 
 ### Phase 1: Backend — Metadata Sources
 
-| # | Task | File(s) |
-|---|------|---------|
-| 1 | Create `steamgriddb-api.ts` service | `src/main/services/steamgriddb-api.ts` (NEW) |
-| 2 | Create `pcgamingwiki-api.ts` service | `src/main/services/pcgamingwiki-api.ts` (NEW) |
-| 3 | Create `ign-metadata.ts` service | `src/main/services/ign-metadata.ts` (NEW) |
-| 4 | Create `vndb-api.ts` service | `src/main/services/vndb-api.ts` (NEW) |
-| 5 | Create `steam-tags-importer.ts` service | `src/main/services/steam-tags-importer.ts` (NEW) |
-| 6 | Create unified `metadata-fetcher.ts` | `src/main/services/metadata-fetcher.ts` (NEW) |
-| 7 | Create metadata cache sublevel | `src/main/level/sublevels/metadata-cache.ts` (NEW) |
-| 8 | Add IPC handlers for metadata fetching | `src/main/events/metadata/*.ts` (NEW) |
-| 9 | Add preload + declaration bindings | `src/preload/index.ts`, `src/renderer/src/declaration.d.ts` |
+| #   | Task                                    | File(s)                                                     |
+| --- | --------------------------------------- | ----------------------------------------------------------- |
+| 1   | Create `steamgriddb-api.ts` service     | `src/main/services/steamgriddb-api.ts` (NEW)                |
+| 2   | Create `pcgamingwiki-api.ts` service    | `src/main/services/pcgamingwiki-api.ts` (NEW)               |
+| 3   | Create `ign-metadata.ts` service        | `src/main/services/ign-metadata.ts` (NEW)                   |
+| 4   | Create `vndb-api.ts` service            | `src/main/services/vndb-api.ts` (NEW)                       |
+| 5   | Create `steam-tags-importer.ts` service | `src/main/services/steam-tags-importer.ts` (NEW)            |
+| 6   | Create unified `metadata-fetcher.ts`    | `src/main/services/metadata-fetcher.ts` (NEW)               |
+| 7   | Create metadata cache sublevel          | `src/main/level/sublevels/metadata-cache.ts` (NEW)          |
+| 8   | Add IPC handlers for metadata fetching  | `src/main/events/metadata/*.ts` (NEW)                       |
+| 9   | Add preload + declaration bindings      | `src/preload/index.ts`, `src/renderer/src/declaration.d.ts` |
 
 ### Phase 2: Data Model
 
-| # | Task | File(s) |
-|---|------|---------|
-| 10 | Add metadata types | `src/types/metadata.types.ts` (NEW) |
-| 11 | Add `userStatus` field to Game | `src/types/level.types.ts` |
-| 12 | Extend HLTB types | `src/types/how-long-to-beat.types.ts` |
-| 13 | Add settings for SteamGridDB API key | UserPreferences type, settings UI |
+| #   | Task                                 | File(s)                               |
+| --- | ------------------------------------ | ------------------------------------- |
+| 10  | Add metadata types                   | `src/types/metadata.types.ts` (NEW)   |
+| 11  | Add `userStatus` field to Game       | `src/types/level.types.ts`            |
+| 12  | Extend HLTB types                    | `src/types/how-long-to-beat.types.ts` |
+| 13  | Add settings for SteamGridDB API key | UserPreferences type, settings UI     |
 
 ### Phase 3: Game Page UI
 
-| # | Task | File(s) |
-|---|------|---------|
-| 14 | Create `MetadataChipsRow` component | `src/renderer/src/pages/game-details/dashboard-cards/metadata-chips-row.tsx` (NEW) |
-| 15 | Integrate chips row into Overview tab | `src/renderer/src/pages/game-details/tabs/overview-tab.tsx` |
-| 16 | Add user status to Stats card | `src/renderer/src/pages/game-details/dashboard-cards/stats-card.tsx` |
-| 17 | Add HLTB progress bars to HLTB card | `src/renderer/src/pages/game-details/dashboard-cards/how-long-to-beat-card.tsx` |
-| 18 | Add HLTB submit button | `src/renderer/src/pages/game-details/dashboard-cards/how-long-to-beat-card.tsx` |
+| #   | Task                                  | File(s)                                                                            |
+| --- | ------------------------------------- | ---------------------------------------------------------------------------------- |
+| 14  | Create `MetadataChipsRow` component   | `src/renderer/src/pages/game-details/dashboard-cards/metadata-chips-row.tsx` (NEW) |
+| 15  | Integrate chips row into Overview tab | `src/renderer/src/pages/game-details/tabs/overview-tab.tsx`                        |
+| 16  | Add user status to Stats card         | `src/renderer/src/pages/game-details/dashboard-cards/stats-card.tsx`               |
+| 17  | Add HLTB progress bars to HLTB card   | `src/renderer/src/pages/game-details/dashboard-cards/how-long-to-beat-card.tsx`    |
+| 18  | Add HLTB submit button                | `src/renderer/src/pages/game-details/dashboard-cards/how-long-to-beat-card.tsx`    |
 
 ### Phase 4: Metadata Modal Redesign
 
-| # | Task | File(s) |
-|---|------|---------|
-| 19 | Rename "assets" → "metadata" category | `game-options-modal.tsx`, translations |
-| 20 | Create sub-tab bar component | `metadata-sub-tabs.tsx` (NEW) |
-| 21 | Create Images sub-tab (extend existing) | Extend `game-assets-settings.tsx` |
-| 22 | Create Details sub-tab form | `metadata-details-form.tsx` (NEW) |
-| 23 | Create Tags sub-tab | `metadata-tags-form.tsx` (NEW) |
-| 24 | Refactor MetadataSearchModal with source tabs | `metadata-search-modal.tsx` |
-| 25 | Create diff/merge preview overlay | `metadata-merge-preview.tsx` (NEW) |
+| #   | Task                                          | File(s)                                |
+| --- | --------------------------------------------- | -------------------------------------- |
+| 19  | Rename "assets" → "metadata" category         | `game-options-modal.tsx`, translations |
+| 20  | Create sub-tab bar component                  | `metadata-sub-tabs.tsx` (NEW)          |
+| 21  | Create Images sub-tab (extend existing)       | Extend `game-assets-settings.tsx`      |
+| 22  | Create Details sub-tab form                   | `metadata-details-form.tsx` (NEW)      |
+| 23  | Create Tags sub-tab                           | `metadata-tags-form.tsx` (NEW)         |
+| 24  | Refactor MetadataSearchModal with source tabs | `metadata-search-modal.tsx`            |
+| 25  | Create diff/merge preview overlay             | `metadata-merge-preview.tsx` (NEW)     |
 
 ### Phase 5: HowLongToBeat Improvements
 
-| # | Task | File(s) |
-|---|------|---------|
-| 26 | Client-side fallback matching | `how-long-to-beat-card.tsx` / new hook |
-| 27 | Progress calculation utilities | `src/shared/hltb-utils.ts` (NEW) |
-| 28 | VNDB fallback for HLTB matching | `vndb-api.ts` |
-| 29 | Backend endpoint for HLTB submission | `src/main/events/` |
-| 30 | Submit button UI | `how-long-to-beat-card.tsx` |
+| #   | Task                                 | File(s)                                |
+| --- | ------------------------------------ | -------------------------------------- |
+| 26  | Client-side fallback matching        | `how-long-to-beat-card.tsx` / new hook |
+| 27  | Progress calculation utilities       | `src/shared/hltb-utils.ts` (NEW)       |
+| 28  | VNDB fallback for HLTB matching      | `vndb-api.ts`                          |
+| 29  | Backend endpoint for HLTB submission | `src/main/events/`                     |
+| 30  | Submit button UI                     | `how-long-to-beat-card.tsx`            |
 
 ### Phase 6: User Status Tags
 
-| # | Task | File(s) |
-|---|------|---------|
-| 31 | Add `userStatus` to Game type | `src/types/level.types.ts` |
-| 32 | IPC handler for setting status | `src/main/events/library/set-game-user-status.ts` (NEW) |
-| 33 | Status dropdown in Stats card | `stats-card.tsx` |
-| 34 | Status display in library cards (future) | Library card components |
+| #   | Task                                     | File(s)                                                 |
+| --- | ---------------------------------------- | ------------------------------------------------------- |
+| 31  | Add `userStatus` to Game type            | `src/types/level.types.ts`                              |
+| 32  | IPC handler for setting status           | `src/main/events/library/set-game-user-status.ts` (NEW) |
+| 33  | Status dropdown in Stats card            | `stats-card.tsx`                                        |
+| 34  | Status display in library cards (future) | Library card components                                 |
 
 ### Phase 7: Polish & Integration
 
-| # | Task | File(s) |
-|---|------|---------|
-| 35 | i18n keys for all new UI | `src/locales/en/translation.json` + others |
-| 36 | SCSS for all new components | Various `.scss` files |
-| 37 | SteamGridDB API key settings UI | Settings page |
-| 38 | Typecheck + lint + test | Project-wide |
-| 39 | Code review + edge case handling | All new/modified files |
+| #   | Task                             | File(s)                                    |
+| --- | -------------------------------- | ------------------------------------------ |
+| 35  | i18n keys for all new UI         | `src/locales/en/translation.json` + others |
+| 36  | SCSS for all new components      | Various `.scss` files                      |
+| 37  | SteamGridDB API key settings UI  | Settings page                              |
+| 38  | Typecheck + lint + test          | Project-wide                               |
+| 39  | Code review + edge case handling | All new/modified files                     |
 
 ---
 
@@ -574,67 +591,67 @@ Completionist   80 Hours    ██████░░░░░░░░░░░�
 
 ### New Files
 
-| File | Purpose |
-|------|---------|
-| `src/main/services/steamgriddb-api.ts` | SteamGridDB API client for image fetching |
-| `src/main/services/pcgamingwiki-api.ts` | PCGamingWiki MediaWiki API client |
-| `src/main/services/ign-metadata.ts` | IGN metadata fetcher |
-| `src/main/services/vndb-api.ts` | VNDB REST API client |
-| `src/main/services/steam-tags-importer.ts` | Steam tags scraper |
-| `src/main/services/metadata-fetcher.ts` | Unified metadata orchestration |
-| `src/main/level/sublevels/metadata-cache.ts` | Metadata cache sublevel |
-| `src/main/events/metadata/fetch-game-metadata.ts` | IPC handler for metadata fetching |
-| `src/main/events/metadata/search-metadata.ts` | IPC handler for metadata search |
-| `src/main/events/library/set-game-user-status.ts` | IPC handler for user status |
-| `src/types/metadata.types.ts` | Extended metadata type definitions |
-| `src/shared/hltb-utils.ts` | HLTB duration parsing and progress utilities |
-| `src/renderer/src/pages/game-details/dashboard-cards/metadata-chips-row.tsx` | Metadata chips row component |
-| `src/renderer/src/pages/game-details/dashboard-cards/metadata-chips-row.scss` | Chips row styles |
-| `src/renderer/src/pages/game-details/modals/metadata-sub-tabs.tsx` | Sub-tab bar for metadata panel |
-| `src/renderer/src/pages/game-details/modals/metadata-details-form.tsx` | Details form for metadata editing |
-| `src/renderer/src/pages/game-details/modals/metadata-tags-form.tsx` | Tags form for metadata editing |
-| `src/renderer/src/pages/game-details/modals/metadata-merge-preview.tsx` | Diff/preview overlay for metadata merge |
+| File                                                                          | Purpose                                      |
+| ----------------------------------------------------------------------------- | -------------------------------------------- |
+| `src/main/services/steamgriddb-api.ts`                                        | SteamGridDB API client for image fetching    |
+| `src/main/services/pcgamingwiki-api.ts`                                       | PCGamingWiki MediaWiki API client            |
+| `src/main/services/ign-metadata.ts`                                           | IGN metadata fetcher                         |
+| `src/main/services/vndb-api.ts`                                               | VNDB REST API client                         |
+| `src/main/services/steam-tags-importer.ts`                                    | Steam tags scraper                           |
+| `src/main/services/metadata-fetcher.ts`                                       | Unified metadata orchestration               |
+| `src/main/level/sublevels/metadata-cache.ts`                                  | Metadata cache sublevel                      |
+| `src/main/events/metadata/fetch-game-metadata.ts`                             | IPC handler for metadata fetching            |
+| `src/main/events/metadata/search-metadata.ts`                                 | IPC handler for metadata search              |
+| `src/main/events/library/set-game-user-status.ts`                             | IPC handler for user status                  |
+| `src/types/metadata.types.ts`                                                 | Extended metadata type definitions           |
+| `src/shared/hltb-utils.ts`                                                    | HLTB duration parsing and progress utilities |
+| `src/renderer/src/pages/game-details/dashboard-cards/metadata-chips-row.tsx`  | Metadata chips row component                 |
+| `src/renderer/src/pages/game-details/dashboard-cards/metadata-chips-row.scss` | Chips row styles                             |
+| `src/renderer/src/pages/game-details/modals/metadata-sub-tabs.tsx`            | Sub-tab bar for metadata panel               |
+| `src/renderer/src/pages/game-details/modals/metadata-details-form.tsx`        | Details form for metadata editing            |
+| `src/renderer/src/pages/game-details/modals/metadata-tags-form.tsx`           | Tags form for metadata editing               |
+| `src/renderer/src/pages/game-details/modals/metadata-merge-preview.tsx`       | Diff/preview overlay for metadata merge      |
 
 ### Modified Files
 
-| File | Changes |
-|------|---------|
-| `src/types/level.types.ts` | Add `userStatus`, `userStatusUpdatedAt` to `Game` |
-| `src/types/how-long-to-beat.types.ts` | Add `HowLongToBeatGameData`, `HowLongToBeatProgress` |
-| `src/types/index.ts` | Export new metadata types |
-| `src/preload/index.ts` | Add new IPC bridge methods |
-| `src/renderer/src/declaration.d.ts` | Add new type declarations |
-| `src/renderer/src/components/metadata-search-modal/metadata-search-modal.tsx` | Major refactor: source tabs + merge preview |
-| `src/renderer/src/pages/game-details/modals/game-options-modal.tsx` | Rename assets→metadata, wire new sub-tabs |
-| `src/renderer/src/pages/game-details/modals/game-assets-settings.tsx` | Extend for additional image types |
-| `src/renderer/src/pages/game-details/tabs/overview-tab.tsx` | Integrate MetadataChipsRow |
-| `src/renderer/src/pages/game-details/dashboard-cards/stats-card.tsx` | Add user status display + dropdown |
-| `src/renderer/src/pages/game-details/dashboard-cards/how-long-to-beat-card.tsx` | Add progress bars + submit button |
-| `src/renderer/src/pages/game-details/sidebar/sidebar.tsx` | Minor: pass metadata context |
-| `src/renderer/src/context/game-details/game-details.context.types.ts` | Add metadata to context |
-| `src/renderer/src/services/website-links.service.ts` | Possibly updated |
-| `src/main/level/sublevels/index.ts` | Export new metadata-cache sublevel |
-| `src/main/events/index.ts` | Register new event handlers |
-| `src/locales/en/translation.json` | Add all new translation keys |
-| Settings page | Add SteamGridDB API key field |
+| File                                                                            | Changes                                              |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `src/types/level.types.ts`                                                      | Add `userStatus`, `userStatusUpdatedAt` to `Game`    |
+| `src/types/how-long-to-beat.types.ts`                                           | Add `HowLongToBeatGameData`, `HowLongToBeatProgress` |
+| `src/types/index.ts`                                                            | Export new metadata types                            |
+| `src/preload/index.ts`                                                          | Add new IPC bridge methods                           |
+| `src/renderer/src/declaration.d.ts`                                             | Add new type declarations                            |
+| `src/renderer/src/components/metadata-search-modal/metadata-search-modal.tsx`   | Major refactor: source tabs + merge preview          |
+| `src/renderer/src/pages/game-details/modals/game-options-modal.tsx`             | Rename assets→metadata, wire new sub-tabs            |
+| `src/renderer/src/pages/game-details/modals/game-assets-settings.tsx`           | Extend for additional image types                    |
+| `src/renderer/src/pages/game-details/tabs/overview-tab.tsx`                     | Integrate MetadataChipsRow                           |
+| `src/renderer/src/pages/game-details/dashboard-cards/stats-card.tsx`            | Add user status display + dropdown                   |
+| `src/renderer/src/pages/game-details/dashboard-cards/how-long-to-beat-card.tsx` | Add progress bars + submit button                    |
+| `src/renderer/src/pages/game-details/sidebar/sidebar.tsx`                       | Minor: pass metadata context                         |
+| `src/renderer/src/context/game-details/game-details.context.types.ts`           | Add metadata to context                              |
+| `src/renderer/src/services/website-links.service.ts`                            | Possibly updated                                     |
+| `src/main/level/sublevels/index.ts`                                             | Export new metadata-cache sublevel                   |
+| `src/main/events/index.ts`                                                      | Register new event handlers                          |
+| `src/locales/en/translation.json`                                               | Add all new translation keys                         |
+| Settings page                                                                   | Add SteamGridDB API key field                        |
 
 ---
 
 ## 10. Edge Cases
 
-| Scenario | Expected Behavior |
-|----------|-------------------|
-| SteamGridDB API key not configured | SteamGridDB tab shows "API key required" prompt with link to settings |
-| PCGamingWiki returns no page | Gracefully empty `technicalInfo` |
-| VNDB finds no match | Returns null; no error shown |
-| Multiple sources return conflicting data | Higher-priority source wins; sources tracked per field |
-| User rapidly switches games | Pending metadata fetches are aborted via AbortController |
-| Metadata cache stale (> 24h) | Background refresh; shows cached data while fetching |
-| Network offline during metadata fetch | Sources fail silently; whatever was fetched is used |
-| Custom game with no matching catalogue entry | Metadata search still works; results from external sources |
-| Game title has special characters | URL-encoded in all API calls; cleaned for search matching |
-| Very large image download (SteamGridDB) | Stream to disk; show progress; timeout after 30s |
-| User imports custom game, then links to catalogue | Metadata sources update to use catalogue data as primary |
+| Scenario                                          | Expected Behavior                                                     |
+| ------------------------------------------------- | --------------------------------------------------------------------- |
+| SteamGridDB API key not configured                | SteamGridDB tab shows "API key required" prompt with link to settings |
+| PCGamingWiki returns no page                      | Gracefully empty `technicalInfo`                                      |
+| VNDB finds no match                               | Returns null; no error shown                                          |
+| Multiple sources return conflicting data          | Higher-priority source wins; sources tracked per field                |
+| User rapidly switches games                       | Pending metadata fetches are aborted via AbortController              |
+| Metadata cache stale (> 24h)                      | Background refresh; shows cached data while fetching                  |
+| Network offline during metadata fetch             | Sources fail silently; whatever was fetched is used                   |
+| Custom game with no matching catalogue entry      | Metadata search still works; results from external sources            |
+| Game title has special characters                 | URL-encoded in all API calls; cleaned for search matching             |
+| Very large image download (SteamGridDB)           | Stream to disk; show progress; timeout after 30s                      |
+| User imports custom game, then links to catalogue | Metadata sources update to use catalogue data as primary              |
 
 ---
 

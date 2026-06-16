@@ -158,12 +158,7 @@ contextBridge.exposeInMainWorld("electron", {
     assetType: "icon" | "logo" | "hero",
     source: "google" | "steamgriddb" | "igdb" | "steamcdn"
   ) =>
-    ipcRenderer.invoke(
-      "searchGameAssetsMulti",
-      gameTitle,
-      assetType,
-      source
-    ),
+    ipcRenderer.invoke("searchGameAssetsMulti", gameTitle, assetType, source),
   onUpdateAchievements: (
     objectId: string,
     shop: GameShop,
