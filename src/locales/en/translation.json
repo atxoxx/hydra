@@ -1718,6 +1718,7 @@
     "loading_giveaways": "Loading giveaways...",
     "could_not_load_giveaways": "Could not load giveaways. Please try again.",
     "no_giveaways": "No giveaways available right now.",
+    "retrying_giveaways": "Retrying... (attempt {{attempt}}/{{max}})",
     "view_all_on_itad": "View all on IsThereAnyDeal",
     "open_giveaway": "Open giveaway",
     "expired": "Expired",

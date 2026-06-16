@@ -1331,5 +1331,6 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("transferGameFiles", shop, objectId, destParent),
 
   /* ITAD Giveaways */
-  getItadGiveaways: () => ipcRenderer.invoke("getItadGiveaways"),
+  getItadGiveaways: (forceRefresh?: boolean) =>
+    ipcRenderer.invoke("getItadGiveaways", forceRefresh),
 });

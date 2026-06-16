@@ -57,6 +57,12 @@
     gap: calc(globals.$spacing-unit * 1.5);
   }
 
+  &__error-actions {
+    display: flex;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 1);
+  }
+
   &__spinner {
     width: 28px;
     height: 28px;
@@ -82,6 +88,26 @@
 
     &:hover {
       opacity: 0.9;
+    }
+  }
+
+  &__view-itad-button {
+    display: flex;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 0.5);
+    padding: calc(globals.$spacing-unit * 0.75) calc(globals.$spacing-unit * 2);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid globals.$border-color;
+    border-radius: 8px;
+    color: globals.$muted-color;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: globals.$body-color;
     }
   }
 

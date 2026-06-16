@@ -1,31 +1,95 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { LinkExternalIcon, SyncIcon, ClockIcon } from "@primer/octicons-react";
 import type { Giveaway } from "../../../declaration";
 import type { DealSourceProps } from "../deal-sources";
 import "./giveaway-panel.scss";
 
+const MAX_AUTO_RETRIES = 3;
+const AUTO_RETRY_DELAY_MS = 1500;
+
+const ITAD_GIVEAWAYS_URL = "https://isthereanydeal.com/giveaways/";
+
 export function GiveawayPanel(_props: DealSourceProps) {
   const { t } = useTranslation("deals");
   const [giveaways, setGiveaways] = useState<Giveaway[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [autoRetryCount, setAutoRetryCount] = useState(0);
+  const isMountedRef = useRef(true);
 
-  const fetchGiveaways = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await window.electron.getItadGiveaways();
-      setGiveaways(data ?? []);
-    } catch {
-      setError(t("could_not_load_giveaways"));
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const fetchGiveaways = useCallback(
+    async (forceRefresh = false) => {
+      setLoading(true);
+      setError(null);
+      setAutoRetryCount(0);
+
+      let attempt = 0;
+      while (attempt < MAX_AUTO_RETRIES) {
+        if (!isMountedRef.current) return;
+
+        attempt++;
+        if (attempt > 1) {
+          setAutoRetryCount(attempt);
+          // Wait before retrying
+          await new Promise((resolve) =>
+            setTimeout(resolve, AUTO_RETRY_DELAY_MS)
+          );
+          if (!isMountedRef.current) return;
+        }
+
+        try {
+          const result = await window.electron.getItadGiveaways(forceRefresh);
+
+          if (result.error && result.giveaways.length === 0) {
+            // API returned an error with no data — retry
+            console.warn(
+              `[GiveawayPanel] Attempt ${attempt}/${MAX_AUTO_RETRIES} failed:`,
+              result.error
+            );
+            if (attempt < MAX_AUTO_RETRIES) continue;
+            // All retries exhausted
+            setError(t("could_not_load_giveaways"));
+            setAutoRetryCount(0);
+            break;
+          }
+
+          // Success (or partial success with stale cache)
+          setGiveaways(result.giveaways ?? []);
+          setError(null);
+          setAutoRetryCount(0);
+          break;
+        } catch {
+          console.warn(
+            `[GiveawayPanel] Attempt ${attempt}/${MAX_AUTO_RETRIES} threw an exception`
+          );
+          if (attempt < MAX_AUTO_RETRIES) continue;
+          // All retries exhausted
+          setError(t("could_not_load_giveaways"));
+          setAutoRetryCount(0);
+        }
+      }
+
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
+    },
+    [t]
+  );
 
   useEffect(() => {
     fetchGiveaways();
+  }, [fetchGiveaways]);
+
+  const handleRefresh = useCallback(() => {
+    fetchGiveaways(true);
   }, [fetchGiveaways]);
 
   const formatExpiry = (date: Date | null): string => {
@@ -61,6 +125,24 @@ export function GiveawayPanel(_props: DealSourceProps) {
     }
   };
 
+  // Auto-retry in progress
+  if (loading && autoRetryCount > 0) {
+    return (
+      <div className="giveaway-panel">
+        <div className="giveaway-panel__loading">
+          <div className="giveaway-panel__spinner" />
+          <p>
+            {t("retrying_giveaways", {
+              attempt: autoRetryCount,
+              max: MAX_AUTO_RETRIES,
+            })}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Initial loading
   if (loading && giveaways.length === 0) {
     return (
       <div className="giveaway-panel">
@@ -72,19 +154,30 @@ export function GiveawayPanel(_props: DealSourceProps) {
     );
   }
 
+  // Error state (after all retries exhausted, no cached data)
   if (error && giveaways.length === 0) {
     return (
       <div className="giveaway-panel">
         <div className="giveaway-panel__error">
           <p>{error}</p>
-          <button
-            type="button"
-            className="giveaway-panel__retry-button"
-            onClick={fetchGiveaways}
-          >
-            <SyncIcon size={14} />
-            {t("retry")}
-          </button>
+          <div className="giveaway-panel__error-actions">
+            <button
+              type="button"
+              className="giveaway-panel__retry-button"
+              onClick={handleRefresh}
+            >
+              <SyncIcon size={14} />
+              {t("retry")}
+            </button>
+            <button
+              type="button"
+              className="giveaway-panel__view-itad-button"
+              onClick={() => openLink(ITAD_GIVEAWAYS_URL)}
+            >
+              {t("view_all_on_itad")}
+              <LinkExternalIcon size={12} />
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -97,7 +190,7 @@ export function GiveawayPanel(_props: DealSourceProps) {
         <button
           type="button"
           className="giveaway-panel__refresh-button"
-          onClick={fetchGiveaways}
+          onClick={handleRefresh}
           disabled={loading}
           title={t("refresh")}
         >
@@ -109,6 +202,19 @@ export function GiveawayPanel(_props: DealSourceProps) {
       {giveaways.length === 0 ? (
         <div className="giveaway-panel__empty">
           <p>{t("no_giveaways")}</p>
+          <a
+            href={ITAD_GIVEAWAYS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="giveaway-panel__view-all"
+            onClick={(e) => {
+              e.preventDefault();
+              openLink(ITAD_GIVEAWAYS_URL);
+            }}
+          >
+            {t("view_all_on_itad")}
+            <LinkExternalIcon size={12} />
+          </a>
         </div>
       ) : (
         <div className="giveaway-panel__grid">
@@ -163,13 +269,13 @@ export function GiveawayPanel(_props: DealSourceProps) {
 
       <div className="giveaway-panel__footer">
         <a
-          href="https://isthereanydeal.com/giveaways/"
+          href={ITAD_GIVEAWAYS_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="giveaway-panel__view-all"
           onClick={(e) => {
             e.preventDefault();
-            openLink("https://isthereanydeal.com/giveaways/");
+            openLink(ITAD_GIVEAWAYS_URL);
           }}
         >
           {t("view_all_on_itad")}

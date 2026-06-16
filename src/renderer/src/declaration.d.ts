@@ -71,6 +71,12 @@ export interface Giveaway {
   boxartUrl: string | null;
 }
 
+export interface GiveawayResult {
+  giveaways: Giveaway[];
+  fromCache: boolean;
+  error: string | null;
+}
+
 export interface DriveInfo {
   root: string;
   label: string;
@@ -1006,7 +1012,7 @@ declare global {
     };
 
     /* ITAD Giveaways */
-    getItadGiveaways: () => Promise<Giveaway[]>;
+    getItadGiveaways: (forceRefresh?: boolean) => Promise<GiveawayResult>;
 
     /* Transfer Game */
     getAvailableDrives: () => Promise<DriveInfo[]>;
