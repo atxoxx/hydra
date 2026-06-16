@@ -1,17 +1,59 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { DownloadIcon, PeopleIcon, StarIcon } from "@primer/octicons-react";
+import {
+  DownloadIcon,
+  PeopleIcon,
+  StarIcon,
+} from "@primer/octicons-react";
 import { StarRating } from "@renderer/components/star-rating/star-rating";
+import { GameStatusDropdown } from "@renderer/components";
 import { gameDetailsContext } from "@renderer/context";
-import { useFormat } from "@renderer/hooks";
+import { useFormat, useToast } from "@renderer/hooks";
+import type { UserGameStatus } from "@types";
 
 import "./dashboard-card.scss";
 import "./stats-card.scss";
 
 export function StatsCard() {
   const { t } = useTranslation("game_details");
-  const { stats, game } = useContext(gameDetailsContext);
+  const { stats, game, shop, objectId, updateGame } =
+    useContext(gameDetailsContext);
   const { numberFormatter } = useFormat();
+  const { showSuccessToast, showErrorToast } = useToast();
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+  // Normalize legacy "to_play" from existing LevelDB data
+  const rawStatus = game?.userStatus;
+  const currentStatus: UserGameStatus =
+    String(rawStatus) === "to_play"
+      ? "plan_to_play"
+      : (rawStatus ?? "none");
+
+  const handleStatusChange = async (status: UserGameStatus) => {
+    if (!shop || !objectId || isUpdatingStatus) return;
+    setIsUpdatingStatus(true);
+    try {
+      const result = await window.electron.setGameUserStatus(
+        shop,
+        objectId,
+        status
+      );
+      if (result.ok) {
+        showSuccessToast(
+          t(
+            status === "none" ? "status_cleared" : "status_updated"
+          )
+        );
+        await updateGame();
+      } else {
+        showErrorToast(result.error || t("status_update_failed"));
+      }
+    } catch {
+      showErrorToast(t("status_update_failed"));
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
 
   if (!stats && !game) return null;
 
@@ -25,6 +67,16 @@ export function StatsCard() {
       </div>
 
       <div className="dashboard-card__body">
+        {game && (
+          <div className="stats-card__status-row">
+            <GameStatusDropdown
+              value={currentStatus}
+              onChange={handleStatusChange}
+              disabled={isUpdatingStatus}
+            />
+          </div>
+        )}
+
         <div className="stats-card__list">
           {stats && (
             <>

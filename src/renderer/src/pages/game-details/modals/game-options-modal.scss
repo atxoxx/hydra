@@ -7,11 +7,41 @@
     gap: 16px;
   }
 
-  &__metadata-search-row {
-    button {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+  &__metadata-panel {
+    display: flex;
+    flex-direction: column;
+    gap: calc(globals.$spacing-unit * 2);
+  }
+
+  &__subtab-bar {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid globals.$border-color;
+    margin-bottom: calc(globals.$spacing-unit / 2);
+  }
+
+  &__subtab-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: globals.$muted-color;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+    margin-bottom: -1px;
+
+    &:hover {
+      color: #dadbe1;
+    }
+
+    &--active {
+      color: #fff;
+      border-bottom-color: rgba(255, 255, 255, 0.8);
     }
   }
 

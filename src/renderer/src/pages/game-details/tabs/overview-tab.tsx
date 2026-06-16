@@ -6,6 +6,7 @@ import { StatsCard } from "../dashboard-cards/stats-card";
 import { HowLongToBeatCard } from "../dashboard-cards/how-long-to-beat-card";
 import { DescriptionCard } from "../dashboard-cards/description-card";
 import { GalleryCard } from "../dashboard-cards/gallery-card";
+import { MetadataChipsRow } from "../dashboard-cards/metadata-chips-row";
 import { SimilarGames } from "../similar-games/similar-games";
 import "./overview-tab.scss";
 
@@ -18,7 +19,6 @@ export function OverviewTab() {
     data: HowLongToBeatCategory[] | null;
   }>({ isLoading: true, data: null });
 
-  // Fetch HowLongToBeat data for the dashboard card
   useEffect(() => {
     if (objectId) {
       setHowLongToBeat({ isLoading: true, data: null });
@@ -41,6 +41,8 @@ export function OverviewTab() {
 
   return (
     <div className="overview-tab">
+      <MetadataChipsRow />
+
       <div className="overview-tab__dashboard-grid">
         <PlayStatusCard />
         <StatsCard />

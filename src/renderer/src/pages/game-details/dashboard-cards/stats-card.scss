@@ -1,6 +1,10 @@
 @use "../../../scss/globals.scss";
 
 .stats-card {
+  &__status-row {
+    margin-bottom: calc(globals.$spacing-unit * 1.5);
+  }
+
   &__list {
     display: flex;
     flex-direction: column;

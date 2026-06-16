@@ -36,6 +36,7 @@ import type {
   PlatformGame,
   FoundExe,
   WatchlistEntry,
+  UserGameStatus,
 } from "@types";
 import type { AuthPage } from "@shared";
 import type { AxiosProgressEvent } from "axios";
@@ -152,6 +153,17 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("getGameAssets", objectId, shop),
   searchGameAssets: (gameTitle: string, assetType: "icon" | "logo" | "hero") =>
     ipcRenderer.invoke("searchGameAssets", gameTitle, assetType),
+  searchGameAssetsMulti: (
+    gameTitle: string,
+    assetType: "icon" | "logo" | "hero",
+    source: "google" | "steamgriddb" | "igdb" | "steamcdn"
+  ) =>
+    ipcRenderer.invoke(
+      "searchGameAssetsMulti",
+      gameTitle,
+      assetType,
+      source
+    ),
   onUpdateAchievements: (
     objectId: string,
     shop: GameShop,
@@ -1353,4 +1365,27 @@ contextBridge.exposeInMainWorld("electron", {
   /* ITAD Giveaways */
   getItadGiveaways: (forceRefresh?: boolean) =>
     ipcRenderer.invoke("getItadGiveaways", forceRefresh),
+  /* Metadata */
+  fetchGameMetadata: (shop: string, objectId: string, gameTitle: string) =>
+    ipcRenderer.invoke("fetchGameMetadata", shop, objectId, gameTitle),
+  searchGameMetadata: (query: string, source: string, shop?: string) =>
+    ipcRenderer.invoke("searchGameMetadata", query, source, shop),
+  setGameUserStatus: (
+    shop: GameShop,
+    objectId: string,
+    status: UserGameStatus
+  ) => ipcRenderer.invoke("setGameUserStatus", shop, objectId, status),
+  saveGameMetadata: (payload: {
+    shop: string;
+    objectId: string;
+    metadata: {
+      description?: string | null;
+      genres?: string[] | null;
+      developers?: string[] | null;
+      publishers?: string[] | null;
+      tags?: string[] | null;
+      releaseDate?: string | null;
+      userStatus?: UserGameStatus | null;
+    };
+  }) => ipcRenderer.invoke("saveGameMetadata", payload),
 });

@@ -58,6 +58,9 @@ import type {
   PlatformGame,
   AllPlatformsScanResult,
   WatchlistEntry,
+  GameMetadata,
+  UserGameStatus,
+  MetadataSearchResult,
 } from "@types";
 import type { AxiosProgressEvent } from "axios";
 
@@ -241,6 +244,22 @@ declare global {
     searchGameAssets: (
       gameTitle: string,
       assetType: "icon" | "logo" | "hero"
+    ) => Promise<{
+      results: {
+        id: string;
+        thumbnailUrl: string;
+        fullImageUrl: string;
+        sourceUrl: string;
+        sourceName: string;
+        width: number | null;
+        height: number | null;
+      }[];
+      query: string;
+    }>;
+    searchGameAssetsMulti: (
+      gameTitle: string,
+      assetType: "icon" | "logo" | "hero",
+      source: "google" | "steamgriddb" | "igdb" | "steamcdn"
     ) => Promise<{
       results: {
         id: string;
@@ -1082,6 +1101,39 @@ declare global {
 
     /* ITAD Giveaways */
     getItadGiveaways: (forceRefresh?: boolean) => Promise<GiveawayResult>;
+
+    /* ITAD Giveaways */
+    getItadGiveaways: (forceRefresh?: boolean) => Promise<GiveawayResult>;
+
+    /* Metadata */
+    fetchGameMetadata: (
+      shop: string,
+      objectId: string,
+      gameTitle: string
+    ) => Promise<GameMetadata | null>;
+    searchGameMetadata: (
+      query: string,
+      source: string,
+      shop?: string
+    ) => Promise<MetadataSearchResult[]>;
+    setGameUserStatus: (
+      shop: GameShop,
+      objectId: string,
+      status: UserGameStatus
+    ) => Promise<{ ok: boolean; error?: string }>;
+    saveGameMetadata: (payload: {
+      shop: string;
+      objectId: string;
+      metadata: {
+        description?: string | null;
+        genres?: string[] | null;
+        developers?: string[] | null;
+        publishers?: string[] | null;
+        tags?: string[] | null;
+        releaseDate?: string | null;
+        userStatus?: UserGameStatus | null;
+      };
+    }) => Promise<{ ok: boolean; error?: string; game?: Game }>;
 
     /* Transfer Game */
     getAvailableDrives: () => Promise<DriveInfo[]>;

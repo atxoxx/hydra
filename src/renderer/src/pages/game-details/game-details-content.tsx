@@ -73,7 +73,7 @@ export function GameDetailsContent() {
   };
 
   const handleEditGameClick = () => {
-    setGameOptionsInitialCategory("assets");
+    setGameOptionsInitialCategory("metadata");
     setShowGameOptionsModal(true);
   };
 

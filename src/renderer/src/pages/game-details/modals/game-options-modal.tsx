@@ -1,6 +1,6 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Modal, Button, MetadataSearchModal } from "@renderer/components";
+import { Modal, MetadataSearchModal } from "@renderer/components";
 import { formatBytes, GAMEMODE_SITE_URL, MANGOHUD_SITE_URL } from "@shared";
 
 import type {
@@ -30,8 +30,7 @@ import {
   DownloadIcon,
   FileDirectoryIcon,
   GearIcon,
-  ImageIcon,
-  SearchIcon,
+  InfoIcon,
 } from "@primer/octicons-react";
 import { Wrench } from "lucide-react";
 import { GameAssetsSettings } from "./game-assets-settings";
@@ -46,7 +45,9 @@ import { CompatibilitySettingsSection } from "./game-options-modal/compatibility
 import { DownloadsSettingsSection } from "./game-options-modal/downloads-section";
 import { DangerZoneSection } from "./game-options-modal/danger-zone-section";
 import { HydraCloudSettingsSection } from "./game-options-modal/hydra-cloud-section";
+import { MetadataGeneralSection } from "./game-options-modal/metadata-general-section";
 import type { GameSettingsCategoryId } from "./game-options-modal/types";
+import { ImageIcon, PencilIcon } from "@primer/octicons-react";
 import { CreateSteamShortcutModal } from "./create-steam-shortcut-modal";
 
 export interface GameOptionsModalProps {
@@ -122,6 +123,9 @@ export function GameOptionsModal({
   const [showSteamShortcutModal, setShowSteamShortcutModal] = useState(false);
   const [showMetadataSearchModal, setShowMetadataSearchModal] = useState(false);
   const [steamShortcutExists, setSteamShortcutExists] = useState(false);
+  const [metadataSubTab, setMetadataSubTab] = useState<"general" | "media">(
+    "general"
+  );
 
   const {
     removeGameInstaller,
@@ -639,9 +643,9 @@ export function GameOptionsModal({
             },
           ]),
       {
-        id: "assets" as const,
-        label: t("settings_category_assets"),
-        icon: <ImageIcon size={16} />,
+        id: "metadata" as const,
+        label: t("settings_category_metadata"),
+        icon: <InfoIcon size={16} />,
       },
       {
         id: "hydra_cloud" as const,
@@ -875,22 +879,55 @@ export function GameOptionsModal({
                 showLaunchOptionsSection={false}
               />
             )}
-            {selectedCategory === "assets" && (
-              <div className="game-options-modal__assets-wrapper">
-                <div className="game-options-modal__metadata-search-row">
-                  <Button
-                    theme="outline"
-                    onClick={() => setShowMetadataSearchModal(true)}
+            {selectedCategory === "metadata" && (
+              <div className="game-options-modal__metadata-panel">
+                <div className="game-options-modal__subtab-bar">
+                  <button
+                    type="button"
+                    className={`game-options-modal__subtab-button ${
+                      metadataSubTab === "general"
+                        ? "game-options-modal__subtab-button--active"
+                        : ""
+                    }`}
+                    onClick={() => setMetadataSubTab("general")}
                   >
-                    <SearchIcon size={14} />
-                    {t("settings_category_search_metadata")}
-                  </Button>
+                    <PencilIcon size={14} />
+                    <span>
+                      {t("metadata_subtab_general", "General")}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`game-options-modal__subtab-button ${
+                      metadataSubTab === "media"
+                        ? "game-options-modal__subtab-button--active"
+                        : ""
+                    }`}
+                    onClick={() => setMetadataSubTab("media")}
+                  >
+                    <ImageIcon size={14} />
+                    <span>{t("metadata_subtab_media", "Media")}</span>
+                  </button>
                 </div>
-                <GameAssetsSettings
-                  game={game}
-                  shopDetails={shopDetails}
-                  onGameUpdated={updateGame}
-                />
+
+                {metadataSubTab === "general" && (
+                  <MetadataGeneralSection
+                    game={game}
+                    shopDetails={shopDetails}
+                    onDownloadMetadata={() =>
+                      setShowMetadataSearchModal(true)
+                    }
+                    onSaved={updateGame}
+                  />
+                )}
+
+                {metadataSubTab === "media" && (
+                  <GameAssetsSettings
+                    game={game}
+                    shopDetails={shopDetails}
+                    onGameUpdated={updateGame}
+                  />
+                )}
               </div>
             )}
             {selectedCategory === "hydra_cloud" && (

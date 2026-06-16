@@ -10,6 +10,17 @@ import "./game-assets-settings.scss";
 
 type AssetType = "icon" | "logo" | "hero";
 type SearchStatus = "idle" | "loading" | "loaded" | "empty" | "error";
+type ImageSource = "google" | "steamgriddb" | "igdb" | "steamcdn";
+
+const IMAGE_SOURCES: {
+  id: ImageSource;
+  labelKey: string;
+}[] = [
+  { id: "google", labelKey: "edit_game_modal_source_google" },
+  { id: "steamgriddb", labelKey: "edit_game_modal_source_steamgriddb" },
+  { id: "igdb", labelKey: "edit_game_modal_source_igdb" },
+  { id: "steamcdn", labelKey: "edit_game_modal_source_steamcdn" },
+];
 
 interface AssetSearchResult {
   id: string;
@@ -118,6 +129,8 @@ export function GameAssetsSettings({
   >(null);
   const [selectedAssetType, setSelectedAssetType] = useState<AssetType>("icon");
   const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
+  const [selectedImageSource, setSelectedImageSource] =
+    useState<ImageSource>("google");
 
   // --- Search state ---
   const [searchQuery, setSearchQuery] = useState(game.title);
@@ -137,8 +150,8 @@ export function GameAssetsSettings({
   const searchCache = useRef<Map<string, SearchGameAssetsResponse>>(new Map());
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const getCacheKey = (assetType: AssetType, query: string) =>
-    `${game.id}:${query}:${assetType}`;
+  const getCacheKey = (assetType: AssetType, query: string, source: ImageSource) =>
+    `${game.id}:${source}:${query}:${assetType}`;
 
   const isCustomGame = useCallback(
     (currentGame: LibraryGame | Game): boolean => {
@@ -272,17 +285,22 @@ export function GameAssetsSettings({
 
     // Trigger auto-search for the new game using game.title directly
     // (avoiding stale searchQuery closure in the other auto-search effect)
-    performSearch(selectedAssetType, game.title);
+    performSearch(selectedAssetType, game.title, selectedImageSource);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game, isCustomGame, setCustomGameAssets, setNonCustomGameAssets]);
 
   // --- Search logic ---
   const performSearch = useCallback(
-    async (assetType: AssetType, query: string, bypassCache = false) => {
+    async (
+      assetType: AssetType,
+      query: string,
+      source: ImageSource,
+      bypassCache = false
+    ) => {
       const trimmedQuery = query.trim();
       if (!trimmedQuery) return;
 
-      const cacheKey = getCacheKey(assetType, trimmedQuery);
+      const cacheKey = getCacheKey(assetType, trimmedQuery, source);
 
       // Check session cache first
       if (!bypassCache && searchCache.current.has(cacheKey)) {
@@ -304,9 +322,10 @@ export function GameAssetsSettings({
       setSearchResults(null);
 
       try {
-        const response = await window.electron.searchGameAssets(
+        const response = await window.electron.searchGameAssetsMulti(
           trimmedQuery,
-          assetType
+          assetType,
+          source
         );
 
         // Discard stale results if controller was aborted
@@ -329,12 +348,14 @@ export function GameAssetsSettings({
   );
 
   const handleRefreshSearch = () => {
-    searchCache.current.delete(getCacheKey(selectedAssetType, searchQuery));
-    performSearch(selectedAssetType, searchQuery, true);
+    searchCache.current.delete(
+      getCacheKey(selectedAssetType, searchQuery, selectedImageSource)
+    );
+    performSearch(selectedAssetType, searchQuery, selectedImageSource, true);
   };
 
   const handleSearchRetry = () => {
-    performSearch(selectedAssetType, searchQuery, true);
+    performSearch(selectedAssetType, searchQuery, selectedImageSource, true);
   };
 
   const handleSearchInputChange = (
@@ -347,8 +368,10 @@ export function GameAssetsSettings({
     event: React.KeyboardEvent<HTMLInputElement>
   ) => {
     if (event.key === "Enter") {
-      searchCache.current.delete(getCacheKey(selectedAssetType, searchQuery));
-      performSearch(selectedAssetType, searchQuery, true);
+      searchCache.current.delete(
+        getCacheKey(selectedAssetType, searchQuery, selectedImageSource)
+      );
+      performSearch(selectedAssetType, searchQuery, selectedImageSource, true);
     }
   };
 
@@ -433,9 +456,10 @@ export function GameAssetsSettings({
       await Promise.all(
         assetTypes.map(async (assetType) => {
           try {
-            const response = await window.electron.searchGameAssets(
+            const response = await window.electron.searchGameAssetsMulti(
               game.title,
-              assetType
+              assetType,
+              "google"
             );
 
             if (response && response.results && response.results.length > 0) {
@@ -509,7 +533,15 @@ export function GameAssetsSettings({
   // --- Existing asset management ---
   const handleAssetTypeChange = (assetType: AssetType) => {
     setSelectedAssetType(assetType);
-    performSearch(assetType, searchQuery);
+    performSearch(assetType, searchQuery, selectedImageSource);
+  };
+
+  const handleImageSourceChange = (source: ImageSource) => {
+    setSelectedImageSource(source);
+    searchCache.current.delete(
+      getCacheKey(selectedAssetType, searchQuery, source)
+    );
+    performSearch(selectedAssetType, searchQuery, source, true);
   };
 
   const getAssetDisplayPath = (assetType: AssetType): string => {
@@ -880,6 +912,24 @@ export function GameAssetsSettings({
           </Button>
         </div>
 
+        <div className="game-assets-settings__source-tabs">
+          {IMAGE_SOURCES.map((src) => (
+            <button
+              key={src.id}
+              type="button"
+              className={`game-assets-settings__source-tab ${
+                selectedImageSource === src.id
+                  ? "game-assets-settings__source-tab--active"
+                  : ""
+              }`}
+              onClick={() => handleImageSourceChange(src.id)}
+              disabled={searchStatus === "loading" || isAutoFetching}
+            >
+              {t(src.labelKey)}
+            </button>
+          ))}
+        </div>
+
         <div className="game-assets-settings__search-input-row">
           <TextField
             placeholder={game.title || t("edit_game_modal_search_placeholder")}
@@ -893,9 +943,18 @@ export function GameAssetsSettings({
                 theme="outline"
                 onClick={() => {
                   searchCache.current.delete(
-                    getCacheKey(selectedAssetType, searchQuery)
+                    getCacheKey(
+                      selectedAssetType,
+                      searchQuery,
+                      selectedImageSource
+                    )
                   );
-                  performSearch(selectedAssetType, searchQuery, true);
+                  performSearch(
+                    selectedAssetType,
+                    searchQuery,
+                    selectedImageSource,
+                    true
+                  );
                 }}
                 disabled={!searchQuery.trim() || searchStatus === "loading"}
               >

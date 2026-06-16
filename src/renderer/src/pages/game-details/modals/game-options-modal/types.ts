@@ -1,7 +1,7 @@
 export type GameSettingsCategoryId =
   | "general"
   | "locations"
-  | "assets"
+  | "metadata"
   | "hydra_cloud"
   | "compatibility"
   | "downloads"

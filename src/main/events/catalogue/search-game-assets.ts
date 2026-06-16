@@ -1,6 +1,6 @@
 import { registerEvent } from "../register-event";
-import { searchGameAssets } from "@main/services/google-image-scraper";
-import type { AssetType } from "@main/services/google-image-scraper";
+import { searchGameAssets } from "@main/services/duckduckgo-image-search";
+import type { AssetType } from "@main/services/duckduckgo-image-search";
 
 const searchGameAssetsEvent = async (
   _event: Electron.IpcMainInvokeEvent,

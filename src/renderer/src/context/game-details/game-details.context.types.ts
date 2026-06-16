@@ -10,7 +10,7 @@ import type {
 export type GameOptionsCategoryId =
   | "general"
   | "locations"
-  | "assets"
+  | "metadata"
   | "hydra_cloud"
   | "compatibility"
   | "downloads"

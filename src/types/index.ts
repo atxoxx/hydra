@@ -645,6 +645,7 @@ export * from "./steam.types";
 export * from "./download.types";
 export * from "./ludusavi.types";
 export * from "./how-long-to-beat.types";
+export * from "./metadata.types";
 export * from "./level.types";
 export * from "./theme.types";
 export * from "./emulator.types";

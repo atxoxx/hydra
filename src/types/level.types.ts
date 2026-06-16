@@ -6,6 +6,7 @@ import type {
 } from "./game.types";
 import type { DownloadStatus } from "./download.types";
 import type { ClassicsDisc } from "./emulator.types";
+import type { UserGameStatus } from "./metadata.types";
 
 export type SubscriptionStatus = "active" | "pending" | "cancelled";
 
@@ -91,6 +92,22 @@ export interface Game {
   linkedObjectId?: string | null;
   /** Whether the game is on the user's watchlist */
   watched?: boolean;
+  /** User-defined game status tag */
+  userStatus?: UserGameStatus | null;
+  /** When the user status was last changed */
+  userStatusUpdatedAt?: Date | null;
+  /** User-edited game description (overrides store description) */
+  description?: string | null;
+  /** User-defined genres (array of genre names, overrides store genres) */
+  genres?: string[] | null;
+  /** User-defined developers (overrides store developers) */
+  developers?: string[] | null;
+  /** User-defined publishers (overrides store publishers) */
+  publishers?: string[] | null;
+  /** User-defined tags (free-form tags) */
+  tags?: string[] | null;
+  /** User-defined release date (ISO date string, e.g. "2024-03-15") */
+  releaseDate?: string | null;
 }
 
 export type WatchlistPriority = "must-play" | "want" | "later";

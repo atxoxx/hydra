@@ -25,6 +25,9 @@ import "./emulators";
 import "./itad-giveaways";
 import "./sessions/get-game-sessions";
 import "./sessions/clear-activity-data";
+import "./metadata/fetch-game-metadata";
+import "./library/set-game-user-status";
+import "./library/save-game-metadata";
 
 import { isPortableVersion } from "@main/helpers";
 

@@ -1,0 +1,46 @@
+@use "../../scss/globals.scss";
+
+.game-status-dropdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: globals.$small-font-size;
+  font-weight: 600;
+
+  &__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &__select {
+    appearance: none;
+    background: transparent;
+    border: none;
+    font-size: globals.$small-font-size;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    // Inherit the inline color set via React style, but fall back to white
+    color: inherit;
+
+    &:focus {
+      outline: none;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    option {
+      // Ensure dropdown options are readable on dark backgrounds
+      background-color: globals.$dark-background-color;
+      color: #dadbe1;
+    }
+  }
+}

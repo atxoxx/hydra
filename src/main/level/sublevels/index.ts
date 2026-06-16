@@ -16,3 +16,4 @@ export * from "./emulators";
 export * from "./ps2-memory-card-saves";
 export * from "./ps1-memory-card-saves";
 export * from "./watchlist";
+export * from "./metadata-cache";

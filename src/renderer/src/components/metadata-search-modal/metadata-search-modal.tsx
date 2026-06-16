@@ -3,16 +3,63 @@ import { useTranslation } from "react-i18next";
 import { SearchIcon, SyncIcon } from "@primer/octicons-react";
 import { Modal, Button, TextField } from "@renderer/components";
 import { useToast } from "@renderer/hooks";
-import type { GameShop, LibraryGame } from "@types";
+import { logger } from "@renderer/logger";
+import type { LibraryGame, MetadataSearchResult } from "@types";
 
 import "./metadata-search-modal.scss";
 
-interface CatalogueSuggestion {
-  title: string;
-  objectId: string;
-  shop: GameShop;
-  iconUrl: string | null;
+const SOURCE_TABS: {
+  id: string;
+  labelKey: string;
+}[] = [
+  { id: "all", labelKey: "metadata_source_all" },
+  { id: "steam", labelKey: "metadata_source_steam" },
+  { id: "vndb", labelKey: "metadata_source_vndb" },
+];
+
+const SOURCE_LABELS: Record<string, string> = {
+  all: "All sources",
+  steam: "Steam",
+  "steam-direct": "Steam",
+  "steam-enriched": "Steam",
+  catalogue: "Catalogue",
+  hydra: "Catalogue",
+  igdb: "Catalogue",
+  vndb: "VNDB",
+};
+
+// "igdb" and "hydra" map onto the unified "all" path on the main side. Normalize
+// before sending the IPC so older hardcoded callers still work.
+function normalizeSource(source: string): "all" | "steam" | "vndb" {
+  if (source === "steam" || source === "vndb") return source;
+  return "all";
 }
+
+/** Fields that can be selectively merged from a metadata search result. */
+const MERGE_FIELDS = [
+  { key: "title", labelKey: "metadata_field_title" },
+  { key: "releaseYear", labelKey: "metadata_field_release_date" },
+  { key: "description", labelKey: "metadata_field_description" },
+  { key: "genres", labelKey: "metadata_field_genres" },
+  { key: "developers", labelKey: "metadata_field_developers" },
+  { key: "publishers", labelKey: "metadata_field_publishers" },
+] as const;
+
+type MergeFieldKey = (typeof MERGE_FIELDS)[number]["key"];
+
+/** Safe array accessors — filters out empty/whitespace strings so the
+ *  joined preview never renders placeholders like ", , ," */
+const cleaned = (values: unknown): string[] =>
+  Array.isArray(values)
+    ? values.filter(
+        (v): v is string => typeof v === "string" && v.trim().length > 0
+      )
+    : [];
+const safeGenres = (r: MetadataSearchResult): string[] => cleaned(r.genres);
+const safeDevelopers = (r: MetadataSearchResult): string[] =>
+  cleaned(r.developers);
+const safePublishers = (r: MetadataSearchResult): string[] =>
+  cleaned(r.publishers);
 
 export interface MetadataSearchModalProps {
   visible: boolean;
@@ -27,130 +74,300 @@ export function MetadataSearchModal({
   onClose,
   onMetadataApplied,
 }: Readonly<MetadataSearchModalProps>) {
-  const { t } = useTranslation("sidebar");
+  const { t } = useTranslation("game_details");
   const { showSuccessToast, showErrorToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [results, setResults] = useState<CatalogueSuggestion[]>([]);
+  const [selectedSource, setSelectedSource] = useState("all");
+  const [results, setResults] = useState<MetadataSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [selectedResult, setSelectedResult] =
-    useState<CatalogueSuggestion | null>(null);
+    useState<MetadataSearchResult | null>(null);
   const [isApplying, setIsApplying] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
+  // Per-field checkbox state — all checked by default
+  const [checkedFields, setCheckedFields] = useState<
+    Record<MergeFieldKey, boolean>
+  >({
+    title: true,
+    releaseYear: true,
+    description: true,
+    genres: true,
+    developers: true,
+    publishers: true,
+  });
+
   const abortRef = useRef<AbortController | null>(null);
 
-  // Reset state when modal opens
-  useEffect(() => {
-    if (visible) {
-      setSearchQuery(game.title);
-      setResults([]);
-      setSelectedResult(null);
-      setIsApplying(false);
-      setHasSearched(false);
-    }
-  }, [visible, game.title]);
-
-  // Cleanup abort controller on unmount
   useEffect(() => {
     return () => abortRef.current?.abort();
   }, []);
 
-  const handleSearch = useCallback(async () => {
-    const query = searchQuery.trim();
-    if (!query || query.length < 2) return;
+  const handleSearch = useCallback(
+    async (overrideQuery?: string, overrideSource?: string) => {
+      const query = (overrideQuery ?? searchQuery).trim();
+      const source = overrideSource ?? selectedSource;
+      if (!query || query.length < 2) return;
 
-    if (abortRef.current) {
-      abortRef.current.abort();
-    }
-
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    setIsSearching(true);
-    setHasSearched(true);
-
-    try {
-      const response = await window.electron.hydraApi.get<
-        {
-          title: string;
-          objectId: string;
-          shop: GameShop;
-          iconUrl: string | null;
-        }[]
-      >("/catalogue/search/suggestions", {
-        params: { query, limit: 8, shop: "steam" },
-        needsAuth: false,
-      });
-
-      if (controller.signal.aborted) return;
-      setResults(response);
-    } catch {
-      if (!controller.signal.aborted) {
-        setResults([]);
+      if (abortRef.current) {
+        abortRef.current.abort();
       }
-    } finally {
-      if (!controller.signal.aborted) {
-        setIsSearching(false);
-      }
-    }
-  }, [searchQuery]);
 
-  const handleSelectResult = (result: CatalogueSuggestion) => {
-    setSelectedResult(
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      setIsSearching(true);
+      setHasSearched(true);
+      setSearchError(null);
+      setSelectedResult(null);
+
+      try {
+        const response = await window.electron.searchGameMetadata(
+          query,
+          normalizeSource(source),
+          game.shop
+        );
+        if (!controller.signal.aborted) {
+          setResults(response ?? []);
+        }
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          setResults([]);
+          setSearchError(
+            err instanceof Error ? err.message : "Search failed"
+          );
+          logger.error("Metadata search failed:", err);
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsSearching(false);
+      }
+    },
+    [searchQuery, selectedSource, game.shop]
+  );
+
+  // Auto-search when the modal opens or when switching games. We deliberately
+  // do NOT include `selectedSource` here so that clicking a source tab does
+  // not fire an immediate network request — it just clears the existing
+  // results and the user can re-trigger via Enter / the Search button.
+  useEffect(() => {
+    if (!visible) return;
+    // Cancel any in-flight search so we don't render stale results.
+    abortRef.current?.abort();
+    abortRef.current = null;
+
+    setResults([]);
+    setSelectedResult(null);
+    setIsApplying(false);
+    setHasSearched(false);
+    setSearchError(null);
+    setCheckedFields({
+      title: true,
+      releaseYear: true,
+      description: true,
+      genres: true,
+      developers: true,
+      publishers: true,
+    });
+    const title = game.title || "";
+    setSearchQuery(title);
+    if (title.trim().length >= 2) {
+      // Run the search once — handleSearch closes over the current selectedSource
+      // and aborts any previous in-flight request before issuing a new one.
+      void handleSearch(title);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, game.shop, game.objectId]);
+
+  const handleSelectResult = (result: MetadataSearchResult) => {
+    const wasSelected =
       selectedResult?.objectId === result.objectId &&
-        selectedResult?.shop === result.shop
-        ? null
-        : result
-    );
+      selectedResult?.shop === result.shop;
+
+    setSelectedResult(wasSelected ? null : result);
+
+    if (!wasSelected) {
+      // Reset checkboxes to all-checked when selecting a new result
+      setCheckedFields({
+        title: true,
+        releaseYear: true,
+        description: true,
+        genres: true,
+        developers: true,
+        publishers: true,
+      });
+    }
   };
 
-  const handleApplyMetadata = async () => {
-    if (!selectedResult || isApplying) return;
+  const allFieldsChecked = Object.values(checkedFields).every(Boolean);
+  const anyFieldChecked = Object.values(checkedFields).some(Boolean);
+
+  const toggleAllFields = (checked: boolean) => {
+    setCheckedFields({
+      title: checked,
+      releaseYear: checked,
+      description: checked,
+      genres: checked,
+      developers: checked,
+      publishers: checked,
+    });
+  };
+
+  const toggleField = (field: MergeFieldKey) => {
+    setCheckedFields((prev) => ({ ...prev, [field]: !prev[field] }));
+  };
+
+  const handleApplySelected = async () => {
+    if (!selectedResult || isApplying || !anyFieldChecked) return;
 
     setIsApplying(true);
 
     try {
-      // Update the game title and icon
-      if (game.shop === "custom") {
-        await window.electron.updateCustomGame({
+      const metadata: Record<string, unknown> = {};
+
+      if (checkedFields.title) metadata.title = selectedResult.title;
+      if (checkedFields.releaseYear && selectedResult.releaseYear) {
+        // Format as full ISO date so the <input type="date"> control displays it.
+        // Year-only numbers become invalid date inputs and appear blank.
+        // Pass through an already-ISO date untouched.
+        const raw = String(selectedResult.releaseYear);
+        metadata.releaseDate = /^\d{4}$/.test(raw) ? `${raw}-01-01` : raw;
+      }
+      if (checkedFields.description) {
+        metadata.description = selectedResult.description || null;
+      }
+      if (checkedFields.genres && safeGenres(selectedResult).length > 0) {
+        metadata.genres = safeGenres(selectedResult);
+      }
+      if (
+        checkedFields.developers &&
+        safeDevelopers(selectedResult).length > 0
+      ) {
+        metadata.developers = safeDevelopers(selectedResult);
+      }
+      if (
+        checkedFields.publishers &&
+        safePublishers(selectedResult).length > 0
+      ) {
+        metadata.publishers = safePublishers(selectedResult);
+      }
+
+      // Always update title + icon through existing mechanism for compatibility
+      if (checkedFields.title || selectedResult.iconUrl) {
+        if (game.shop === "custom") {
+          await window.electron.updateCustomGame({
+            shop: game.shop,
+            objectId: game.objectId,
+            title: checkedFields.title
+              ? selectedResult.title
+              : game.title,
+            iconUrl: selectedResult.iconUrl || undefined,
+          });
+        } else {
+          await window.electron.updateGameCustomAssets({
+            shop: game.shop,
+            objectId: game.objectId,
+            title: checkedFields.title
+              ? selectedResult.title
+              : game.title,
+            customIconUrl: selectedResult.iconUrl || undefined,
+            customLogoImageUrl: null,
+            customHeroImageUrl: null,
+          });
+        }
+      }
+
+      // Save remaining metadata fields via the dedicated handler
+      const hasMetadataFields = Object.keys(metadata).length > 0;
+      if (hasMetadataFields) {
+        const result = await window.electron.saveGameMetadata({
           shop: game.shop,
           objectId: game.objectId,
-          title: selectedResult.title,
-          iconUrl: selectedResult.iconUrl || undefined,
+          metadata: {
+            description:
+              (metadata.description as string | null) ?? undefined,
+            genres:
+              (metadata.genres as string[] | null) ?? undefined,
+            developers:
+              (metadata.developers as string[] | null) ?? undefined,
+            publishers:
+              (metadata.publishers as string[] | null) ?? undefined,
+            releaseDate:
+              (metadata.releaseDate as string | null) ?? undefined,
+
+          },
         });
-      } else {
-        await window.electron.updateGameCustomAssets({
-          shop: game.shop,
-          objectId: game.objectId,
-          title: selectedResult.title,
-          customIconUrl: selectedResult.iconUrl || undefined,
-          customLogoImageUrl: null,
-          customHeroImageUrl: null,
-        });
+
+        if (!result.ok) {
+          logger.warn("saveGameMetadata returned not-ok:", result.error);
+        }
       }
 
       showSuccessToast(t("custom_game_modal_metadata_applied"));
       onMetadataApplied?.();
       onClose();
-    } catch (error) {
-      console.error("Failed to apply metadata:", error);
+    } catch (err) {
+      logger.error("Failed to apply metadata:", err);
       showErrorToast(t("custom_game_modal_metadata_failed"));
     } finally {
       setIsApplying(false);
     }
   };
 
+  const getFieldDisplayValue = (
+    result: MetadataSearchResult,
+    field: MergeFieldKey
+  ): string => {
+    switch (field) {
+      case "title":
+        return result.title ?? "";
+      case "releaseYear":
+        return result.releaseYear ? String(result.releaseYear) : "";
+      case "description":
+        return result.description || "";
+      case "genres":
+        return safeGenres(result).join(", ");
+      case "developers":
+        return safeDevelopers(result).join(", ");
+      case "publishers":
+        return safePublishers(result).join(", ");
+    }
+  };
+
   return (
     <Modal
       visible={visible}
-      title={t("custom_game_modal_search_metadata")}
+      title={t("metadata_search_title")}
       onClose={onClose}
+      large={true}
     >
       <div className="metadata-search-modal">
+        <div className="metadata-search-modal__source-tabs">
+          {SOURCE_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={`metadata-search-modal__source-tab ${
+                selectedSource === tab.id
+                  ? "metadata-search-modal__source-tab--active"
+                  : ""
+              }`}
+              onClick={() => {
+                setSelectedSource(tab.id);
+                setResults([]);
+                setSelectedResult(null);
+                setHasSearched(false);
+              }}
+            >
+              {t(tab.labelKey)}
+            </button>
+          ))}
+        </div>
+
         <div className="metadata-search-modal__search-row">
           <TextField
-            placeholder={t("custom_game_modal_search_placeholder")}
+            placeholder={t("metadata_search_placeholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {
@@ -161,7 +378,7 @@ export function MetadataSearchModal({
               <Button
                 type="button"
                 theme="outline"
-                onClick={handleSearch}
+                onClick={() => handleSearch()}
                 disabled={!searchQuery.trim() || isSearching}
               >
                 {isSearching ? (
@@ -184,13 +401,27 @@ export function MetadataSearchModal({
 
           {!isSearching && hasSearched && results.length === 0 && (
             <div className="metadata-search-modal__status">
-              <span>{t("edit_game_modal_no_results")}</span>
+              <span>
+                {searchError
+                  ? searchError
+                  : t("edit_game_modal_no_results", "No results")}
+              </span>
+              <Button
+                type="button"
+                theme="outline"
+                onClick={() => handleSearch()}
+              >
+                {t("edit_game_modal_search_retry", "Retry")}
+              </Button>
             </div>
           )}
 
           {!isSearching && results.length > 0 && (
             <div className="metadata-search-modal__results-list">
-              {results.map((result) => (
+              {results.map((result) => {
+                const genres = safeGenres(result);
+                const developers = safeDevelopers(result);
+                return (
                 <button
                   key={`${result.shop}-${result.objectId}`}
                   type="button"
@@ -214,17 +445,36 @@ export function MetadataSearchModal({
                       {result.title}
                     </span>
                     <span className="metadata-search-modal__result-shop">
-                      {result.shop}
+                      {result.shop} · {SOURCE_LABELS[result.source] || result.source}
+                      {result.releaseYear &&
+                        ` · ${result.releaseYear}`}
                     </span>
+                    {genres.length > 0 && (
+                      <span className="metadata-search-modal__result-genres">
+                        {genres.slice(0, 3).join(", ")}
+                        {genres.length > 3
+                          ? ` +${genres.length - 3}`
+                          : ""}
+                      </span>
+                    )}
+                    {developers.length > 0 && (
+                      <span className="metadata-search-modal__result-meta">
+                        {developers.slice(0, 2).join(", ")}
+                        {developers.length > 2
+                          ? ` +${developers.length - 2}`
+                          : ""}
+                      </span>
+                    )}
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
           )}
 
           {!isSearching && !hasSearched && (
             <div className="metadata-search-modal__status">
-              <span>{t("custom_game_modal_search_placeholder")}</span>
+              <span>{t("metadata_search_placeholder")}</span>
             </div>
           )}
         </div>
@@ -244,9 +494,67 @@ export function MetadataSearchModal({
                   {selectedResult.title}
                 </span>
                 <span className="metadata-search-modal__preview-shop">
-                  {selectedResult.shop}
+                  {selectedResult.shop} ·{" "}
+                  {SOURCE_LABELS[selectedResult.source] || selectedResult.source}
                 </span>
+                {selectedResult.releaseYear && (
+                  <span className="metadata-search-modal__preview-year">
+                    {selectedResult.releaseYear}
+                  </span>
+                )}
               </div>
+            </div>
+
+            <div className="metadata-search-modal__preview-toggle">
+              <button
+                type="button"
+                className="metadata-search-modal__toggle-btn"
+                onClick={() => toggleAllFields(!allFieldsChecked)}
+              >
+                {allFieldsChecked
+                  ? t("metadata_deselect_all", "Deselect All")
+                  : t("metadata_select_all", "Select All")}
+              </button>
+            </div>
+
+            <div className="metadata-search-modal__preview-fields">
+              {MERGE_FIELDS.map((field) => {
+                const displayValue = getFieldDisplayValue(
+                  selectedResult,
+                  field.key as MergeFieldKey
+                );
+                if (!displayValue) return null;
+                return (
+                  <label
+                    key={field.key}
+                    className="metadata-search-modal__preview-field metadata-search-modal__preview-field--checkable"
+                  >
+                    <input
+                      type="checkbox"
+                      className="metadata-search-modal__preview-checkbox"
+                      checked={checkedFields[field.key as MergeFieldKey]}
+                      onChange={() =>
+                        toggleField(field.key as MergeFieldKey)
+                      }
+                      disabled={isApplying}
+                    />
+                    <div className="metadata-search-modal__preview-field-body">
+                      <span className="metadata-search-modal__preview-field-label">
+                        {t(field.labelKey)}
+                      </span>
+                      <span
+                        className={`metadata-search-modal__preview-field-value ${
+                          field.key === "description"
+                            ? "metadata-search-modal__preview-field-value--description"
+                            : ""
+                        }`}
+                      >
+                        {displayValue}
+                      </span>
+                    </div>
+                  </label>
+                );
+              })}
             </div>
           </div>
         )}
@@ -258,17 +566,17 @@ export function MetadataSearchModal({
             onClick={onClose}
             disabled={isApplying}
           >
-            {t("custom_game_modal_cancel")}
+            {t("metadata_cancel", "Cancel")}
           </Button>
           <Button
             type="button"
             theme="primary"
-            onClick={handleApplyMetadata}
-            disabled={!selectedResult || isApplying}
+            onClick={handleApplySelected}
+            disabled={!selectedResult || isApplying || !anyFieldChecked}
           >
             {isApplying
-              ? t("custom_game_modal_adding")
-              : t("custom_game_modal_apply_metadata")}
+              ? t("metadata_applying", "Applying...")
+              : t("metadata_apply_selected", "Apply Selected")}
           </Button>
         </div>
       </div>
