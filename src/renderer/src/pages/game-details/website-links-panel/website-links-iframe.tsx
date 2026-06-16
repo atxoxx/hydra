@@ -33,6 +33,8 @@ export function WebsiteLinksIframe({ link }: WebsiteLinksIframeProps) {
   const [copied, setCopied] = useState(false);
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryCountRef = useRef(0);
+  const FAIL_TIMEOUT_MS = 60000;
 
   const clearTimer = useCallback(() => {
     if (timeoutRef.current) {
@@ -40,6 +42,14 @@ export function WebsiteLinksIframe({ link }: WebsiteLinksIframeProps) {
       timeoutRef.current = null;
     }
   }, []);
+
+  const startTimer = useCallback(() => {
+    clearTimer();
+    timeoutRef.current = setTimeout(() => {
+      setIsLoading(false);
+      setHasError(true);
+    }, FAIL_TIMEOUT_MS);
+  }, [clearTimer]);
 
   const handleOpenInBrowser = useCallback(() => {
     window.electron.openExternal(currentUrl);
@@ -116,6 +126,7 @@ export function WebsiteLinksIframe({ link }: WebsiteLinksIframeProps) {
   // Sync state when game link tab changes
   useEffect(() => {
     clearTimer();
+    retryCountRef.current = 0;
     setHasError(false);
 
     if (!link.isEmbeddable) {
@@ -135,16 +146,13 @@ export function WebsiteLinksIframe({ link }: WebsiteLinksIframeProps) {
       }
     }
 
-    // 30-second timeout fallback
-    timeoutRef.current = setTimeout(() => {
-      setIsLoading(false);
-      setHasError(true);
-    }, 30000);
+    // Safety timeout - will be refreshed by did-start-loading on each navigation
+    startTimer();
 
     return () => {
       clearTimer();
     };
-  }, [link.url, link.isEmbeddable, clearTimer]);
+  }, [link.url, link.isEmbeddable, clearTimer, startTimer]);
 
   useEffect(() => {
     const webview = webviewRef.current;
@@ -158,8 +166,12 @@ export function WebsiteLinksIframe({ link }: WebsiteLinksIframeProps) {
     };
 
     const onDidStartLoading = () => {
-      setIsLoading(true);
       setHasError(false);
+      // Refresh timeout on each new navigation start.
+      // Do NOT set isLoading here — subframe loads (ads, iframes, trackers)
+      // also trigger did-start-loading, which would cause visible blinking.
+      // Loading state is managed by the URL-change effect for initial loads.
+      startTimer();
     };
 
     const onDidStopLoading = () => {
@@ -168,6 +180,7 @@ export function WebsiteLinksIframe({ link }: WebsiteLinksIframeProps) {
     };
 
     const onDidNavigate = () => {
+      clearTimer();
       setHasError(false);
       updateNavigationState();
     };
@@ -177,21 +190,47 @@ export function WebsiteLinksIframe({ link }: WebsiteLinksIframeProps) {
     };
 
     const onDidFailLoad = (e: any) => {
-      // Ignore non-fatal aborted codes (e.g. -3 ERR_ABORTED on redirects/new navigation requests)
+      // Ignore aborted loads (e.g. -3 ERR_ABORTED on redirects/new navigation requests)
       if (e.errorCode === -3) return;
 
+      // Fatal errors - show error immediately
+      // -2 ERR_FAILED, -6 ERR_FILE_NOT_FOUND, -10 ERR_ACCESS_DENIED
+      const fatalErrors = [-2, -6, -10];
+      if (fatalErrors.includes(e.errorCode)) {
+        clearTimer();
+        setIsLoading(false);
+        setHasError(true);
+        return;
+      }
+
+      // Network errors - retry once before showing error
+      // -7 ERR_TIMED_OUT, -21 ERR_NETWORK_CHANGED, -105/-137 ERR_NAME_NOT_RESOLVED, -106 ERR_INTERNET_DISCONNECTED
+      const networkErrors = [-7, -21, -105, -106, -137];
+      if (networkErrors.includes(e.errorCode)) {
+        if (retryCountRef.current < 1) {
+          const wv = webviewRef.current;
+          if (wv) {
+            retryCountRef.current++;
+            try { wv.reload(); } catch { /* ignore */ }
+            return;
+          }
+        }
+      }
+
+      // Default / retries exhausted - show error
       clearTimer();
       setIsLoading(false);
       setHasError(true);
     };
 
+    const onWillNavigate = (e: any) => {
+      setCurrentUrl(e.url);
+      setInputValue(e.url);
+    };
+
     const onNewWindow = (e: any) => {
       e.preventDefault();
-      try {
-        webview.loadURL(e.url);
-      } catch {
-        window.electron.openExternal(e.url);
-      }
+      window.electron.openExternal(e.url);
     };
 
     webview.addEventListener("dom-ready", onDomReady);
@@ -200,7 +239,14 @@ export function WebsiteLinksIframe({ link }: WebsiteLinksIframeProps) {
     webview.addEventListener("did-navigate", onDidNavigate);
     webview.addEventListener("did-navigate-in-page", onDidNavigateInPage);
     webview.addEventListener("did-fail-load", onDidFailLoad);
+    webview.addEventListener("will-navigate", onWillNavigate);
     webview.addEventListener("new-window", onNewWindow);
+
+    // Enable media features via Permissions Policy (autoplay, DRM, PiP)
+    webview.setAttribute(
+      "allow",
+      "autoplay; encrypted-media; picture-in-picture"
+    );
 
     return () => {
       webview.removeEventListener("dom-ready", onDomReady);
@@ -209,6 +255,7 @@ export function WebsiteLinksIframe({ link }: WebsiteLinksIframeProps) {
       webview.removeEventListener("did-navigate", onDidNavigate);
       webview.removeEventListener("did-navigate-in-page", onDidNavigateInPage);
       webview.removeEventListener("did-fail-load", onDidFailLoad);
+      webview.removeEventListener("will-navigate", onWillNavigate);
       webview.removeEventListener("new-window", onNewWindow);
     };
   }, [clearTimer, updateNavigationState]);
@@ -355,7 +402,7 @@ export function WebsiteLinksIframe({ link }: WebsiteLinksIframeProps) {
           src={link.url}
           partition="persist:website-previews"
           className={`website-links-iframe__frame ${isLoading ? "website-links-iframe__frame--hidden" : ""}`}
-          webpreferences="sandbox=yes, contextIsolation=yes"
+          webpreferences="contextIsolation=yes"
           style={{ display: hasError ? "none" : undefined }}
         />
         {/* eslint-enable react/no-unknown-property */}

@@ -41,15 +41,15 @@ const WEBSITE_META: Record<
   WebsiteId,
   { nameKey: string; isEmbeddable: boolean }
 > = {
-  steam: { nameKey: "steam", isEmbeddable: true },
+  steam: { nameKey: "steam", isEmbeddable: false },
   steamdb: { nameKey: "steamdb", isEmbeddable: true },
   protondb: { nameKey: "protondb", isEmbeddable: true },
   pcgamingwiki: { nameKey: "pcgamingwiki", isEmbeddable: true },
   twitch: { nameKey: "twitch", isEmbeddable: true },
   nexusmods: { nameKey: "nexusmods", isEmbeddable: true },
   moddb: { nameKey: "moddb", isEmbeddable: true },
-  gamefaqs: { nameKey: "gamefaqs", isEmbeddable: true },
-  metacritic: { nameKey: "metacritic", isEmbeddable: true },
+  gamefaqs: { nameKey: "gamefaqs", isEmbeddable: false },
+  metacritic: { nameKey: "metacritic", isEmbeddable: false },
   howlongtobeat: { nameKey: "howlongtobeat", isEmbeddable: true },
   igdb: { nameKey: "igdb", isEmbeddable: true },
   youtube: { nameKey: "youtube", isEmbeddable: true },

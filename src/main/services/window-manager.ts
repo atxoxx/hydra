@@ -273,50 +273,29 @@ export class WindowManager {
       // Always spoof User-Agent to stable desktop Chrome for previews
       requestHeaders["user-agent"] = stableIframeUA;
 
-      // Spoof Origin and Referer for previews to bypass CSRF/CORS and GraphQL blocks
+      // Spoof Origin and Referer for previews to bypass CSRF/CORS and GraphQL blocks.
+      // Derive Origin from the referrer (the page that initiated the request) so
+      // sub-resource requests (CDN images, scripts, API calls) carry proper headers
+      // instead of being blocked for missing Origin/Referer.
+      const referer = details.referrer || requestHeaders["Referer"] || "";
       try {
-        const urlObj = new URL(details.url);
-        const hostname = urlObj.hostname;
-        let baseOrigin = "";
+        const refererUrl = new URL(referer);
+        const origin = refererUrl.origin;
 
-        if (hostname.endsWith("twitch.tv") || hostname.endsWith("ttvnw.net")) {
-          baseOrigin = "https://www.twitch.tv";
-        } else if (hostname.endsWith("nexusmods.com")) {
-          baseOrigin = "https://www.nexusmods.com";
-        } else if (
-          hostname.endsWith("youtube.com") ||
-          hostname.endsWith("youtu.be")
-        ) {
-          baseOrigin = "https://www.youtube.com";
-        } else if (hostname.endsWith("steampowered.com")) {
-          baseOrigin = "https://store.steampowered.com";
-        } else if (hostname.endsWith("steamdb.info")) {
-          baseOrigin = "https://steamdb.info";
-        } else if (hostname.endsWith("protondb.com")) {
-          baseOrigin = "https://www.protondb.com";
-        } else if (hostname.endsWith("pcgamingwiki.com")) {
-          baseOrigin = "https://www.pcgamingwiki.com";
-        } else if (hostname.endsWith("moddb.com")) {
-          baseOrigin = "https://www.moddb.com";
-        } else if (
-          hostname.endsWith("gamefaqs.gamespot.com") ||
-          hostname.endsWith("gamespot.com")
-        ) {
-          baseOrigin = "https://gamefaqs.gamespot.com";
-        } else if (hostname.endsWith("metacritic.com")) {
-          baseOrigin = "https://www.metacritic.com";
-        } else if (hostname.endsWith("howlongtobeat.com")) {
-          baseOrigin = "https://howlongtobeat.com";
-        } else if (hostname.endsWith("igdb.com")) {
-          baseOrigin = "https://www.igdb.com";
-        }
-
-        if (baseOrigin) {
-          requestHeaders["Origin"] = baseOrigin;
-          requestHeaders["Referer"] = baseOrigin + "/";
+        if (origin.startsWith("http")) {
+          requestHeaders["Origin"] = origin;
+          requestHeaders["Referer"] = referer;
         }
       } catch {
-        /* ignore invalid URLs */
+        // If referrer is unavailable (e.g. initial navigation), fall back to
+        // deriving Origin from the request URL itself
+        try {
+          const urlObj = new URL(details.url);
+          requestHeaders["Origin"] = urlObj.origin;
+          requestHeaders["Referer"] = urlObj.origin + "/";
+        } catch {
+          /* ignore invalid URLs */
+        }
       }
 
       callback({ requestHeaders });
@@ -344,31 +323,52 @@ export class WindowManager {
         }
       }
 
-      const corsHeaders = {
-        "access-control-allow-origin": ["*"],
-        "access-control-allow-methods": ["GET, POST, PUT, DELETE, OPTIONS"],
-        "access-control-expose-headers": ["ETag"],
-        "access-control-allow-headers": [
-          "Content-Type, Authorization, X-Requested-With, If-None-Match",
-        ],
-      };
+      // Only inject CORS headers when the response doesn't already have
+      // access-control-allow-origin. Overwriting it with "*" breaks sites
+      // that use credentialed requests (access-control-allow-credentials: true)
+      // because the CORS spec forbids "*" with credentials.
+      const hasExistingAllowOrigin = Object.keys(responseHeaders).some(
+        (key) => key.toLowerCase() === "access-control-allow-origin"
+      );
 
-      if (details.method === "OPTIONS") {
+      if (!hasExistingAllowOrigin) {
+        const corsHeaders = {
+          "access-control-allow-origin": ["*"],
+          "access-control-allow-methods": ["GET, POST, PUT, DELETE, OPTIONS"],
+          "access-control-expose-headers": ["ETag"],
+          "access-control-allow-headers": [
+            "Content-Type, Authorization, X-Requested-With, If-None-Match",
+          ],
+        };
+
+        if (details.method === "OPTIONS") {
+          return callback({
+            cancel: false,
+            responseHeaders: {
+              ...responseHeaders,
+              ...corsHeaders,
+            },
+            statusLine: "HTTP/1.1 200 OK",
+          });
+        }
+
         return callback({
-          cancel: false,
           responseHeaders: {
             ...responseHeaders,
             ...corsHeaders,
           },
-          statusLine: "HTTP/1.1 200 OK",
+        });
+      }
+
+      if (details.method === "OPTIONS") {
+        return callback({
+          cancel: false,
+          responseHeaders,
         });
       }
 
       return callback({
-        responseHeaders: {
-          ...responseHeaders,
-          ...corsHeaders,
-        },
+        responseHeaders,
       });
     });
 
