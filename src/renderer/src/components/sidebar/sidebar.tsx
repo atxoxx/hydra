@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
@@ -33,10 +33,10 @@ import {
   FileDirectoryIcon,
   HeartIcon,
   PencilIcon,
-  PlayIcon,
   PlusIcon,
   TrashIcon,
 } from "@primer/octicons-react";
+import type { GameShop, UserGameStatus } from "@types";
 import deckyIcon from "@renderer/assets/icons/decky.png";
 import { setCollections } from "@renderer/features";
 import { setFriendRequestCount } from "@renderer/features/user-details-slice";
@@ -46,36 +46,141 @@ import { SidebarAddingCustomGameModal } from "./sidebar-adding-custom-game-modal
 import { SidebarGameItem } from "./sidebar-game-item";
 import { SidebarProfile } from "./sidebar-profile";
 import { SidebarSuggestions } from "./sidebar-suggestions";
+import {
+  SidebarFilterMenu,
+  type LibrarySetFilter,
+  type SidebarSortOption,
+  type FilterOption,
+} from "./sidebar-filter-menu";
 
 const SIDEBAR_MIN_WIDTH = 200;
 const SIDEBAR_INITIAL_WIDTH = 250;
 const SIDEBAR_MAX_WIDTH = 450;
 const FAVORITES_COLLECTION_ID = "__favorites__";
 
-type SidebarSort =
-  | "alphabetical"
-  | "most_played"
-  | "recently_played"
-  | "installed_first";
-
-const SORT_OPTIONS: { value: SidebarSort; labelKey: string }[] = [
-  { value: "alphabetical", labelKey: "sort_alphabetical" },
-  { value: "most_played", labelKey: "sort_most_played" },
-  { value: "recently_played", labelKey: "sort_recently_played" },
-  { value: "installed_first", labelKey: "sort_installed_first" },
+const VALID_SORTS: SidebarSortOption[] = [
+  "alphabetical",
+  "title_desc",
+  "most_played",
+  "recently_played",
+  "installed_first",
 ];
 
-const getSavedSort = (): SidebarSort => {
-  const saved = localStorage.getItem("sidebar-sort-by");
-  if (saved && SORT_OPTIONS.some((o) => o.value === saved)) {
-    return saved as SidebarSort;
-  }
-  return "alphabetical";
+const STATUS_FILTER_VALUES: UserGameStatus[] = [
+  "playing",
+  "on_hold",
+  "beaten",
+  "completed",
+  "played",
+  "not_played",
+  "abandoned",
+  "plan_to_play",
+];
+
+const STATUS_LABELS: Record<UserGameStatus, string> = {
+  none: "status_none",
+  not_played: "status_not_played",
+  playing: "status_playing",
+  on_hold: "status_on_hold",
+  played: "status_played",
+  beaten: "status_beaten",
+  completed: "status_completed",
+  abandoned: "status_abandoned",
+  plan_to_play: "status_plan_to_play",
 };
 
-const initialSidebarWidth = window.localStorage.getItem("sidebarWidth");
+const VALID_LIBRARY_SETS: LibrarySetFilter[] = [
+  "all",
+  "installed",
+  "not_installed",
+];
 
-const isGamePlayable = (game: LibraryGame) => Boolean(game.executablePath);
+const SHOP_LABEL_KEYS: Record<GameShop, string> = {
+  steam: "platform_steam",
+  epic: "platform_epic",
+  gog: "platform_gog",
+  "battle-net": "platform_battle_net",
+  amazon: "platform_amazon",
+  ubisoft: "platform_ubisoft",
+  xbox: "platform_xbox",
+  rockstar: "platform_rockstar",
+  "itch-io": "platform_itch_io",
+  humble: "platform_humble",
+  custom: "platform_custom",
+  launchbox: "platform_launchbox",
+};
+
+interface SidebarFilterState {
+  librarySet: LibrarySetFilter;
+  stores: string[];
+  genres: string[];
+  statuses: UserGameStatus[];
+  sortBy: SidebarSortOption;
+}
+
+function getDefaultFilterState(): SidebarFilterState {
+  return {
+    librarySet: "all",
+    stores: [],
+    genres: [],
+    statuses: [],
+    sortBy: "alphabetical",
+  };
+}
+
+function loadStoredArray<T extends string>(key: string): T[] {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((v): v is T => typeof v === "string");
+  } catch {
+    return [];
+  }
+}
+
+function getSavedFilterState(): SidebarFilterState {
+  const defaults = getDefaultFilterState();
+  const librarySetRaw = localStorage.getItem("sidebar-filter-library-set");
+  const librarySet: LibrarySetFilter =
+    librarySetRaw && (VALID_LIBRARY_SETS as string[]).includes(librarySetRaw)
+      ? (librarySetRaw as LibrarySetFilter)
+      : defaults.librarySet;
+
+  const sortRaw = localStorage.getItem("sidebar-sort-by");
+  const sortBy: SidebarSortOption =
+    sortRaw && (VALID_SORTS as string[]).includes(sortRaw)
+      ? (sortRaw as SidebarSortOption)
+      : defaults.sortBy;
+
+  return {
+    librarySet,
+    stores: loadStoredArray<string>("sidebar-filter-stores"),
+    genres: loadStoredArray<string>("sidebar-filter-genres"),
+    statuses: loadStoredArray<UserGameStatus>("sidebar-filter-statuses").filter(
+      (value): value is UserGameStatus =>
+        (STATUS_FILTER_VALUES as string[]).includes(value)
+    ),
+    sortBy,
+  };
+}
+
+function isGameInstalled(game: LibraryGame): boolean {
+  return Boolean(game.executablePath) || game.installedSizeInBytes != null;
+}
+
+function getGameGenres(game: LibraryGame): string[] {
+  return Array.isArray(game.genres) ? game.genres : [];
+}
+
+function gameMatchesGenres(game: LibraryGame, selected: string[]): boolean {
+  if (selected.length === 0) return true;
+  const lower = getGameGenres(game).map((g) => g.toLowerCase());
+  return selected.every((needle) => lower.includes(needle.toLowerCase()));
+}
+
+const initialSidebarWidth = window.localStorage.getItem("sidebarWidth");
 
 export function Sidebar() {
   const filterRef = useRef<HTMLInputElement>(null);
@@ -94,8 +199,6 @@ export function Sidebar() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [filteredLibrary, setFilteredLibrary] = useState<LibraryGame[]>([]);
-
   const [isResizing, setIsResizing] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(
     initialSidebarWidth ? Number(initialSidebarWidth) : SIDEBAR_INITIAL_WIDTH
@@ -103,56 +206,41 @@ export function Sidebar() {
 
   const location = useLocation();
 
-  const [sortBy, setSortBy] = useState<SidebarSort>(getSavedSort);
+  const [filterState, setFilterState] =
+    useState<SidebarFilterState>(getSavedFilterState);
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
 
-  const sortedLibrary = useMemo(() => {
-    const sorted = [...library];
+  const updateFilterState = useCallback(
+    (updater: (prev: SidebarFilterState) => SidebarFilterState) => {
+      setFilterState((prev) => {
+        const next = updater(prev);
+        try {
+          localStorage.setItem("sidebar-filter-library-set", next.librarySet);
+          localStorage.setItem(
+            "sidebar-filter-stores",
+            JSON.stringify(next.stores)
+          );
+          localStorage.setItem(
+            "sidebar-filter-genres",
+            JSON.stringify(next.genres)
+          );
+          localStorage.setItem(
+            "sidebar-filter-statuses",
+            JSON.stringify(next.statuses)
+          );
+          localStorage.setItem("sidebar-sort-by", next.sortBy);
+        } catch {
+          /* localStorage unavailable; ignore */
+        }
+        return next;
+      });
+    },
+    []
+  );
 
-    switch (sortBy) {
-      case "most_played":
-        sorted.sort(
-          (a, b) =>
-            (b.playTimeInMilliseconds ?? 0) - (a.playTimeInMilliseconds ?? 0)
-        );
-        break;
-      case "recently_played": {
-        const aHasPlayed = (a: LibraryGame) => a.lastTimePlayed !== null;
-        sorted.sort((a, b) => {
-          if (aHasPlayed(a) && aHasPlayed(b)) {
-            return (
-              new Date(b.lastTimePlayed!).getTime() -
-              new Date(a.lastTimePlayed!).getTime()
-            );
-          }
-          if (aHasPlayed(a) !== aHasPlayed(b)) return aHasPlayed(a) ? -1 : 1;
-          return a.title.localeCompare(b.title, undefined, {
-            sensitivity: "base",
-          });
-        });
-        break;
-      }
-      case "installed_first":
-        sorted.sort((a, b) => {
-          const aInstalled =
-            Boolean(a.executablePath) || a.installedSizeInBytes != null;
-          const bInstalled =
-            Boolean(b.executablePath) || b.installedSizeInBytes != null;
-          if (aInstalled !== bInstalled) return aInstalled ? -1 : 1;
-          return a.title.localeCompare(b.title, undefined, {
-            sensitivity: "base",
-          });
-        });
-        break;
-      case "alphabetical":
-      default:
-        sorted.sort((a, b) =>
-          a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
-        );
-        break;
-    }
-
-    return sorted;
-  }, [library, sortBy]);
+  const handleResetAllFilters = useCallback(() => {
+    updateFilterState(() => getDefaultFilterState());
+  }, [updateFilterState]);
 
   const { hasActiveSubscription, userDetails } = useUserDetails();
 
@@ -160,7 +248,6 @@ export function Sidebar() {
 
   const { showWarningToast, showSuccessToast, showErrorToast } = useToast();
 
-  const [showPlayableOnly, setShowPlayableOnly] = useState(false);
   const [isCollectionsCollapsed, setIsCollectionsCollapsed] = useState(false);
   const [isSuggestionsCollapsed, setIsSuggestionsCollapsed] = useState(false);
   const [isGamesCollapsed, setIsGamesCollapsed] = useState(false);
@@ -193,16 +280,6 @@ export function Sidebar() {
     if (!location.pathname.startsWith("/library")) return null;
     return searchParams.get("collection");
   }, [location.pathname, searchParams]);
-
-  const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = event.target.value as SidebarSort;
-    setSortBy(value);
-    localStorage.setItem("sidebar-sort-by", value);
-  };
-
-  const handlePlayButtonClick = () => {
-    setShowPlayableOnly(!showPlayableOnly);
-  };
 
   const handleAddGameButtonClick = () => {
     setShowAddGameModal(true);
@@ -312,23 +389,179 @@ export function Sidebar() {
       sidebarRef.current?.clientWidth || SIDEBAR_INITIAL_WIDTH;
   };
 
+  // ---------- Menu filter pipeline: filter -> sort -> title substring ----------
+  const menuFilteredLibrary = useMemo(() => {
+    const { librarySet, stores, genres, statuses } = filterState;
+
+    if (
+      librarySet === "all" &&
+      stores.length === 0 &&
+      genres.length === 0 &&
+      statuses.length === 0
+    ) {
+      return library;
+    }
+
+    return library.filter((game) => {
+      if (librarySet === "installed" && !isGameInstalled(game)) return false;
+      if (librarySet === "not_installed" && isGameInstalled(game)) return false;
+
+      if (stores.length > 0 && !stores.includes(game.shop)) return false;
+
+      if (genres.length > 0 && !gameMatchesGenres(game, genres)) return false;
+
+      if (
+        statuses.length > 0 &&
+        !statuses.includes(game.userStatus as UserGameStatus)
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [library, filterState]);
+
+  const sortedLibrary = useMemo(() => {
+    const sorted = [...menuFilteredLibrary];
+
+    switch (filterState.sortBy) {
+      case "most_played":
+        sorted.sort(
+          (a, b) =>
+            (b.playTimeInMilliseconds ?? 0) - (a.playTimeInMilliseconds ?? 0)
+        );
+        break;
+      case "recently_played": {
+        const aHasPlayed = (a: LibraryGame) => a.lastTimePlayed !== null;
+        sorted.sort((a, b) => {
+          if (aHasPlayed(a) && aHasPlayed(b)) {
+            return (
+              new Date(b.lastTimePlayed!).getTime() -
+              new Date(a.lastTimePlayed!).getTime()
+            );
+          }
+          if (aHasPlayed(a) !== aHasPlayed(b)) return aHasPlayed(a) ? -1 : 1;
+          return a.title.localeCompare(b.title, undefined, {
+            sensitivity: "base",
+          });
+        });
+        break;
+      }
+      case "installed_first":
+        sorted.sort((a, b) => {
+          if (isGameInstalled(a) !== isGameInstalled(b))
+            return isGameInstalled(a) ? -1 : 1;
+          return a.title.localeCompare(b.title, undefined, {
+            sensitivity: "base",
+          });
+        });
+        break;
+      case "title_desc":
+        sorted.sort((a, b) =>
+          b.title.localeCompare(a.title, undefined, { sensitivity: "base" })
+        );
+        break;
+      case "alphabetical":
+      default:
+        sorted.sort((a, b) =>
+          a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
+        );
+        break;
+    }
+
+    return sorted;
+  }, [menuFilteredLibrary, filterState.sortBy]);
+
+  // Text-search filter layer (controlled by `searchText`; output is `displayedLibrary`).
+  const [searchText, setSearchText] = useState("");
+
   const handleFilter: React.ChangeEventHandler<HTMLInputElement> = (event) => {
-    setFilteredLibrary(
-      sortedLibrary.filter((game) =>
-        game.title
-          .toLowerCase()
-          .includes(event.target.value.toLocaleLowerCase())
-      )
-    );
+    setSearchText(event.target.value);
   };
 
-  useEffect(() => {
-    setFilteredLibrary(sortedLibrary);
+  const displayedLibrary = useMemo(() => {
+    const trimmed = searchText.trim();
+    if (!trimmed) return sortedLibrary;
+    const lower = trimmed.toLowerCase();
+    return sortedLibrary.filter((game) =>
+      game.title.toLowerCase().includes(lower)
+    );
+  }, [sortedLibrary, searchText]);
 
-    if (filterRef.current) {
-      filterRef.current.value = "";
+  // Reset the search input only when the underlying library actually changes
+  // (e.g. after a scan). Menu filter / sort changes should NOT clear the search.
+  const lastLibraryRef = useRef(library);
+  useEffect(() => {
+    if (lastLibraryRef.current !== library) {
+      lastLibraryRef.current = library;
+      setSearchText("");
+      if (filterRef.current) {
+        filterRef.current.value = "";
+      }
     }
-  }, [sortedLibrary]);
+  }, [library]);
+
+  // ---------- Available options for the filter menu ----------
+  const availableStores = useMemo<FilterOption<string>[]>(() => {
+    const counts = new Map<string, number>();
+    for (const game of library) {
+      counts.set(game.shop, (counts.get(game.shop) ?? 0) + 1);
+    }
+    const shops = Array.from(counts.keys());
+    shops.sort((a, b) => a.localeCompare(b));
+    return shops.map((shop) => {
+      const labelKey = SHOP_LABEL_KEYS[shop as GameShop] ?? `platform_${shop}`;
+      return {
+        value: shop,
+        label: t(labelKey, { ns: "settings", defaultValue: shop }),
+        count: counts.get(shop) ?? 0,
+      };
+    });
+  }, [library, t]);
+
+  const availableGenres = useMemo<FilterOption<string>[]>(() => {
+    const counts = new Map<string, number>();
+    for (const game of library) {
+      for (const genre of getGameGenres(game)) {
+        const key = genre.trim();
+        if (!key) continue;
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+      }
+    }
+    const sortedGenres = Array.from(counts.keys()).sort((a, b) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" })
+    );
+    return sortedGenres.map((genre) => ({
+      value: genre,
+      label: genre,
+      count: counts.get(genre) ?? 0,
+    }));
+  }, [library]);
+
+  const libraryCountTotals = useMemo(() => {
+    const total = library.length;
+    const installed = library.filter(isGameInstalled).length;
+    return {
+      total,
+      installed,
+      notInstalled: Math.max(0, total - installed),
+    };
+  }, [library]);
+
+  const availableStatuses = useMemo<FilterOption<UserGameStatus>[]>(() => {
+    const counts = new Map<UserGameStatus, number>();
+    for (const game of library) {
+      const status = (game.userStatus ?? "none") as UserGameStatus;
+      counts.set(status, (counts.get(status) ?? 0) + 1);
+    }
+    return STATUS_FILTER_VALUES.filter(
+      (status) => (counts.get(status) ?? 0) > 0
+    ).map((status) => ({
+      value: status,
+      label: t(STATUS_LABELS[status], { ns: "game_details" }),
+      count: counts.get(status) ?? 0,
+    }));
+  }, [library, t]);
 
   useEffect(() => {
     window.onmousemove = (event: MouseEvent) => {
@@ -751,21 +984,38 @@ export function Sidebar() {
                 />
                 <small className="sidebar__section-title">{t("games")}</small>
               </button>
-              <div
-                style={{ display: "flex", gap: "8px", alignItems: "center" }}
-              >
-                <select
-                  className="sidebar__sort-select"
-                  value={sortBy}
-                  onChange={handleSortChange}
-                  aria-label={t("sort_by")}
-                >
-                  {SORT_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {t(option.labelKey)}
-                    </option>
-                  ))}
-                </select>
+              <div className="sidebar__section-actions">
+                <SidebarFilterMenu
+                  open={isFilterMenuOpen}
+                  onOpenChange={setIsFilterMenuOpen}
+                  librarySet={filterState.librarySet}
+                  onLibrarySetChange={(next) =>
+                    updateFilterState((prev) => ({ ...prev, librarySet: next }))
+                  }
+                  totalCount={libraryCountTotals.total}
+                  installedCount={libraryCountTotals.installed}
+                  notInstalledCount={libraryCountTotals.notInstalled}
+                  stores={filterState.stores}
+                  onStoresChange={(next) =>
+                    updateFilterState((prev) => ({ ...prev, stores: next }))
+                  }
+                  availableStores={availableStores}
+                  genres={filterState.genres}
+                  onGenresChange={(next) =>
+                    updateFilterState((prev) => ({ ...prev, genres: next }))
+                  }
+                  availableGenres={availableGenres}
+                  statuses={filterState.statuses}
+                  onStatusesChange={(next) =>
+                    updateFilterState((prev) => ({ ...prev, statuses: next }))
+                  }
+                  availableStatuses={availableStatuses}
+                  sortBy={filterState.sortBy}
+                  onSortChange={(next) =>
+                    updateFilterState((prev) => ({ ...prev, sortBy: next }))
+                  }
+                  onResetAll={handleResetAllFilters}
+                />
                 <button
                   type="button"
                   className="sidebar__add-button"
@@ -775,18 +1025,6 @@ export function Sidebar() {
                   data-tooltip-place="top"
                 >
                   <PlusIcon size={16} />
-                </button>
-                <button
-                  type="button"
-                  className={cn("sidebar__play-button", {
-                    "sidebar__play-button--active": showPlayableOnly,
-                  })}
-                  onClick={handlePlayButtonClick}
-                  data-tooltip-id="show-playable-only-tooltip"
-                  data-tooltip-content={t("show_playable_only_tooltip")}
-                  data-tooltip-place="top"
-                >
-                  <PlayIcon size={16} />
                 </button>
               </div>
             </div>
@@ -801,9 +1039,12 @@ export function Sidebar() {
                 />
 
                 <ul className="sidebar__menu">
-                  {filteredLibrary
-                    .filter((game) => !showPlayableOnly || isGamePlayable(game))
-                    .map((game) => (
+                  {displayedLibrary.length === 0 ? (
+                    <li className="sidebar__menu-empty">
+                      {t("filter_no_results")}
+                    </li>
+                  ) : (
+                    displayedLibrary.map((game) => (
                       <SidebarGameItem
                         key={game.id}
                         game={game}
@@ -811,7 +1052,8 @@ export function Sidebar() {
                         getGameTitle={getGameTitle}
                         getOwnership={getOwnership}
                       />
-                    ))}
+                    ))
+                  )}
                 </ul>
               </>
             )}
@@ -965,7 +1207,7 @@ export function Sidebar() {
 
       <Tooltip id="add-custom-game-tooltip" />
       <Tooltip id="create-collection-tooltip" />
-      <Tooltip id="show-playable-only-tooltip" />
+      <Tooltip id="sidebar-filter-button-tooltip" />
     </aside>
   );
 }

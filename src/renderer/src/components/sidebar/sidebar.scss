@@ -239,6 +239,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: calc(globals.$spacing-unit / 2);
+  }
+
+  &__section-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
   }
 
   &__section-toggle {
@@ -331,51 +338,6 @@
     justify-content: center;
     color: #fff;
     border-radius: 50%;
-  }
-
-  &__sort-select {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 4px;
-    color: globals.$muted-color;
-    font-size: 10px;
-    padding: 2px 4px;
-    cursor: pointer;
-    max-width: 100px;
-    outline: none;
-
-    option {
-      background-color: globals.$dark-background-color;
-      color: globals.$body-color;
-    }
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    &:focus {
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-  }
-
-  &__play-button {
-    background: none;
-    border: none;
-    color: globals.$muted-color;
-    cursor: pointer;
-    padding: 0;
-
-    &:active {
-      color: rgba(255, 255, 255, 0.5);
-    }
-
-    &--active {
-      color: globals.$brand-teal;
-    }
-
-    svg {
-      display: block;
-    }
   }
 
   &__add-button {

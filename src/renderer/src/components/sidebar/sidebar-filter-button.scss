@@ -1,0 +1,52 @@
+@use "../../scss/globals.scss";
+
+.sidebar-filter-button {
+  position: relative;
+  background: none;
+  border: none;
+  color: globals.$muted-color;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  &:active {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  svg {
+    display: block;
+  }
+
+  &--active,
+  &--open {
+    color: globals.$brand-teal;
+  }
+
+  &__badge {
+    position: absolute;
+    top: -4px;
+    right: -6px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background-color: globals.$brand-teal;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 2px globals.$dark-background-color;
+    pointer-events: none;
+  }
+}
