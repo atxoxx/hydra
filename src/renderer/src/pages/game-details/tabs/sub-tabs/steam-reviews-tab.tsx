@@ -21,9 +21,7 @@ import type {
 } from "@types";
 import { gameDetailsContext } from "@renderer/context";
 import { SteamReviewSummaryBanner } from "../steam-reviews/steam-review-summary-banner";
-import {
-  SteamReviewCard,
-} from "../steam-reviews/steam-review-card";
+import { SteamReviewCard } from "../steam-reviews/steam-review-card";
 import {
   SteamReviewFilterBar,
   DEFAULT_FILTERS,
@@ -84,27 +82,35 @@ export function SteamReviewsTab() {
     useState<SteamReviewFiltersState>(DEFAULT_FILTERS);
 
   /* ----- list data (cursor pagination) ----- */
-  const playtimeMinutes = useMemo(() => getPlaytimeMinutes(filters.playtime), [
-    filters.playtime,
-  ]);
+  const playtimeMinutes = useMemo(
+    () => getPlaytimeMinutes(filters.playtime),
+    [filters.playtime]
+  );
 
   const sortFilterForHook: SteamReviewSortFilter = activeSortTab; // "all" | "recent" | "funny"
   // Steam requires numeric dayRange for recent reviews; default to 30 days.
   const dayRange = activeSortTab === "recent" ? 30 : undefined;
 
-  const { reviews, isLoading, isLoadingMore, hasMore, hasError, loadMore, reload } =
-    useSteamReviewsExtended({
-      shop,
-      objectId,
-      gameTitle,
-      sortFilter: sortFilterForHook,
-      reviewType: toSteamReviewType(filters.reviewType),
-      purchaseType: toSteamPurchaseType(filters.purchaseType),
-      language: filters.language,
-      playtimeMinMinutes: playtimeMinutes.min,
-      playtimeMaxMinutes: playtimeMinutes.max,
-      dayRange,
-    });
+  const {
+    reviews,
+    isLoading,
+    isLoadingMore,
+    hasMore,
+    hasError,
+    loadMore,
+    reload,
+  } = useSteamReviewsExtended({
+    shop,
+    objectId,
+    gameTitle,
+    sortFilter: sortFilterForHook,
+    reviewType: toSteamReviewType(filters.reviewType),
+    purchaseType: toSteamPurchaseType(filters.purchaseType),
+    language: filters.language,
+    playtimeMinMinutes: playtimeMinutes.min,
+    playtimeMaxMinutes: playtimeMinutes.max,
+    dayRange,
+  });
 
   /* ----- summary fetch ----- */
   useEffect(() => {
@@ -258,10 +264,7 @@ export function SteamReviewsTab() {
         {reviews.length > 0 && (
           <div className="steam-reviews-tab__cards">
             {reviews.map((review) => (
-              <SteamReviewCard
-                key={review.recommendationid}
-                review={review}
-              />
+              <SteamReviewCard key={review.recommendationid} review={review} />
             ))}
           </div>
         )}
@@ -280,9 +283,7 @@ export function SteamReviewsTab() {
         )}
 
         {!hasMore && reviews.length > 0 && !isLoadingMore && (
-          <div className="steam-reviews-tab__end">
-            {t("review_list_end")}
-          </div>
+          <div className="steam-reviews-tab__end">{t("review_list_end")}</div>
         )}
       </div>
     </div>

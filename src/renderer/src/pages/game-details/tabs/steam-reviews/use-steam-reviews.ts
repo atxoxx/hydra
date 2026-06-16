@@ -141,7 +141,8 @@ export function useSteamReviews({
             ...prev,
             reviews: [...prev.reviews, ...page.reviews],
             cursor: reachedEnd ? "" : page.cursor,
-            totalReviews: page.query_summary?.total_reviews ?? prev.totalReviews,
+            totalReviews:
+              page.query_summary?.total_reviews ?? prev.totalReviews,
             hasError: false,
           };
         });

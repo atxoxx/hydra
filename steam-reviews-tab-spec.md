@@ -18,7 +18,7 @@ out of the game details flow.
 - **Remove** the `SteamRatingSection` "See Details" button from the sidebar.
 - **Remove** the `SteamReviewModal` (overlay) entirely.
 - **Keep** a compact Steam score chip in the sidebar (descriptor + percentage
-  + bar, no button — clicking opens the new tab).
+  - bar, no button — clicking opens the new tab).
 - **Add** a new **Steam Reviews** sub-tab that is the second child of the
   existing `reviews` parent tab (alongside the existing **Community Reviews**
   content from `DetailsTab` / `GameReviews`).
@@ -27,37 +27,37 @@ out of the game details flow.
 
 Mapped from the upstream plugin (C#/WPF) to Hydra's React/TypeScript stack.
 
-| Playnite ReviewViewer concept | Steam API param               | Hydra implementation                |
-| ---------------------------- | ----------------------------- | ----------------------------------- |
-| `ReviewType` (Positive/Negative/All) | `review_type`        | sort tabs in UI                      |
-| `PurchaseType` (Steam / Non-Steam Purchase) | `purchase_type` | filter chip                          |
-| `PlaytimePreset` (Hours buckets)        | `playtime_filter_min`/`max` | filter dropdown                |
-| Language dropdown                          | `language`           | filter dropdown                      |
-| `DisplayType` = `MostHelpful`             | `filter=all`         | sub-tab default view                |
-| `DisplayType` = `Recent`                  | `filter=recent` (+ optional `day_range`) | sub-tab       |
-| `DisplayType` = `Funny`                   | `filter=funny`       | sub-tab                              |
-| `DisplayType` = `Summary`                 | `filter=summary`     | top "summary banner" card (not a tab) |
-| Cursor-based pagination                   | `cursor`             | infinite scroll in renderer         |
-| Per review info                           | `reviews[]` payload  | `SteamReview` card row               |
+| Playnite ReviewViewer concept               | Steam API param                          | Hydra implementation                  |
+| ------------------------------------------- | ---------------------------------------- | ------------------------------------- |
+| `ReviewType` (Positive/Negative/All)        | `review_type`                            | sort tabs in UI                       |
+| `PurchaseType` (Steam / Non-Steam Purchase) | `purchase_type`                          | filter chip                           |
+| `PlaytimePreset` (Hours buckets)            | `playtime_filter_min`/`max`              | filter dropdown                       |
+| Language dropdown                           | `language`                               | filter dropdown                       |
+| `DisplayType` = `MostHelpful`               | `filter=all`                             | sub-tab default view                  |
+| `DisplayType` = `Recent`                    | `filter=recent` (+ optional `day_range`) | sub-tab                               |
+| `DisplayType` = `Funny`                     | `filter=funny`                           | sub-tab                               |
+| `DisplayType` = `Summary`                   | `filter=summary`                         | top "summary banner" card (not a tab) |
+| Cursor-based pagination                     | `cursor`                                 | infinite scroll in renderer           |
+| Per review info                             | `reviews[]` payload                      | `SteamReview` card row                |
 
 ### Per-review data paid forward from the Steam `reviews[]` payload
 
-| Field                                       | UI element                              |
-| ------------------------------------------- | --------------------------------------- |
-| `author.personaname`                        | Reviewer name (with optional profile link) |
-| `review` (text)                             | Review body (BBCode stripped)           |
-| `timestamp_created`                         | "Posted X days ago" date chip           |
-| `voted_up`                                  | Recommended / Not Recommended badge    |
-| `votes_up`                                  | Helpful count                           |
-| `votes_funny`                               | Funny badge (visible in Funny tab)      |
-| `weighted_vote_score`                       | Steam's quality ranking badge           |
-| `author.playtime_at_review`                 | "X hrs on record at review"             |
-| `author.playtime_forever`                   | "X hrs total"                           |
-| `language`                                  | Language chip with flag                 |
-| `steam_purchase`                            | "Steam Purchase" pill                   |
-| `received_for_free`                         | "Received for free" warning pill        |
-| `written_during_early_access`               | "Early Access" pill                     |
-| `comment_count`                             | "N comments" link (opens comment thread — out of scope for v1) |
+| Field                         | UI element                                                     |
+| ----------------------------- | -------------------------------------------------------------- |
+| `author.personaname`          | Reviewer name (with optional profile link)                     |
+| `review` (text)               | Review body (BBCode stripped)                                  |
+| `timestamp_created`           | "Posted X days ago" date chip                                  |
+| `voted_up`                    | Recommended / Not Recommended badge                            |
+| `votes_up`                    | Helpful count                                                  |
+| `votes_funny`                 | Funny badge (visible in Funny tab)                             |
+| `weighted_vote_score`         | Steam's quality ranking badge                                  |
+| `author.playtime_at_review`   | "X hrs on record at review"                                    |
+| `author.playtime_forever`     | "X hrs total"                                                  |
+| `language`                    | Language chip with flag                                        |
+| `steam_purchase`              | "Steam Purchase" pill                                          |
+| `received_for_free`           | "Received for free" warning pill                               |
+| `written_during_early_access` | "Early Access" pill                                            |
+| `comment_count`               | "N comments" link (opens comment thread — out of scope for v1) |
 
 ## 3. Non-goals (out of scope for this change)
 
@@ -120,7 +120,7 @@ Mapped from the upstream plugin (C#/WPF) to Hydra's React/TypeScript stack.
 - `src/renderer/src/pages/game-details/tabs/details-tab.tsx`
   - Wrap content in a sub-tab shell. The "Community Reviews" content
     (`GameReviews`) becomes the default sub-tab for that branch; the new
-    "Steam Reviews" sub-tab is the *first* sub-tab (Steam is the primary
+    "Steam Reviews" sub-tab is the _first_ sub-tab (Steam is the primary
     source for new users). The `?reviews=true` URL scrolls to community
     reviews section.
 - `src/renderer/src/types/declaration.d.ts`
@@ -240,7 +240,7 @@ The existing parent tab `reviews` becomes a shell with a small sub-tab bar:
 ### Hide-when-no-appid rule
 
 - Determine appid at sub-tab level: `shop === "steam" ? objectId :
-  await searchSteamGame(gameTitle)`.
+await searchSteamGame(gameTitle)`.
 - If null, **do not render** the Steam Reviews sub-tab. Only Community
   Reviews is visible. Do not show "no appid" placeholder; the tab simply
   doesn't exist for that game.
@@ -256,14 +256,14 @@ interface SteamReview {
   author: {
     steamid: string;
     personaname: string;
-    profileUrl: string;        // computed
+    profileUrl: string; // computed
     num_reviews: number;
-    playtime_forever: number;  // minutes
+    playtime_forever: number; // minutes
     playtime_at_review: number;
     last_played: number;
   };
   language: string;
-  review: string;              // plain text (BBCode stripped in renderer)
+  review: string; // plain text (BBCode stripped in renderer)
   timestamp_created: number;
   timestamp_updated: number;
   voted_up: boolean;
@@ -290,15 +290,15 @@ type SteamReviewsPage = {
 };
 
 interface SteamReviewFilters {
-  cursor?: string;             // default "*"
+  cursor?: string; // default "*"
   filter: "all" | "recent" | "funny";
   reviewType: "all" | "positive" | "negative";
   purchaseType: "all" | "steam" | "non_steam_purchase";
-  language: string;            // "all" or specific Steam code
-  dayRange?: number;           // only when filter === "recent"
-  playtimeMinMinutes: number;  // 0 = any
-  playtimeMaxMinutes: number;  // 0 = any
-  numPerPage: number;          // 20 default, 100 max
+  language: string; // "all" or specific Steam code
+  dayRange?: number; // only when filter === "recent"
+  playtimeMinMinutes: number; // 0 = any
+  playtimeMaxMinutes: number; // 0 = any
+  numPerPage: number; // 20 default, 100 max
 }
 ```
 
@@ -309,6 +309,7 @@ server-side (simple `\n` plus `[b]/[i]/[u]/[url]/[list]/[*]` → HTML — same
 capability as the existing `html-sanitizer` at `src/shared/html-sanitizer.ts`).
 
 Caching rules:
+
 - Key by appId + full filter set + cursor.
 - 5 minute TTL (matches existing summary / analysis caches).
 - Different from `getSteamReviewAnalysis` (which still does heavy
@@ -357,8 +358,8 @@ form. No top border — sits below the parent tab bar with a thin separator.
    - Language: dropdown `[All | English | 简体中文 | 日本語 | ...]`.
      Map `language` codes per Playnite's `_steamQueryMap`. `All` → `all`.
 3. **Sub-sort tabs** (smaller, under the filter bar): three buttons —
-   `Most Helpful` (default), `Recent`, `Funny`. The *Summary banner is
-   already above* the filters, so Summary is not a sub-sort tab.
+   `Most Helpful` (default), `Recent`, `Funny`. The _Summary banner is
+   already above_ the filters, so Summary is not a sub-sort tab.
 4. **Review list** (cursor-based infinite-scroll rows): each row is a
    `SteamReviewCard` (see 8.3). IntersectionObserver on the last row
    triggers the next page.
@@ -464,14 +465,14 @@ Replace the existing sidebar implementation with a slim "chip" component:
 
 Add to `useSearchParams` flow in `SteamReviewsTab`:
 
-| Param                          | Meaning                                            | Example                |
-| ------------------------------ | -------------------------------------------------- | ---------------------- |
-| `reviewsTab` (= parent tab)   | Active parent tab (`steam_reviews` / `community_reviews`) | `?reviewsTab=steam_reviews` |
-| `steamReviewsSort`            | Sub-sort tab                                       | `?steamReviewsSort=funny`    |
-| `steamReviewType`             | Review type filter                                 | `steamReviewType=positive`   |
-| `steamPurchaseType`           | Purchase type filter                               | `steamPurchaseType=steam`    |
-| `steamPlaytimeFilter`         | Playtime filter                                    | `steamPlaytimeFilter=10`     |
-| `steamLanguage`               | Language filter                                    | `steamLanguage=schinese`     |
+| Param                       | Meaning                                                   | Example                     |
+| --------------------------- | --------------------------------------------------------- | --------------------------- |
+| `reviewsTab` (= parent tab) | Active parent tab (`steam_reviews` / `community_reviews`) | `?reviewsTab=steam_reviews` |
+| `steamReviewsSort`          | Sub-sort tab                                              | `?steamReviewsSort=funny`   |
+| `steamReviewType`           | Review type filter                                        | `steamReviewType=positive`  |
+| `steamPurchaseType`         | Purchase type filter                                      | `steamPurchaseType=steam`   |
+| `steamPlaytimeFilter`       | Playtime filter                                           | `steamPlaytimeFilter=10`    |
+| `steamLanguage`             | Language filter                                           | `steamLanguage=schinese`    |
 
 The existing `?reviews=true` deep link (which scrolls to the community
 reviews section) continues to work; in addition, it will also set
@@ -526,7 +527,7 @@ overrides initially; if dimensions break, fix in a follow-up.
    percentage + reviews count is shown above the filters.
 6. The new sub-tab exposes these filters: review type (all/positive/
    negative), purchase type (all/steam), playtime preset (any/>1/>10/>
-   >100 hrs), language (all + a short list).
+   > 100 hrs), language (all + a short list).
 7. Each `SteamReviewCard` shows: recommendation badge, author name +
    total reviews, hours-at-review, hours-total, language chip, language
    flag, body (truncated/expandable), helpful count, funny count,
@@ -569,13 +570,13 @@ overrides initially; if dimensions break, fix in a follow-up.
 
 ## 18. Risks & mitigations
 
-| Risk                                                                 | Mitigation                                                                                 |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| Steam rate-limits cursor calls                                       | 200ms delay between pages; abort on unmount; bail out early when `cursor === ""`           |
-| Non-Steam games without a Steam appid hang the sub-tab               | Hide sub-tab entirely (per §5)                                                            |
-| BBCode in `review` text contains unsanitized HTML                    | Reuse `src/shared/html-sanitizer.ts` server-side; renderer treats text as plain text only |
-| Very-long reviews overflow the card                                  | Truncate to 12em with gradient + "Show more" expand; user can collapse                     |
-| Language flag data missing                                           | Reuse `src/shared/language-flags.ts` for supported locales; fallback to 2-letter code      |
-| Many reviews cause scroll jank                                       | Add `react-window` virtualization when list > 200 items (post-v1 polish)                    |
-| Community regressions when `DetailsTab` restructured                 | Cover with manual QA pass; minimize handler changes                                       |
-| Some locales missing new keys                                        | Graceful fallback to English (existing behaviour)                                          |
+| Risk                                                   | Mitigation                                                                                |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| Steam rate-limits cursor calls                         | 200ms delay between pages; abort on unmount; bail out early when `cursor === ""`          |
+| Non-Steam games without a Steam appid hang the sub-tab | Hide sub-tab entirely (per §5)                                                            |
+| BBCode in `review` text contains unsanitized HTML      | Reuse `src/shared/html-sanitizer.ts` server-side; renderer treats text as plain text only |
+| Very-long reviews overflow the card                    | Truncate to 12em with gradient + "Show more" expand; user can collapse                    |
+| Language flag data missing                             | Reuse `src/shared/language-flags.ts` for supported locales; fallback to 2-letter code     |
+| Many reviews cause scroll jank                         | Add `react-window` virtualization when list > 200 items (post-v1 polish)                  |
+| Community regressions when `DetailsTab` restructured   | Cover with manual QA pass; minimize handler changes                                       |
+| Some locales missing new keys                          | Graceful fallback to English (existing behaviour)                                         |

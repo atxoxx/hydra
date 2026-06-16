@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ClockIcon, ThumbsupIcon, SunIcon, GiftIcon, ZapIcon } from "@primer/octicons-react";
+import {
+  ClockIcon,
+  ThumbsupIcon,
+  SunIcon,
+  GiftIcon,
+  ZapIcon,
+} from "@primer/octicons-react";
 import { ThumbsUp } from "lucide-react";
 import type { SteamReview } from "@types";
 import { useDate, useFormat } from "@renderer/hooks";
@@ -72,12 +78,16 @@ export function SteamReviewCard({
   const bodyText = (review.review ?? "").trim();
   const bodyIsLong = bodyText.length > 320;
 
-  const weightedScorePct = getWeightedVotePercentage(review.weighted_vote_score);
+  const weightedScorePct = getWeightedVotePercentage(
+    review.weighted_vote_score
+  );
 
   return (
     <article
       className={`steam-review-card ${
-        recommended ? "steam-review-card--recommended" : "steam-review-card--not-recommended"
+        recommended
+          ? "steam-review-card--recommended"
+          : "steam-review-card--not-recommended"
       }`}
     >
       <header className="steam-review-card__header">
@@ -139,7 +149,10 @@ export function SteamReviewCard({
       </div>
 
       <div className="steam-review-card__meta">
-        <span className="steam-review-card__meta-item" title={t("review_hours_at_review_other", { count: hoursAtReview })}>
+        <span
+          className="steam-review-card__meta-item"
+          title={t("review_hours_at_review_other", { count: hoursAtReview })}
+        >
           <ClockIcon size={12} />
           {hoursAtReview >= 1
             ? `${numberFormatter.format(Math.round(hoursAtReview))} h`
@@ -147,18 +160,20 @@ export function SteamReviewCard({
         </span>
 
         {hoursTotal > 0 && (
-          <span className="steam-review-card__meta-item" title={t("review_hours_total_other", { count: hoursTotal })}>
+          <span
+            className="steam-review-card__meta-item"
+            title={t("review_hours_total_other", { count: hoursTotal })}
+          >
             · Σ {numberFormatter.format(Math.round(hoursTotal))} h
           </span>
         )}
 
         {review.language && (
-          <span
-            className="steam-review-card__language"
-            title={review.language}
-          >
+          <span className="steam-review-card__language" title={review.language}>
             {flagEmoji && (
-              <span className="steam-review-card__language-flag">{flagEmoji}</span>
+              <span className="steam-review-card__language-flag">
+                {flagEmoji}
+              </span>
             )}
             <span className="steam-review-card__language-code">
               {review.language.slice(0, 2).toUpperCase()}

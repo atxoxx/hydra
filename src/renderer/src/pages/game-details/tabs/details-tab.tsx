@@ -1,9 +1,6 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import {
-  CommentDiscussionIcon,
-  PeopleIcon,
-} from "@primer/octicons-react";
+import { CommentDiscussionIcon, PeopleIcon } from "@primer/octicons-react";
 import { useTranslation } from "react-i18next";
 import { GameReviews } from "../game-reviews";
 import { useUserDetails, useLibrary } from "@renderer/hooks";
@@ -16,9 +13,7 @@ type ReviewSubTabId = "steam_reviews" | "community_reviews";
 
 const DEFAULT_STEAM_SUB_TAB: ReviewSubTabId = "steam_reviews";
 
-function readReviewSubTab(
-  params: URLSearchParams
-): ReviewSubTabId | null {
+function readReviewSubTab(params: URLSearchParams): ReviewSubTabId | null {
   const value = params.get("reviewsTab");
   if (value === "steam_reviews" || value === "community_reviews") {
     return value;
@@ -53,7 +48,7 @@ export function DetailsTab() {
   // URL is the source of truth for the active sub-tab.
   const urlSubTab = readReviewSubTab(searchParams);
   const activeSubTab: ReviewSubTabId = isOnSteam
-    ? urlSubTab ?? DEFAULT_STEAM_SUB_TAB
+    ? (urlSubTab ?? DEFAULT_STEAM_SUB_TAB)
     : "community_reviews";
 
   const handleSubTabChange = (id: ReviewSubTabId) => {

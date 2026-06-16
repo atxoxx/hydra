@@ -3,7 +3,11 @@ import "./steam-review-filter-bar.scss";
 
 export type SteamReviewTypeFilterValue = "all" | "positive" | "negative";
 export type SteamReviewPurchaseFilterValue = "all" | "steam";
-export type SteamReviewPlaytimePreset = "any" | "over_1" | "over_10" | "over_100";
+export type SteamReviewPlaytimePreset =
+  | "any"
+  | "over_1"
+  | "over_10"
+  | "over_100";
 export type SteamReviewLanguageFilterValue =
   | "all"
   | "english"
@@ -42,9 +46,10 @@ export const DEFAULT_FILTERS: SteamReviewFiltersState = {
 };
 
 /** Map from PlaytimePreset to (min, max) minutes. */
-export function getPlaytimeMinutes(
-  preset: SteamReviewPlaytimePreset
-): { min: number; max: number } {
+export function getPlaytimeMinutes(preset: SteamReviewPlaytimePreset): {
+  min: number;
+  max: number;
+} {
   switch (preset) {
     case "over_1":
       return { min: 60, max: 0 };
@@ -91,7 +96,9 @@ const LANGUAGE_VALUES: SteamReviewLanguageFilterValue[] = [
   "arabic",
 ];
 
-export function isDefaultFilterState(filters: SteamReviewFiltersState): boolean {
+export function isDefaultFilterState(
+  filters: SteamReviewFiltersState
+): boolean {
   return (
     filters.reviewType === DEFAULT_FILTERS.reviewType &&
     filters.purchaseType === DEFAULT_FILTERS.purchaseType &&
@@ -110,9 +117,15 @@ export function SteamReviewFilterBar({
   const showClear = !isDefaultFilterState(filters);
 
   return (
-    <div className="steam-review-filter-bar" role="group" aria-label={t("steam_reviews")}>
+    <div
+      className="steam-review-filter-bar"
+      role="group"
+      aria-label={t("steam_reviews")}
+    >
       <div className="steam-review-filter-bar__group">
-        <span className="steam-review-filter-bar__label">{t("filter_review_type")}</span>
+        <span className="steam-review-filter-bar__label">
+          {t("filter_review_type")}
+        </span>
         <SegmentedControl
           options={[
             { value: "all", label: t("filter_review_type_all") },
@@ -139,7 +152,10 @@ export function SteamReviewFilterBar({
       </div>
 
       <div className="steam-review-filter-bar__group">
-        <label className="steam-review-filter-bar__label" htmlFor="steam-reviews-filter-playtime">
+        <label
+          className="steam-review-filter-bar__label"
+          htmlFor="steam-reviews-filter-playtime"
+        >
           {t("filter_playtime")}
         </label>
         <select
@@ -147,18 +163,26 @@ export function SteamReviewFilterBar({
           className="steam-review-filter-bar__select"
           value={filters.playtime}
           onChange={(event) =>
-            onChange("playtime", event.target.value as SteamReviewPlaytimePreset)
+            onChange(
+              "playtime",
+              event.target.value as SteamReviewPlaytimePreset
+            )
           }
         >
           <option value="any">{t("filter_playtime_any")}</option>
           <option value="over_1">{t("filter_playtime_over_1_hour")}</option>
           <option value="over_10">{t("filter_playtime_over_10_hours")}</option>
-          <option value="over_100">{t("filter_playtime_over_100_hours")}</option>
+          <option value="over_100">
+            {t("filter_playtime_over_100_hours")}
+          </option>
         </select>
       </div>
 
       <div className="steam-review-filter-bar__group">
-        <label className="steam-review-filter-bar__label" htmlFor="steam-reviews-filter-language">
+        <label
+          className="steam-review-filter-bar__label"
+          htmlFor="steam-reviews-filter-language"
+        >
           {t("filter_language")}
         </label>
         <select
@@ -215,7 +239,9 @@ function SegmentedControl<T extends string>({
             role="radio"
             aria-checked={isActive}
             className={`steam-review-filter-bar__segmented-option ${
-              isActive ? "steam-review-filter-bar__segmented-option--active" : ""
+              isActive
+                ? "steam-review-filter-bar__segmented-option--active"
+                : ""
             }`}
             onClick={() => onChange(option.value)}
           >

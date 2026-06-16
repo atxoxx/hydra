@@ -25,11 +25,7 @@ export function SubTabBar<T extends string = string>({
   const resolvedAriaLabel = ariaLabel ?? t("sub_tabs_aria_label");
 
   return (
-    <div
-      className="sub-tab-bar"
-      role="tablist"
-      aria-label={resolvedAriaLabel}
-    >
+    <div className="sub-tab-bar" role="tablist" aria-label={resolvedAriaLabel}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -41,7 +37,9 @@ export function SubTabBar<T extends string = string>({
           role="tab"
           aria-selected={activeSubTab === tab.id}
         >
-          {tab.icon && <span className="sub-tab-bar__tab-icon">{tab.icon}</span>}
+          {tab.icon && (
+            <span className="sub-tab-bar__tab-icon">{tab.icon}</span>
+          )}
           <span className="sub-tab-bar__tab-label">{tab.label}</span>
         </button>
       ))}
