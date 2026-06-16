@@ -100,7 +100,7 @@ The popover body is a fixed-size 2-column layout:
 └──────────────────┴────────────────────────────────────────┘
 ```
 
-- Left column: **fixed-width group navigator** showing each group with the number of *currently selected* chips in parentheses, e.g. `Genre (2)`. Groups whose right-column is scrollable (`Store`, `Genre`, `Status`) get an arrow on their row indicating "more".
+- Left column: **fixed-width group navigator** showing each group with the number of _currently selected_ chips in parentheses, e.g. `Genre (2)`. Groups whose right-column is scrollable (`Store`, `Genre`, `Status`) get an arrow on their row indicating "more".
 - Right column: shows the **active group's options** as a scrollable list/grid of chips.
 - A group with zero options (e.g. no genres available on any game) is shown disabled with a count of `0`.
 - On narrow sidebars (< ~250 px) the popover is sized so the menu extends **over** the sidebar/library content area but stays within the viewport — using Radix's `collisionPadding` (already in the existing primitive).
@@ -135,17 +135,17 @@ The popover body is a fixed-size 2-column layout:
 
 ## 4. Filter Groups
 
-### 4.1 Library set *(single-select, always visible)*
+### 4.1 Library set _(single-select, always visible)_
 
-| Option        | Predicate                                                                                | Default |
-| ------------- | ---------------------------------------------------------------------------------------- | ------- |
-| All           | (no filter)                                                                              | ✓       |
-| Installed     | `Boolean(game.executablePath) \|\| game.installedSizeInBytes != null`                    |         |
-| Not installed | NOT installed                                                                             |         |
+| Option        | Predicate                                                             | Default |
+| ------------- | --------------------------------------------------------------------- | ------- |
+| All           | (no filter)                                                           | ✓       |
+| Installed     | `Boolean(game.executablePath) \|\| game.installedSizeInBytes != null` |         |
+| Not installed | NOT installed                                                         |         |
 
 > Decision: a game is **installed** when `executablePath` exists OR `installedSizeInBytes > 0` (matches the existing `installed_first` sort in `sidebar.tsx`). This **replaces and supersedes** the old show-playable-only Play button. The old button is removed.
 
-### 4.2 Stores / Platform *(multi-select, AND within group)*
+### 4.2 Stores / Platform _(multi-select, AND within group)_
 
 Sourced from `MODERN_SHOPS` plus `launchbox`:
 
@@ -155,7 +155,7 @@ Sourced from `MODERN_SHOPS` plus `launchbox`:
 
 > Note: The "Classics" arcade platform breakdown (PS1/PS2/etc.) is folded into the same Stores group. The library-page `PlatformFilter` for classics continues to work independently on the main page; the sidebar's stores group shows a single combined "Classics" chip plus a per-platform breakdown when expanded further.
 
-### 4.3 Genre *(multi-select, AND within group)*
+### 4.3 Genre _(multi-select, AND within group)_
 
 - Chips populated from `game.genres` across all library games.
 - De-duplicated, alphabetized.
@@ -166,32 +166,32 @@ Sourced from `MODERN_SHOPS` plus `launchbox`:
 - Each chip label = the localized genre name (using `steamGenresMapping[lang]` when available; falls back to `game.genres[i]` raw).
 - Count = number of library games whose `genres` contains that value. Disabled chips (count=0) are still rendered but inert.
 
-### 4.4 Sort *(single-select, always visible)*
+### 4.4 Sort _(single-select, always visible)_
 
 Existing inline `<select>` options are reused. New options: keep `title_desc` (Z→A) as a simpler mirror of alphabetical.
 
-| Value             | Predicate (mirrors `sidebar.tsx`)                                                                |
-| ----------------- | ------------------------------------------------------------------------------------------------- |
-| `alphabetical`    | `a.title.localeCompare(b.title, undefined, { sensitivity: "base" })` (A→Z) — **default**         |
-| `title_desc`      | Reverse alphabetical (Z→A)                                                                         |
-| `most_played`     | `(b.playTimeInMilliseconds ?? 0) - (a.playTimeInMilliseconds ?? 0)`                                |
-| `recently_played` | `lastTimePlayed` desc; then alphabetical fallback                                                  |
-| `installed_first` | Installed first, then alphabetical tiebreak                                                        |
+| Value             | Predicate (mirrors `sidebar.tsx`)                                                        |
+| ----------------- | ---------------------------------------------------------------------------------------- |
+| `alphabetical`    | `a.title.localeCompare(b.title, undefined, { sensitivity: "base" })` (A→Z) — **default** |
+| `title_desc`      | Reverse alphabetical (Z→A)                                                               |
+| `most_played`     | `(b.playTimeInMilliseconds ?? 0) - (a.playTimeInMilliseconds ?? 0)`                      |
+| `recently_played` | `lastTimePlayed` desc; then alphabetical fallback                                        |
+| `installed_first` | Installed first, then alphabetical tiebreak                                              |
 
-### 4.5 Status *(multi-select, AND within group)*
+### 4.5 Status _(multi-select, AND within group)_
 
 Sourced from `UserGameStatus` enum used in `game-status-dropdown.tsx`:
 
-| Value           | Predicate (per `LibraryGame`)                                                  |
-| --------------- | -------------------------------------------------------------------------------- |
-| `playing`       | `userStatus === "playing"`                                                       |
-| `plan_to_play` | `userStatus === "plan_to_play"`                                                   |
-| `on_hold`       | `userStatus === "on_hold"`                                                       |
-| `beaten`        | `userStatus === "beaten"`                                                          |
-| `completed`     | `userStatus === "completed"`                                                        |
-| `played`        | `userStatus === "played"`                                                          |
-| `not_played`   | `userStatus === "not_played"`                                                      |
-| `abandoned`     | `userStatus === "abandoned"`                                                       |
+| Value          | Predicate (per `LibraryGame`)   |
+| -------------- | ------------------------------- |
+| `playing`      | `userStatus === "playing"`      |
+| `plan_to_play` | `userStatus === "plan_to_play"` |
+| `on_hold`      | `userStatus === "on_hold"`      |
+| `beaten`       | `userStatus === "beaten"`       |
+| `completed`    | `userStatus === "completed"`    |
+| `played`       | `userStatus === "played"`       |
+| `not_played`   | `userStatus === "not_played"`   |
+| `abandoned`    | `userStatus === "abandoned"`    |
 
 > `UserGameStatus "none"` and `null` are intentionally omitted from the chips (they map to "Unrated" — would produce identical 0-count chips and are excluded to avoid clutter).
 
@@ -210,16 +210,19 @@ function matchesFilters(game, state) {
   if (state.librarySet === "not_installed" && isInstalled(game)) return false;
 
   // 5.1.b Stores — AND
-  if (state.stores.length > 0 && !state.stores.includes(game.shop)) return false;
+  if (state.stores.length > 0 && !state.stores.includes(game.shop))
+    return false;
 
   // 5.1.c Genre — AND
   if (state.genres.length > 0) {
-    const gameGenres = game.genres?.map(g => g.toLowerCase()) ?? [];
-    if (!state.genres.every(g => gameGenres.includes(g.toLowerCase()))) return false;
+    const gameGenres = game.genres?.map((g) => g.toLowerCase()) ?? [];
+    if (!state.genres.every((g) => gameGenres.includes(g.toLowerCase())))
+      return false;
   }
 
   // 5.1.d Status — AND
-  if (state.statuses.length > 0 && !state.statuses.includes(game.userStatus)) return false;
+  if (state.statuses.length > 0 && !state.statuses.includes(game.userStatus))
+    return false;
 
   return true;
 }
@@ -239,6 +242,7 @@ Applied **after** filtering, using `sortBy`. Single-select so no conflicts.
 ### 5.4 AND-with-AND semantics example
 
 Selecting `Stores = {Steam}`, `Genre = {RPG}`, `Status = {playing}` returns games where:
+
 - `game.shop === "steam"` **AND**
 - `game.genres` includes `"RPG"` **AND**
 - `game.userStatus === "playing"`
@@ -257,13 +261,13 @@ Selecting `Stores = {Steam, Epic}` (multi within group) returns games where `sho
 
 ### 6.2 Persisted keys (localStorage)
 
-| Key                          | Type                       | Default        |
-| ---------------------------- | -------------------------- | -------------- |
-| `sidebar-filter-store-set`   | `"all" \| "installed" \| "not_installed"` | `"all"`        |
-| `sidebar-filter-stores`      | JSON-stringified `string[]`| `[]`           |
-| `sidebar-filter-genres`      | JSON-stringified `string[]`| `[]`           |
-| `sidebar-filter-status`     | JSON-stringified `UserGameStatus[]` | `[]`           |
-| `sidebar-sort-by`            | `SortOption`               | `"alphabetical"` |
+| Key                        | Type                                      | Default          |
+| -------------------------- | ----------------------------------------- | ---------------- |
+| `sidebar-filter-store-set` | `"all" \| "installed" \| "not_installed"` | `"all"`          |
+| `sidebar-filter-stores`    | JSON-stringified `string[]`               | `[]`             |
+| `sidebar-filter-genres`    | JSON-stringified `string[]`               | `[]`             |
+| `sidebar-filter-status`    | JSON-stringified `UserGameStatus[]`       | `[]`             |
+| `sidebar-sort-by`          | `SortOption`                              | `"alphabetical"` |
 
 The existing `sidebar-sort-by` key is reused (no breaking change). On mount, hydrate from localStorage with safe defaults and validation (drop unknown values).
 
@@ -279,25 +283,25 @@ The existing `sidebar-sort-by` key is reused (no breaking change). On mount, hyd
 
 ### 7.1 New files
 
-| File                                                              | Purpose                                                                    |
-| ----------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `src/renderer/src/components/sidebar/sidebar-filter-menu.tsx`     | The Radix-popover component: layout, group renderer, chip renderer         |
-| `src/renderer/src/components/sidebar/sidebar-filter-menu.scss`    | Styles for the popover and chips                                           |
-| `src/renderer/src/components/sidebar/sidebar-filter-button.tsx`   | The header icon button + count badge                                       |
-| `src/renderer/src/components/sidebar/sidebar-filter-button.scss`  | Styles for the button + badge                                              |
+| File                                                             | Purpose                                                            |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `src/renderer/src/components/sidebar/sidebar-filter-menu.tsx`    | The Radix-popover component: layout, group renderer, chip renderer |
+| `src/renderer/src/components/sidebar/sidebar-filter-menu.scss`   | Styles for the popover and chips                                   |
+| `src/renderer/src/components/sidebar/sidebar-filter-button.tsx`  | The header icon button + count badge                               |
+| `src/renderer/src/components/sidebar/sidebar-filter-button.scss` | Styles for the button + badge                                      |
 
 ### 7.2 Files to modify
 
-| File                                                          | Changes                                                                                                                         |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `src/renderer/src/components/sidebar/sidebar.tsx`             | Add `SidebarFilterButton` + `SidebarFilterMenu`; replace sort `<select>`, remove `<Play>` button; add `SidebarFilterState`;     |
-| `src/renderer/src/components/sidebar/sidebar.scss`            | Drop `.sidebar__sort-select`, `.sidebar__play-button`, `.sidebar__play-button--active`; minor header spacing fix                |
+| File                                               | Changes                                                                                                                     |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `src/renderer/src/components/sidebar/sidebar.tsx`  | Add `SidebarFilterButton` + `SidebarFilterMenu`; replace sort `<select>`, remove `<Play>` button; add `SidebarFilterState`; |
+| `src/renderer/src/components/sidebar/sidebar.scss` | Drop `.sidebar__sort-select`, `.sidebar__play-button`, `.sidebar__play-button--active`; minor header spacing fix            |
 
 ### 7.3 Locale files
 
-| File                                | Changes                                                                  |
-| ----------------------------------- | ------------------------------------------------------------------------ |
-| `src/locales/en/translation.json`   | Add new keys under `sidebar` namespace (English only for v1)              |
+| File                              | Changes                                                      |
+| --------------------------------- | ------------------------------------------------------------ |
+| `src/locales/en/translation.json` | Add new keys under `sidebar` namespace (English only for v1) |
 
 Other ~40 locale files: untouched (fall back to English string keys).
 
@@ -336,8 +340,8 @@ Other ~40 locale files: untouched (fall back to English string keys).
     "sort_title_desc": "Alphabetical (Z–A)",
     "sort_most_played": "Most played",
     "sort_recently_played": "Recently played",
-    "sort_installed_first": "Installed first"
-  }
+    "sort_installed_first": "Installed first",
+  },
 }
 ```
 
