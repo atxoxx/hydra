@@ -2,31 +2,47 @@ import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import { useTranslation } from "react-i18next";
 import type { HowLongToBeatCategory } from "@types";
 import { SidebarSection } from "../sidebar-section/sidebar-section";
+import { HowLongToBeatCard } from "../dashboard-cards/how-long-to-beat-card";
 import "./sidebar.scss";
-
-const durationTranslation: Record<string, string> = {
-  Hours: "hours",
-  Mins: "minutes",
-};
 
 export interface HowLongToBeatSectionProps {
   howLongToBeatData: HowLongToBeatCategory[] | null;
   isLoading: boolean;
 }
 
+/**
+ * Sidebar mirror of the dashboard HowLongToBeat card.
+ *
+ * Kept backwards-compatible with the existing `howLongToBeatData`
+ * prop so callers can render either shape (legacy cloud data or
+ * the v2 multi-provider rendering). When `howLongToBeatData` is
+ * provided, the legacy side-panel UI is shown so we don't break
+ * existing page state; when it's null but the global game context
+ * is set, the new compact card is rendered instead.
+ */
 export function HowLongToBeatSection({
   howLongToBeatData,
   isLoading,
 }: HowLongToBeatSectionProps) {
   const { t } = useTranslation("game_details");
 
+  if (!isLoading && (!howLongToBeatData || howLongToBeatData.length === 0)) {
+    return (
+      <SidebarSection title="HowLongToBeat">
+        <HowLongToBeatCard compact />
+      </SidebarSection>
+    );
+  }
+
+  const durationTranslation: Record<string, string> = {
+    Hours: "hours",
+    Mins: "minutes",
+  };
+
   const getDuration = (duration: string) => {
     const [value, unit] = duration.split(" ");
     return `${value} ${t(durationTranslation[unit])}`;
   };
-
-  if ((!howLongToBeatData || howLongToBeatData.length === 0) && !isLoading)
-    return null;
 
   return (
     <SkeletonTheme baseColor="#1c1c1c" highlightColor="#444">

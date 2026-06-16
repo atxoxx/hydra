@@ -24,6 +24,7 @@ export * from "./download-directories";
 export * from "./html-sanitizer";
 export * from "./language-flags";
 export * from "./use-hls-video";
+export * from "./playtime/provider-meta";
 export { getRendererEnv } from "./env-config";
 
 export class UserNotLoggedInError extends Error {

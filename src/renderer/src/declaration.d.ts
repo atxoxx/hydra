@@ -63,6 +63,10 @@ import type {
   GameMetadata,
   UserGameStatus,
   MetadataSearchResult,
+  PlaytimeProviderId,
+  PlaytimeSearchResult,
+  PlaytimeGameData,
+  PlaytimeMapping,
 } from "@types";
 import type { AxiosProgressEvent } from "axios";
 
@@ -1142,6 +1146,32 @@ declare global {
         userStatus?: UserGameStatus | null;
       };
     }) => Promise<{ ok: boolean; error?: string; game?: Game }>;
+
+    /* Playtime providers */
+    searchPlaytimeGames: (params: {
+      provider: PlaytimeProviderId;
+      query: string;
+    }) => Promise<PlaytimeSearchResult[]>;
+    fetchPlaytimeData: (params: {
+      provider: PlaytimeProviderId;
+      externalId: string;
+    }) => Promise<PlaytimeGameData | null>;
+    autoMatchPlaytime: (params: {
+      title: string;
+      releaseYear?: number | null;
+      appId?: number | null;
+    }) => Promise<PlaytimeSearchResult | null>;
+    saveGamePlaytimeMapping: (params: {
+      shop: string;
+      objectId: string;
+      provider: PlaytimeProviderId;
+      externalId: string;
+      matchedSimilarityScore?: number;
+    }) => Promise<{
+      ok: boolean;
+      mapping: PlaytimeMapping | null;
+      error?: string;
+    }>;
 
     /* Transfer Game */
     getAvailableDrives: () => Promise<DriveInfo[]>;

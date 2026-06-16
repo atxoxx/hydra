@@ -28,6 +28,7 @@ import "./sessions/clear-activity-data";
 import "./metadata/fetch-game-metadata";
 import "./library/set-game-user-status";
 import "./library/save-game-metadata";
+import "./playtime";
 
 import { isPortableVersion } from "@main/helpers";
 

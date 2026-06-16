@@ -38,6 +38,10 @@ import type {
   FoundExe,
   WatchlistEntry,
   UserGameStatus,
+  PlaytimeProviderId,
+  PlaytimeSearchResult,
+  PlaytimeGameData,
+  PlaytimeMapping,
 } from "@types";
 import type { AuthPage } from "@shared";
 import type { AxiosProgressEvent } from "axios";
@@ -1391,4 +1395,40 @@ contextBridge.exposeInMainWorld("electron", {
       userStatus?: UserGameStatus | null;
     };
   }) => ipcRenderer.invoke("saveGameMetadata", payload),
+
+  /* Playtime providers (HLTB / Backlogged / IGDB+Steam) */
+  searchPlaytimeGames: (params: {
+    provider: PlaytimeProviderId;
+    query: string;
+  }) =>
+    ipcRenderer.invoke("searchPlaytimeGames", params) as Promise<
+      PlaytimeSearchResult[]
+    >,
+  fetchPlaytimeData: (params: {
+    provider: PlaytimeProviderId;
+    externalId: string;
+  }) =>
+    ipcRenderer.invoke("fetchPlaytimeData", params) as Promise<
+      PlaytimeGameData | null
+    >,
+  autoMatchPlaytime: (params: {
+    title: string;
+    releaseYear?: number | null;
+    appId?: number | null;
+  }) =>
+    ipcRenderer.invoke("autoMatchPlaytime", params) as Promise<
+      PlaytimeSearchResult | null
+    >,
+  saveGamePlaytimeMapping: (params: {
+    shop: string;
+    objectId: string;
+    provider: PlaytimeProviderId;
+    externalId: string;
+    matchedSimilarityScore?: number;
+  }) =>
+    ipcRenderer.invoke("saveGamePlaytimeMapping", params) as Promise<{
+      ok: boolean;
+      mapping: PlaytimeMapping | null;
+      error?: string;
+    }>,
 });

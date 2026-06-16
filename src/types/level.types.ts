@@ -7,6 +7,7 @@ import type {
 import type { DownloadStatus } from "./download.types";
 import type { ClassicsDisc } from "./emulator.types";
 import type { UserGameStatus } from "./metadata.types";
+import type { PlaytimeMapping } from "./how-long-to-beat.types";
 
 export type SubscriptionStatus = "active" | "pending" | "cancelled";
 
@@ -34,6 +35,7 @@ export interface User {
 }
 
 export interface Game {
+
   title: string;
   iconUrl: string | null;
   libraryHeroImageUrl: string | null;
@@ -108,6 +110,8 @@ export interface Game {
   tags?: string[] | null;
   /** User-defined release date (ISO date string, e.g. "2024-03-15") */
   releaseDate?: string | null;
+  /** Manual override of the auto-matched playtime provider for this game. */
+  playtimeMapping?: PlaytimeMapping | null;
 }
 
 export type WatchlistPriority = "must-play" | "want" | "later";

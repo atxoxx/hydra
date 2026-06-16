@@ -1,5 +1,4 @@
-import { useContext, useEffect, useState } from "react";
-import type { HowLongToBeatCategory } from "@types";
+import { useContext } from "react";
 import { gameDetailsContext } from "@renderer/context";
 import { PlayStatusCard } from "../dashboard-cards/play-status-card";
 import { StatsCard } from "../dashboard-cards/stats-card";
@@ -11,33 +10,7 @@ import { SimilarGames } from "../similar-games/similar-games";
 import "./overview-tab.scss";
 
 export function OverviewTab() {
-  const { effectiveObjectId, effectiveShop, objectId } =
-    useContext(gameDetailsContext);
-
-  const [howLongToBeat, setHowLongToBeat] = useState<{
-    isLoading: boolean;
-    data: HowLongToBeatCategory[] | null;
-  }>({ isLoading: true, data: null });
-
-  useEffect(() => {
-    if (objectId) {
-      setHowLongToBeat({ isLoading: true, data: null });
-
-      window.electron.hydraApi
-        .get<HowLongToBeatCategory[] | null>(
-          `/games/${effectiveShop}/${effectiveObjectId}/how-long-to-beat`,
-          {
-            needsAuth: false,
-          }
-        )
-        .then((data) => {
-          setHowLongToBeat({ isLoading: false, data });
-        })
-        .catch(() => {
-          setHowLongToBeat({ isLoading: false, data: null });
-        });
-    }
-  }, [effectiveObjectId, effectiveShop, objectId]);
+  const { effectiveObjectId, effectiveShop } = useContext(gameDetailsContext);
 
   return (
     <div className="overview-tab">
@@ -46,10 +19,7 @@ export function OverviewTab() {
       <div className="overview-tab__dashboard-grid">
         <PlayStatusCard />
         <StatsCard />
-        <HowLongToBeatCard
-          howLongToBeatData={howLongToBeat.data}
-          isLoading={howLongToBeat.isLoading}
-        />
+        <HowLongToBeatCard />
         <div className="overview-tab__full-width">
           <DescriptionCard />
         </div>
