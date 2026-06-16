@@ -211,7 +211,11 @@ export function WebsiteLinksIframe({ link }: WebsiteLinksIframeProps) {
           const wv = webviewRef.current;
           if (wv) {
             retryCountRef.current++;
-            try { wv.reload(); } catch { /* ignore */ }
+            try {
+              wv.reload();
+            } catch {
+              /* ignore */
+            }
             return;
           }
         }

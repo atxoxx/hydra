@@ -14,6 +14,7 @@ Fix multiple interconnected issues in the **website-links panel** (`website-link
 **Current**: `webpreferences="sandbox=yes, contextIsolation=yes"`
 
 In Electron, `sandbox=yes` for a `<webview>` tag runs the webview's renderer process in OS-level sandbox mode. This:
+
 - **Disables GPU process access** → no hardware-accelerated video decoding (YouTube/Twitch videos spin forever)
 - **Restricts certain Web APIs** → interactive elements, `navigator.mediaDevices`, and other JS-heavy features fail silently
 - **Limits sub-resource fetching** → images and third-party scripts from CDNs may fail to load
@@ -30,11 +31,12 @@ The main window already has `sandbox: false` (line 60 of `window-manager.ts`), a
 
 **Location**: `src/renderer/src/pages/game-details/website-links-panel/website-links-iframe.tsx`, lines 188-194
 **Current behavior**: When a page tries to open a popup/new-window (ads, authentication flows, social sharing), the handler catches the event, prevents default, but then loads the popup URL **in the current webview**:
+
 ```ts
 const onNewWindow = (e: any) => {
   e.preventDefault();
   try {
-    webview.loadURL(e.url);  // <-- THIS redirects the current view
+    webview.loadURL(e.url); // <-- THIS redirects the current view
   } catch {
     window.electron.openExternal(e.url);
   }
@@ -44,6 +46,7 @@ const onNewWindow = (e: any) => {
 This is the **primary cause of "random reloads"** while viewing a tab. Sites like Twitch (clip sharing popups), YouTube (embedded player popups), and NexusMods (auth dialogs, ad popups) all trigger `new-window` events. The current handler redirects the user away from the content they were viewing.
 
 **Fix**: Always open popup URLs in the external browser, never load them in the webview:
+
 ```ts
 const onNewWindow = (e: any) => {
   e.preventDefault();
@@ -61,11 +64,13 @@ const onNewWindow = (e: any) => {
 **Current behavior**: The preview session only sets `Origin` and `Referer` headers when the **request URL itself** matches a known hostname list (e.g., `hostname.endsWith("twitch.tv")`). However, when a page like Twitch loads sub-resources (images from `static-cdn.jtvnw.net`, scripts from `cdn.twitch.tv`, API calls to `gql.twitch.tv`), those sub-resource requests do not match the known hostname list. They go out **without proper Origin/Referer headers**, and CDNs/APIs block them.
 
 This is why:
+
 - **Images don't load**: CDN image hosts reject requests without proper referrer
 - **Interactive elements broken**: API calls fail silently due to missing Origin headers
 - **Embedded content blocked**: Third-party widgets (Twitch chat, ModDB embeds) fail to initialize
 
 **Fix**: Instead of checking the **request URL** hostname, check the **referrer** (the page that initiated the request) to determine which Origin/Referer to spoof:
+
 ```ts
 previewSession.webRequest.onBeforeSendHeaders((details, callback) => {
   const requestHeaders = { ...details.requestHeaders };
@@ -80,7 +85,7 @@ previewSession.webRequest.onBeforeSendHeaders((details, callback) => {
 
     if (origin.startsWith("http")) {
       requestHeaders["Origin"] = origin;
-      requestHeaders["Referer"] = referer;  // Keep original referer chain
+      requestHeaders["Referer"] = referer; // Keep original referer chain
     }
   } catch {
     // Fallback: try to derive from the request URL's referrer
@@ -106,7 +111,8 @@ previewSession.webRequest.onBeforeSendHeaders((details, callback) => {
 **Location**: `src/renderer/src/pages/game-details/website-links-panel/website-links-iframe.tsx`, lines 122-131
 **Current behavior**: A 30-second timeout is set when a new URL is loaded. If `dom-ready` doesn't fire within 30 seconds, the error state is shown. Sites like NexusMods (heavy JS bundles, multiple API calls) and Twitch (real-time websocket, chat, player initialization) can take >30 seconds on slower connections.
 
-**Fix**: 
+**Fix**:
+
 - Increase timeout to **60 seconds**
 - Reset the timeout whenever `did-start-loading` fires (to handle progressive page loads)
 - Don't set the timer until `did-start-loading` fires (not immediately on URL assignment)
@@ -120,6 +126,7 @@ previewSession.webRequest.onBeforeSendHeaders((details, callback) => {
 
 **Location**: `src/renderer/src/pages/game-details/website-links-panel/website-links-iframe.tsx`, lines 179-186
 **Current behavior**: Any `did-fail-load` with an error code other than -3 (ERR_ABORTED) immediately shows the error UI. This includes transient errors like:
+
 - -21 (ERR_NETWORK_CHANGED)
 - -105/-137 (ERR_NAME_NOT_RESOLVED)
 - -106 (ERR_INTERNET_DISCONNECTED)
@@ -127,7 +134,8 @@ previewSession.webRequest.onBeforeSendHeaders((details, callback) => {
 
 These should be handled more gracefully.
 
-**Fix**: 
+**Fix**:
+
 - Only show error UI for fatal/permanent error codes: -2 (ERR_FAILED), -6 (ERR_FILE_NOT_FOUND), -10 (ERR_ACCESS_DENIED)
 - For network-related errors (-7, -21, -105, -106, -137), retry once after 3 seconds before showing error
 - For code -3 (ERR_ABORTED), keep current behavior (ignore)
@@ -143,6 +151,7 @@ These should be handled more gracefully.
 **Current behavior**: The webview has no `will-navigate` event listener. If a site triggers a client-side redirect (e.g., Steam age gate redirect, geo-redirect, authentication flow), the navigation happens silently without updating the address bar or navigation state. This can look like the page "breaking" because the URL shown doesn't match the content.
 
 **Fix**: Add a `will-navigate` handler that updates the address bar and navigation state:
+
 ```ts
 const onWillNavigate = (e: any) => {
   setCurrentUrl(e.url);
@@ -161,6 +170,7 @@ webview.addEventListener("will-navigate", onWillNavigate);
 **Current behavior**: All 12 websites have `isEmbeddable: true` set. When sites are known to be problematic in webviews (Steam Store with its age gate and JS-heavy storefront, GameFAQs search-only pages), the fallback error screen only shows after the 30-second timeout.
 
 **Fix**: Review and update `isEmbeddable` flags:
+
 - `steam`: change to `false` (storefront has age gates, heavy JS, blocks embedded login)
 - `gamefaqs`: change to `false` (search-only URL rarely resolves to a useful embed)
 - `metacritic`: change to `false` (heavy JS, often blocks iframe rendering)
@@ -175,26 +185,26 @@ When `isEmbeddable: false`, the component should immediately show the fallback s
 
 ### Phase 1: Renderer Component Fixes (`website-links-iframe.tsx`)
 
-| # | Change | Priority |
-|---|--------|----------|
-| 1 | Remove `sandbox=yes` from `webpreferences` | **Critical** |
-| 2 | Fix `onNewWindow` to always open externally | **Critical** |
-| 3 | Increase timeout to 60s and reset on `did-start-loading` | High |
-| 4 | Add selective error code handling for `did-fail-load` | High |
-| 5 | Add `will-navigate` handler for address bar sync | Medium |
-| 6 | Show immediate fallback when `isEmbeddable: false` | Medium |
+| #   | Change                                                   | Priority     |
+| --- | -------------------------------------------------------- | ------------ |
+| 1   | Remove `sandbox=yes` from `webpreferences`               | **Critical** |
+| 2   | Fix `onNewWindow` to always open externally              | **Critical** |
+| 3   | Increase timeout to 60s and reset on `did-start-loading` | High         |
+| 4   | Add selective error code handling for `did-fail-load`    | High         |
+| 5   | Add `will-navigate` handler for address bar sync         | Medium       |
+| 6   | Show immediate fallback when `isEmbeddable: false`       | Medium       |
 
 ### Phase 2: Main Process Fixes (`window-manager.ts`)
 
-| # | Change | Priority |
-|---|--------|----------|
-| 7 | Fix `onBeforeSendHeaders` to use referrer for Origin/Referer spoofing | **Critical** |
+| #   | Change                                                                | Priority     |
+| --- | --------------------------------------------------------------------- | ------------ |
+| 7   | Fix `onBeforeSendHeaders` to use referrer for Origin/Referer spoofing | **Critical** |
 
 ### Phase 3: Service Fixes (`website-links.service.ts`)
 
-| # | Change | Priority |
-|---|--------|----------|
-| 8 | Update `isEmbeddable` flags for Steam, GameFAQs, Metacritic | Medium |
+| #   | Change                                                      | Priority |
+| --- | ----------------------------------------------------------- | -------- |
+| 8   | Update `isEmbeddable` flags for Steam, GameFAQs, Metacritic | Medium   |
 
 ---
 
@@ -237,13 +247,13 @@ When `isEmbeddable: false`, the component should immediately show the fallback s
 
 ## Key Edge Cases
 
-| Scenario | Expected Behavior |
-|----------|-------------------|
-| Site triggers `window.open()` | Popup URL opens in external browser; webview stays on current page |
-| Site does client-side redirect | `will-navigate` fires; address bar updates; no error state |
-| Network drops briefly | `did-fail-load` with network code → retry once after 3s |
-| Page takes >60s to load | `did-stop-loading` eventually fires OR timeout shows fallback |
-| Site returns HTTP 404/500 | `did-fail-load` with fatal code → show fallback UI |
-| User rapidly switches tabs | Previous webview unloads cleanly; new webview starts fresh |
+| Scenario                               | Expected Behavior                                                          |
+| -------------------------------------- | -------------------------------------------------------------------------- |
+| Site triggers `window.open()`          | Popup URL opens in external browser; webview stays on current page         |
+| Site does client-side redirect         | `will-navigate` fires; address bar updates; no error state                 |
+| Network drops briefly                  | `did-fail-load` with network code → retry once after 3s                    |
+| Page takes >60s to load                | `did-stop-loading` eventually fires OR timeout shows fallback              |
+| Site returns HTTP 404/500              | `did-fail-load` with fatal code → show fallback UI                         |
+| User rapidly switches tabs             | Previous webview unloads cleanly; new webview starts fresh                 |
 | Site has CSP that blocks sub-resources | Preview session strips CSP → sub-resources load (enhanced by referrer fix) |
-| Game title contains special characters | URL encoding handled by `buildWebsiteLinks` (already works) |
+| Game title contains special characters | URL encoding handled by `buildWebsiteLinks` (already works)                |
