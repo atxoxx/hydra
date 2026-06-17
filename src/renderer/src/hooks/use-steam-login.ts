@@ -76,10 +76,7 @@ export function useSteamLogin() {
         return;
       }
 
-      showErrorToast(
-        t("steam_login_failed"),
-        t("steam_login_failed_message")
-      );
+      showErrorToast(t("steam_login_failed"), t("steam_login_failed_message"));
     }
   }, [showSuccessToast, showErrorToast]);
 

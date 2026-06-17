@@ -21,6 +21,7 @@ Add a full Steam integration to Hydra that includes:
 Use an **Electron `BrowserWindow` popup** (not a webview or iframe) that navigates to a Steam page requiring authentication. The user logs in through Steam's standard OAuth flow. Once the login completes and the page's HTML contains the `steamid` and `webapi_token`, the window auto-closes and Hydra extracts the token.
 
 This mirrors the approach used by Playnite's `SteamStoreService.Login()`:
+
 ```csharp
 public SteamUserToken? Login() {
     var view = PlayniteApi.WebViews.CreateView(600, 720);
@@ -45,6 +46,7 @@ The token is extracted from the page source after navigation. The relevant field
 ```
 
 Regex patterns from Playnite's `SteamStoreService.GetSteamUserTokenFromWebViewAsync()`:
+
 ```
 "steamid":"(\d{17})"
 "webapi_token":"([^&]+)"
@@ -54,11 +56,11 @@ Regex patterns from Playnite's `SteamStoreService.GetSteamUserTokenFromWebViewAs
 
 The following is persisted to `UserPreferences` (in LevelDB):
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `steamLoginUserId` | `string \| null` | SteamID64 of the logged-in user |
-| `steamLoginUsername` | `string \| null` | Display name from Steam |
-| `steamLoginAccessToken` | `string \| null` | The web API access token |
+| Field                       | Type             | Description                           |
+| --------------------------- | ---------------- | ------------------------------------- |
+| `steamLoginUserId`          | `string \| null` | SteamID64 of the logged-in user       |
+| `steamLoginUsername`        | `string \| null` | Display name from Steam               |
+| `steamLoginAccessToken`     | `string \| null` | The web API access token              |
 | `steamLoginTokenObtainedAt` | `string \| null` | ISO timestamp when token was obtained |
 
 The existing `steamApiKey` field remains as a **fallback** for users who prefer not to log in. When logged in, the access token takes priority.
@@ -88,10 +90,12 @@ It replaces the current Steam API Key text field with a richer login section.
 ### 2.2 States
 
 #### Logged Out
+
 - Button: **"Login with Steam"** (opens the Electron BrowserWindow popup)
 - Below the button, the existing API key field is shown as a collapsed/optional fallback: "Or use a Steam Web API Key" with a disclosure toggle.
 
 #### Logged In
+
 - **Rich status panel** showing:
   - Green dot indicator + "Logged in as `{username}`"
   - "Last synced: `{timestamp}`" (or "Never synced" after login but before first sync)
@@ -99,6 +103,7 @@ It replaces the current Steam API Key text field with a richer login section.
   - The API key fallback is hidden when logged in
 
 #### Expired
+
 - Status text turns amber: "Session expired — please re-login"
 - The login button becomes "Re-login with Steam"
 
@@ -124,11 +129,11 @@ SettingsContextPlatformImport
 
 When logged in and access token available:
 
-| Endpoint | Purpose |
-|----------|---------|
-| `GET https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/` | Fetch owned games with `access_token={token}&steamid={steamid}` |
-| `GET https://store.steampowered.com/dynamicstore/userdata/` | Get `rgOwnedApps` for app info (name/type from Playnite's `SteamServicesClient`) |
-| `GET https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/` | Get player display names |
+| Endpoint                                                                | Purpose                                                                          |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `GET https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/`  | Fetch owned games with `access_token={token}&steamid={steamid}`                  |
+| `GET https://store.steampowered.com/dynamicstore/userdata/`             | Get `rgOwnedApps` for app info (name/type from Playnite's `SteamServicesClient`) |
+| `GET https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/` | Get player display names                                                         |
 
 ### 3.2 Sync Flow
 
@@ -167,6 +172,7 @@ Games are **auto-imported** directly into the library (no DiscoveryWizardModal f
 ### 3.4 Install Detection
 
 For each game, detect if it is locally installed:
+
 - Read `appmanifest_{appId}.acf` from all Steam library folders
 - Check `StateFlags` for `FullyInstalled` flag (`0x4`)
 - Extract `installdir` from the manifest
@@ -217,9 +223,11 @@ Hydra LevelDB
 When a user clicks "Install" for a Steam game that they own, the **download modal** shows two tabs:
 
 #### Tab 1: "Hydra Sources"
+
 - Existing repack/torrent download sources (current behavior unchanged).
 
 #### Tab 2: "Steam Store"
+
 - If the user **owns** the game via Steam (and is logged in):
   - Button: **"Install via Steam"**
   - Opens `steam://install/{appId}` via `shell.openExternal()` or equivalent.
@@ -231,6 +239,7 @@ When a user clicks "Install" for a Steam game that they own, the **download moda
 ### 5.2 Post-Install Detection
 
 After opening `steam://install/{appId}`:
+
 1. Hydra **does not** show custom progress (user chose "Open Steam's UI").
 2. Hydra polls `appmanifest_{appId}.acf` files every 10 seconds for up to 1 hour.
 3. When `StateFlags` has `FullyInstalled` flag set:
@@ -246,6 +255,7 @@ After opening `steam://install/{appId}`:
 ### 6.1 Decision Logic
 
 For any Steam game, clicking "Play":
+
 1. If the game has an `executablePath` in LevelDB and the file exists → launch via Hydra's normal launcher (current behavior).
 2. As an alternative, the game context menu or hero actions show **"Play via Steam"** which triggers:
    ```
@@ -256,6 +266,7 @@ For any Steam game, clicking "Play":
 ### 6.2 Fallback
 
 If Steam is not installed or `steam.exe` cannot be found:
+
 - The "Play via Steam" button is hidden or grayed out.
 - Play via Hydra's existing launcher is always available as the primary action.
 
@@ -266,80 +277,91 @@ If Steam is not installed or `steam.exe` cannot be found:
 ### 7.1 New Services
 
 #### `src/main/services/steam-login.ts`
+
 ```typescript
 export class SteamLogin {
   /** Opens a BrowserWindow for Steam OAuth login, returns token info */
-  static async login(): Promise<SteamLoginResult>
+  static async login(): Promise<SteamLoginResult>;
 
   /** Extracts steamid and webapi_token from page source */
-  static extractTokenFromPage(pageSource: string): SteamLoginResult | null
+  static extractTokenFromPage(pageSource: string): SteamLoginResult | null;
 
   /** Checks if stored token is still valid */
-  static async validateToken(token: string): Promise<boolean>
+  static async validateToken(token: string): Promise<boolean>;
 
   /** Logs out - clears stored credentials */
-  static async logout(): Promise<void>
+  static async logout(): Promise<void>;
 }
 
 interface SteamLoginResult {
-  steamId64: string
-  username: string
-  accessToken: string
+  steamId64: string;
+  username: string;
+  accessToken: string;
 }
 ```
 
 #### `src/main/services/steam-game-sync.ts`
+
 ```typescript
 export class SteamGameSync {
   /** Full sync: fetches owned games, checks install status, imports to library, syncs playtime */
-  static async syncAll(accessToken: string, steamId64: string): Promise<SteamSyncResult>
+  static async syncAll(
+    accessToken: string,
+    steamId64: string
+  ): Promise<SteamSyncResult>;
 
   /** Fetches owned games from the Steam Web API using access token */
-  static async fetchOwnedGames(accessToken: string, steamId64: string): Promise<SteamOwnedGame[]>
+  static async fetchOwnedGames(
+    accessToken: string,
+    steamId64: string
+  ): Promise<SteamOwnedGame[]>;
 
   /** Checks if a game is locally installed by reading ACF manifest */
-  static async checkInstallStatus(appId: number): Promise<InstallCheckResult>
+  static async checkInstallStatus(appId: number): Promise<InstallCheckResult>;
 }
 
 interface SteamSyncResult {
-  imported: number
-  updated: number
-  errors: string[]
-  playtimeSynced: number
+  imported: number;
+  updated: number;
+  errors: string[];
+  playtimeSynced: number;
 }
 ```
 
 ### 7.2 Modified Services
 
 #### `src/main/services/steam-web-api.ts`
+
 - Add `getOwnedGamesWithToken(steamId64, accessToken)` method (uses `access_token` param instead of `key`).
 - The existing `getOwnedGames(steamId64, apiKey)` remains as a fallback.
 
 #### `src/main/services/steam.ts`
+
 - Export `getSteamExecutablePath()` helper to locate `steam.exe`.
 - Add `openSteamProtocol(url: string)` helper.
 
 #### `src/main/services/steam-family-scanner.ts`
+
 - Refactored to reuse `findInstalledGame()` from a shared location.
 - Can now use the access token from login instead of requiring a separate API key.
 
 ### 7.3 New IPC Events
 
-| Event | Direction | Purpose |
-|-------|-----------|---------|
-| `steamLogin` | renderer → main | Opens BrowserWindow for Steam login |
-| `steamLogout` | renderer → main | Clears stored Steam credentials |
-| `steamSync` | renderer → main | Triggers full library + playtime sync |
-| `steamGetLoginStatus` | renderer → main | Returns current login state |
+| Event                      | Direction       | Purpose                                             |
+| -------------------------- | --------------- | --------------------------------------------------- |
+| `steamLogin`               | renderer → main | Opens BrowserWindow for Steam login                 |
+| `steamLogout`              | renderer → main | Clears stored Steam credentials                     |
+| `steamSync`                | renderer → main | Triggers full library + playtime sync               |
+| `steamGetLoginStatus`      | renderer → main | Returns current login state                         |
 | `steamStartInstallWatcher` | renderer → main | Starts polling ACF manifests for install completion |
-| `steamStopInstallWatcher` | renderer → main | Stops polling for a specific appId |
+| `steamStopInstallWatcher`  | renderer → main | Stops polling for a specific appId                  |
 
 ### 7.4 Modified IPC Events
 
-| Event | Change |
-|-------|--------|
-| `scanPlatforms` | Add Steam to the scan results (only when logged in; use API instead of filesystem-only) |
-| `scanSteamFamily` | Can now use access token instead of requiring API key |
+| Event             | Change                                                                                  |
+| ----------------- | --------------------------------------------------------------------------------------- |
+| `scanPlatforms`   | Add Steam to the scan results (only when logged in; use API instead of filesystem-only) |
+| `scanSteamFamily` | Can now use access token instead of requiring API key                                   |
 
 ---
 
@@ -373,6 +395,7 @@ Replace the current Steam section (API key, checkboxes) with:
 ### 8.2 New Hook
 
 **`src/renderer/src/hooks/use-steam-login.ts`**
+
 ```typescript
 export function useSteamLogin() {
   // Manages login state, sync status, polling
@@ -393,26 +416,27 @@ export function useSteamLogin() {
 The existing download modal needs a modification for Steam games. When the game's shop is `"steam"` and the user is logged in:
 
 **Two-tab layout:**
+
 - **"Hydra Sources" tab** — Existing repack/torrent list (unchanged)
 - **"Steam Store" tab** — Shows one of:
   - If owned: "Install via Steam" button → triggers `steam://install/{appId}`
   - If not owned: Grayed out message "This game is not in your Steam library"
 
-*Note: The exact implementation of this UI is out of scope for the initial implementation and should be a follow-up task.*
+_Note: The exact implementation of this UI is out of scope for the initial implementation and should be a follow-up task._
 
 ### 8.4 Toast Messages
 
-| Scenario | Type | Title | Message |
-|----------|------|-------|---------|
-| Login success | `success` | "Logged in as {username}" | — |
-| Login failure | `error` | "Steam login failed" | "Please try again or use a Web API Key instead." |
-| Sync success | `success` | "Steam sync complete" | "{count} games imported" |
-| Sync partial | `warning` | "Steam sync finished with errors" | "{success} imported, {errors} failed" |
-| Sync failure | `error` | "Steam sync failed" | "{error message}" |
-| Token expired | `warning` | "Steam session expired" | "Please re-login to continue syncing." |
-| Install started | `success` | "Installing via Steam" | "{gameTitle} — Steam will handle the download" |
-| Install complete | `success` | "Installation complete" | "{gameTitle} is now installed via Steam" |
-| Logout | `success` | "Logged out of Steam" | — |
+| Scenario         | Type      | Title                             | Message                                          |
+| ---------------- | --------- | --------------------------------- | ------------------------------------------------ |
+| Login success    | `success` | "Logged in as {username}"         | —                                                |
+| Login failure    | `error`   | "Steam login failed"              | "Please try again or use a Web API Key instead." |
+| Sync success     | `success` | "Steam sync complete"             | "{count} games imported"                         |
+| Sync partial     | `warning` | "Steam sync finished with errors" | "{success} imported, {errors} failed"            |
+| Sync failure     | `error`   | "Steam sync failed"               | "{error message}"                                |
+| Token expired    | `warning` | "Steam session expired"           | "Please re-login to continue syncing."           |
+| Install started  | `success` | "Installing via Steam"            | "{gameTitle} — Steam will handle the download"   |
+| Install complete | `success` | "Installation complete"           | "{gameTitle} is now installed via Steam"         |
+| Logout           | `success` | "Logged out of Steam"             | —                                                |
 
 All toasts use the **existing renderer toast system** (`toast-slice.ts` + `use-toast.ts`).
 
@@ -482,29 +506,30 @@ App startup (main process)
 // In src/types/index.ts or a new steam-login.types.ts
 
 export interface SteamLoginResult {
-  steamId64: string
-  username: string
-  accessToken: string
+  steamId64: string;
+  username: string;
+  accessToken: string;
 }
 
 export interface SteamSyncResult {
-  imported: number
-  updated: number
-  errors: string[]
-  playtimeSynced: number
+  imported: number;
+  updated: number;
+  errors: string[];
+  playtimeSynced: number;
 }
 
 export interface SteamLoginState {
-  status: "logged-out" | "logging-in" | "logged-in" | "expired" | "syncing"
-  steamId64: string | null
-  username: string | null
-  lastSyncAt: string | null  // ISO timestamp
+  status: "logged-out" | "logging-in" | "logged-in" | "expired" | "syncing";
+  steamId64: string | null;
+  username: string | null;
+  lastSyncAt: string | null; // ISO timestamp
 }
 ```
 
 ### 10.2 Modified Types
 
 **`UserPreferences`** (in `src/types/level.types.ts`):
+
 ```typescript
 // Add:
 steamLoginUserId?: string | null
@@ -519,17 +544,20 @@ steamLastSyncAt?: string | null
 ## 11. Implementation Order
 
 ### Phase 1: Core Login (Backend)
+
 1. Create `src/main/services/steam-login.ts` with BrowserWindow login flow
 2. Add IPC events: `steamLogin`, `steamLogout`, `steamGetLoginStatus`
 3. Add `UserPreferences` fields for Steam credentials
 4. Register events in `src/main/events/`
 
 ### Phase 2: Login UI (Frontend)
+
 5. Update `settings-context-platform-import.tsx` with login/logout UI
 6. Create `useSteamLogin` hook
 7. Add toast notifications for login/logout
 
 ### Phase 3: Game & Playtime Sync
+
 8. Create `src/main/services/steam-game-sync.ts`
 9. Modify `steam-web-api.ts` to support `access_token` auth
 10. Add IPC events: `steamSync`
@@ -538,12 +566,14 @@ steamLastSyncAt?: string | null
 13. Add toast notifications for sync results
 
 ### Phase 4: Install & Launch via Steam
+
 14. Add `steam://install/{appId}` support to download flow
 15. Add "Play via Steam" to game actions/context menu
 16. Add ACF manifest polling for install detection
 17. Add IPC events for install watching
 
 ### Phase 5: Download Modal Tabs (Follow-up)
+
 18. Modify download modal to show Hydra Sources / Steam Store tabs
 19. Handle owned/not-owned state for store tab
 

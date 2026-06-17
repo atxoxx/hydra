@@ -381,9 +381,7 @@ export function SettingsContextPlatformImport() {
                         showApiKeyFallback && (
                           <div className="settings-platform-import__api-key-row">
                             <TextField
-                              label={t(
-                                platform.apiKeyLabel ?? "api_key"
-                              )}
+                              label={t(platform.apiKeyLabel ?? "api_key")}
                               value={steamApiKey}
                               placeholder={t(
                                 platform.apiKeyPlaceholder ??
@@ -531,9 +529,7 @@ export function SettingsContextPlatformImport() {
               </p>
             )}
             {syncStatus && !scanningStatus && (
-              <p className="settings-platform-import__status">
-                {syncStatus}
-              </p>
+              <p className="settings-platform-import__status">{syncStatus}</p>
             )}
           </div>
         </>

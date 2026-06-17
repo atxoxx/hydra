@@ -970,9 +970,9 @@ declare global {
       errors: string[];
       playtimeSynced: number;
     }>;
-  steamInstallGame: (appId: string) => Promise<void>;
-  steamLaunchGame: (appId: string) => Promise<void>;
-  steamCheckOwnership: (appId: string) => Promise<boolean>;
+    steamInstallGame: (appId: string) => Promise<void>;
+    steamLaunchGame: (appId: string) => Promise<void>;
+    steamCheckOwnership: (appId: string) => Promise<boolean>;
 
     /* Auth */
     getAuth: () => Promise<Auth | null>;

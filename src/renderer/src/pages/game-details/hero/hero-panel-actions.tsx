@@ -486,8 +486,7 @@ export function HeroPanelActions() {
 
   if (game) {
     const isSteamGame = game.shop === "steam";
-    const showSteamPlay =
-      isSteamGame && steamLoggedIn && !isGameRunning;
+    const showSteamPlay = isSteamGame && steamLoggedIn && !isGameRunning;
     const showSteamInstall =
       isSteamGame && steamLoggedIn && !game.executablePath;
 

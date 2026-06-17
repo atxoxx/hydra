@@ -58,11 +58,9 @@ function clearSteamCookies(session: Electron.Session): Promise<void> {
 
   return Promise.all(
     steamDomains.map((domain) =>
-      session.cookies
-        .remove(domain, "")
-        .catch(() => {
-          // Ignore errors — some domains may not have cookies
-        })
+      session.cookies.remove(domain, "").catch(() => {
+        // Ignore errors — some domains may not have cookies
+      })
     )
   ).then(() => {});
 }
@@ -99,9 +97,7 @@ export class SteamLogin {
         if (result) {
           resolve(result);
         } else {
-          reject(
-            error ?? new Error("Steam login failed — no token found")
-          );
+          reject(error ?? new Error("Steam login failed — no token found"));
         }
       };
 
@@ -142,10 +138,9 @@ export class SteamLogin {
         if (resolved) return;
 
         try {
-          const pageSource =
-            await loginWindow!.webContents.executeJavaScript(
-              "document.documentElement.outerHTML"
-            );
+          const pageSource = await loginWindow!.webContents.executeJavaScript(
+            "document.documentElement.outerHTML"
+          );
 
           const result = extractTokenFromPage(pageSource);
           if (result) {
@@ -192,16 +187,15 @@ export class SteamLogin {
     const updated: UserPreferences = {
       ...(userPreferences ?? {}),
       steamLoginUserId: result.steamId64,
-      steamLoginUsername: result.username || `Steam User ${result.steamId64.slice(-4)}`,
+      steamLoginUsername:
+        result.username || `Steam User ${result.steamId64.slice(-4)}`,
       steamLoginAccessToken: result.accessToken,
       steamLoginTokenObtainedAt: new Date().toISOString(),
     };
 
-    await db.put<string, UserPreferences>(
-      levelKeys.userPreferences,
-      updated,
-      { valueEncoding: "json" }
-    );
+    await db.put<string, UserPreferences>(levelKeys.userPreferences, updated, {
+      valueEncoding: "json",
+    });
   }
 
   /**
@@ -224,11 +218,9 @@ export class SteamLogin {
       steamLoginTokenObtainedAt: null,
     };
 
-    await db.put<string, UserPreferences>(
-      levelKeys.userPreferences,
-      updated,
-      { valueEncoding: "json" }
-    );
+    await db.put<string, UserPreferences>(levelKeys.userPreferences, updated, {
+      valueEncoding: "json",
+    });
   }
 
   /**

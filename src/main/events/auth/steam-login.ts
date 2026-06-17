@@ -97,18 +97,11 @@ const steamCheckOwnership = async (
     return false;
   }
 
-  return SteamWebApi.checkGameOwnership(
-    steamId64,
-    accessToken,
-    Number(appId)
-  );
+  return SteamWebApi.checkGameOwnership(steamId64, accessToken, Number(appId));
 };
 
 registerEvent("steamInstallGame", steamInstallGame);
 registerEvent("steamLaunchGame", steamLaunchGame);
-registerEvent(
-  "steamStartInstallWatcher",
-  steamStartInstallWatcherHandler
-);
+registerEvent("steamStartInstallWatcher", steamStartInstallWatcherHandler);
 registerEvent("steamStopInstallWatcher", steamStopInstallWatcherHandler);
 registerEvent("steamCheckOwnership", steamCheckOwnership);

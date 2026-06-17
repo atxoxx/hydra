@@ -269,10 +269,8 @@ export function useGameActions(game: LibraryGame) {
   };
 
   const isSteamGame = game.shop === "steam";
-  const showSteamPlay =
-    isSteamGame && steamLoggedIn && !isGameRunning;
-  const showSteamInstall =
-    isSteamGame && steamLoggedIn && !canPlay;
+  const showSteamPlay = isSteamGame && steamLoggedIn && !isGameRunning;
+  const showSteamInstall = isSteamGame && steamLoggedIn && !canPlay;
 
   const handleOpenDownloadOptions = () => {
     const path = buildGameDetailsPath({

@@ -41,9 +41,7 @@ export function startSteamInstallWatcher(appId: string): void {
     try {
       // Check if we've exceeded the maximum watch duration
       if (Date.now() - startedAt > MAX_WATCH_DURATION_MS) {
-        logger.info(
-          `[SteamInstallWatcher] Timed out watching app ${appId}`
-        );
+        logger.info(`[SteamInstallWatcher] Timed out watching app ${appId}`);
         stopSteamInstallWatcher(appId);
         return;
       }

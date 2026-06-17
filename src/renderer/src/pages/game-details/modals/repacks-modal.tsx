@@ -347,7 +347,11 @@ export function RepacksModal({
                     className="repacks-modal__filter-toggle"
                   >
                     {t("filter_by_source")}
-                    {isFilterDrawerOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                    {isFilterDrawerOpen ? (
+                      <ChevronUpIcon />
+                    ) : (
+                      <ChevronDownIcon />
+                    )}
                   </Button>
                 )}
               </div>
@@ -366,7 +370,9 @@ export function RepacksModal({
                     .map((source) => {
                       const label = source.name || source.url;
                       const truncatedLabel =
-                        label.length > 16 ? label.substring(0, 16) + "..." : label;
+                        label.length > 16
+                          ? label.substring(0, 16) + "..."
+                          : label;
                       return (
                         <div
                           key={source.fingerprint}
@@ -377,7 +383,9 @@ export function RepacksModal({
                             checked={selectedFingerprints.includes(
                               source.fingerprint
                             )}
-                            onChange={() => toggleFingerprint(source.fingerprint)}
+                            onChange={() =>
+                              toggleFingerprint(source.fingerprint)
+                            }
                           />
                         </div>
                       );
@@ -412,7 +420,8 @@ export function RepacksModal({
                 filteredRepacks.map((repack) => {
                   const isLastDownloadedOption =
                     checkIfLastDownloadedOption(repack);
-                  const availabilityStatus = getRepackAvailabilityStatus(repack);
+                  const availabilityStatus =
+                    getRepackAvailabilityStatus(repack);
                   const tooltipId = `availability-orb-${repack.id}`;
 
                   return (
