@@ -67,6 +67,9 @@ import type {
   PlaytimeSearchResult,
   PlaytimeGameData,
   PlaytimeMapping,
+  CrackWatchStatus,
+  NewsSnapshot,
+  RssFeed,
 } from "@types";
 import type { AxiosProgressEvent } from "axios";
 
@@ -1113,9 +1116,28 @@ declare global {
 
     /* ITAD Giveaways */
     getItadGiveaways: (forceRefresh?: boolean) => Promise<GiveawayResult>;
-
-    /* ITAD Giveaways */
-    getItadGiveaways: (forceRefresh?: boolean) => Promise<GiveawayResult>;
+    /* CrackWatch */
+    getCrackWatchStatus: (
+      objectId: string,
+      shop: GameShop,
+      title: string
+    ) => Promise<CrackWatchStatus | null>;
+    /* News (RSS aggregator) */
+    getNewsSnapshot: (forceRefresh?: boolean) => Promise<NewsSnapshot>;
+    listNewsFeeds: () => Promise<RssFeed[]>;
+    addNewsFeed: (data: { url: string; label: string }) => Promise<RssFeed>;
+    removeNewsFeed: (url: string) => Promise<void>;
+    toggleNewsFeed: (url: string, enabled: boolean) => Promise<void>;
+    markNewsArticleRead: (guid: string) => Promise<{
+      guid: string;
+      readAt: number;
+    }>;
+    markAllNewsRead: () => Promise<{ count: number }>;
+    clearNewsReadHistory: () => Promise<void>;
+    listNewsReadGuids: () => Promise<string[]>;
+    onUnreadNewsCountUpdated: (
+      cb: (value: { count: number }) => void
+    ) => () => Electron.IpcRenderer;
 
     /* Metadata */
     fetchGameMetadata: (

@@ -1,0 +1,558 @@
+@use "../../scss/globals.scss";
+
+.news {
+  &__container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: calc(globals.$spacing-unit * 2);
+  }
+
+  &__page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 2);
+    flex-wrap: wrap;
+  }
+
+  &__page-header-left {
+    flex: 1 1 auto;
+  }
+
+  &__page-header-right {
+    display: flex;
+    gap: globals.$spacing-unit;
+  }
+
+  &__page-title {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: globals.$spacing-unit;
+    color: globals.$body-color;
+  }
+
+  &__unread-badge {
+    background: rgba(globals.$primary-color, 0.18);
+    color: globals.$primary-color;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: globals.$small-font-size;
+    font-weight: 600;
+  }
+
+  &__toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: globals.$spacing-unit;
+  }
+
+  &__chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin-top: globals.$spacing-unit;
+  }
+
+  &__chip {
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: globals.$muted-color;
+    font-size: globals.$small-font-size;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition:
+      background 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease;
+    user-select: none;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: globals.$body-color;
+    }
+
+    &--active {
+      background: rgba(globals.$primary-color, 0.2);
+      border-color: globals.$primary-color;
+      color: globals.$primary-color;
+      font-weight: 600;
+
+      &:hover {
+        background: rgba(globals.$primary-color, 0.3);
+      }
+    }
+  }
+
+  &__list {
+    flex: 1 1 auto;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    // Note: previously had `overflow: hidden` here. rc-virtual-list manages
+    // its own internal scroll area, and the parent `overflow: hidden +
+    // border-radius: 8px` was visually chipping the bottom corners of rows
+    // and the dimmed `news__row--read` content (visible as a "cutout" at
+    // the bottom of the list). Drop the overflow clip without losing the
+    // rounded visual.
+    min-height: 320px;
+  }
+
+  &__virtual-list {
+    height: 100%;
+  }
+
+  &__placeholder {
+    padding: calc(globals.$spacing-unit * 6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: globals.$spacing-unit;
+    color: globals.$muted-color;
+  }
+
+  &__row {
+    display: flex;
+    align-items: flex-start;
+    gap: globals.$spacing-unit;
+    padding: globals.$spacing-unit;
+    width: 100%;
+    transition: background 120ms ease;
+
+    &--read {
+      opacity: 0.5;
+
+      .news__row-title {
+        color: globals.$muted-color;
+        font-weight: 500;
+      }
+    }
+
+    &:not(.news__row--read):hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+  }
+
+  &__row-thumb {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  &__row-body {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__row-meta {
+    display: flex;
+    gap: calc(globals.$spacing-unit / 2);
+    align-items: center;
+    color: globals.$muted-color;
+    font-size: globals.$small-font-size;
+  }
+
+  &__row-source {
+    font-weight: 600;
+    color: globals.$body-color;
+  }
+
+  &__row-divider {
+    opacity: 0.5;
+  }
+
+  &__row-date {
+    font-size: globals.$small-font-size;
+  }
+
+  &__row-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: globals.$primary-color;
+    align-self: center;
+    margin-left: calc(globals.$spacing-unit * 0.5);
+  }
+
+  &__row-title {
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  &__row-summary {
+    color: globals.$muted-color;
+    font-size: globals.$small-font-size;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    margin-top: 4px;
+  }
+
+  &__row-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  &__row-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: globals.$muted-color;
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: globals.$small-font-size;
+    font-weight: 500;
+    transition:
+      background 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease;
+
+    &:hover {
+      background: rgba(globals.$primary-color, 0.12);
+      border-color: rgba(globals.$primary-color, 0.5);
+      color: globals.$primary-color;
+    }
+  }
+
+  @media (min-width: 1100px) {
+    &__row {
+      gap: calc(globals.$spacing-unit * 3);
+      padding: calc(globals.$spacing-unit * 2.5);
+    }
+
+    &__row-thumb {
+      width: 96px;
+      height: 96px;
+    }
+
+    &__row-action {
+      padding: 8px 14px;
+      font-size: globals.$body-font-size;
+    }
+  }
+}
+
+.news-settings {
+  display: flex;
+  flex-direction: column;
+  gap: calc(globals.$spacing-unit * 3);
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: globals.$spacing-unit;
+  }
+
+  &__add-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    gap: globals.$spacing-unit;
+    align-items: end;
+  }
+
+  &__default-hint {
+    color: globals.$muted-color;
+    font-size: globals.$small-font-size;
+  }
+
+  &__feed-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: calc(globals.$spacing-unit * 1.5);
+  }
+
+  &__feed-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto auto;
+    align-items: center;
+    gap: globals.$spacing-unit;
+    padding: calc(globals.$spacing-unit * 1.5);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  &__feed-url {
+    color: globals.$muted-color;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: globals.$small-font-size;
+  }
+
+  &__feed-error {
+    color: globals.$warning-color;
+    font-size: globals.$small-font-size;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__feed-default {
+    color: globals.$primary-color;
+    font-size: globals.$small-font-size;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(globals.$primary-color, 0.1);
+  }
+
+  &__empty {
+    color: globals.$muted-color;
+  }
+}
+
+.article-inline {
+  display: flex;
+  flex-direction: column;
+  gap: globals.$spacing-unit;
+  // Constrain the modal body to a useful viewport-relative height
+  // so the <webview> (child __viewport with `flex: 1 1 0`) actually
+  // fills the available space. Three caps:
+  //   - 90vh: keeps the launcher background visible behind the
+  //     modal (Backdrop sits above the window, modal__header eats
+  //     ~60px, modal__content padding eats ~48px, our own padding +
+  //     gap eat ~32px → effective inner area ≈ 90vh - 140 ≈ 700px
+  //     on a 900px tall window).
+  //   - 900px: absolute cap for very tall windows (4K portrait,
+  //     stacked browser devtools, etc.).
+  //   - calc(100vh - 80px): respects the backdrop's vertical
+  //     padding so the modal can never pop out of the visible
+  //     region on small (sub-620px) windows.
+  // The 540px floor is also guarded against the same backdrop
+  // budget, so a 540px-tall window no longer drags the modal out
+  // of view.
+  // The blocked-summary lives inside `.article-inline__blocked-overlay`
+  // which has its own `max-height: 180px; overflow-y: auto`, so a
+  // taller modal body no longer clips the article summary.
+  height: min(90vh, 900px, calc(100vh - 80px));
+  min-height: min(540px, calc(100vh - 80px));
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 8px;
+  padding: globals.$spacing-unit;
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    gap: globals.$spacing-unit;
+    padding: globals.$spacing-unit;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  &__header-thumb {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  &__header-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__header-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(globals.$spacing-unit / 2);
+    align-items: center;
+    color: globals.$muted-color;
+    font-size: globals.$small-font-size;
+  }
+
+  &__header-source {
+    font-weight: 600;
+    color: globals.$primary-color;
+  }
+
+  &__header-title {
+    margin: 0;
+    font-size: globals.$body-font-size;
+    line-height: 1.4;
+    color: #fff;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  &__header-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  // The viewport hosts the <webview> tag (partition
+  // "persist:website-previews"). That session in main/services/
+  // window-manager.ts strips x-frame-options + csp frame-ancestors
+  // so publishers that refuse iframe embedding (Eurogamer, IGN,
+  // GameSpot, etc.) embed successfully here.
+  //
+  // `flex: 1 1 0; min-height: 0` makes the viewport FILL the
+  // remaining vertical space inside `.article-inline` (whose
+  // height is now a real value, not auto). The previous
+  // `min-height: 420px` floor was correct in isolation but, paired
+  // with a content-sized parent, used to clamp the viewport and
+  // leave an empty black gap below the embedded article.
+  &__viewport {
+    flex: 1 1 0;
+    min-height: 0;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+  }
+
+  &__webview {
+    // Absolute positioning inside the __viewport (position:relative) so
+    // the webview fills the viewport regardless of whether its parent
+    // height comes from an explicit value or from flex resolution.
+    // height:100% on a <webview> child of a flex-determined-height
+    // parent resolves to auto (intrinsic), causing the webview to
+    // collapse to a tiny strip. Absolute positioning sidesteps that.
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: #fff;
+
+    // When the webview fails to load reliably (publisher CSP,
+    // network error past the 8s timeout), we keep its DOM slot
+    // reserved so the dark blocked-overlay can cover the same
+    // rectangle without reflow. visibility:hidden (not display:none)
+    // preserves layout.
+    &--hidden {
+      visibility: hidden;
+    }
+  }
+
+  // Dark overlay shown above the webview when the publisher's
+  // loading pipeline failed. Always renders the article title in the
+  // header above the overlay, so the user is never staring at an
+  // unidentified blank rectangle.
+  &__blocked-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: globals.$spacing-unit;
+    padding: calc(globals.$spacing-unit * 3);
+    background: rgba(0, 0, 0, 0.92);
+    text-align: center;
+  }
+
+  &__blocked-overlay-icon {
+    color: globals.$primary-color;
+    opacity: 0.85;
+  }
+
+  &__blocked-overlay-body {
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    strong {
+      color: #fff;
+      display: block;
+      font-size: globals.$body-font-size;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+      color: globals.$muted-color;
+      font-size: globals.$small-font-size;
+      line-height: 1.5;
+    }
+  }
+
+  &__blocked-overlay-summary {
+    margin-top: globals.$spacing-unit;
+    padding-top: globals.$spacing-unit;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    color: globals.$body-color;
+    font-size: globals.$small-font-size;
+    line-height: 1.5;
+    text-align: left;
+    white-space: pre-wrap;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+
+  &__blocked-overlay-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: globals.$spacing-unit;
+  }
+
+  @media (max-width: 720px) {
+    &__header {
+      flex-direction: column;
+    }
+
+    &__header-actions {
+      flex-direction: row;
+      width: 100%;
+    }
+
+    &__header-title {
+      font-size: globals.$small-font-size;
+      -webkit-line-clamp: 3;
+    }
+
+    &__blocked-overlay-actions {
+      flex-direction: column;
+      width: 100%;
+
+      > * {
+        width: 100%;
+      }
+    }
+  }
+}
