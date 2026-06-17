@@ -194,4 +194,68 @@
     width: 100%;
     word-break: break-word;
   }
+
+  /* Tab bar */
+  &__tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    margin-bottom: calc(globals.$spacing-unit * 2);
+  }
+
+  &__tab {
+    background: none;
+    border: none;
+    padding: calc(globals.$spacing-unit * 1) calc(globals.$spacing-unit * 2);
+    font-size: globals.$small-font-size;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease;
+
+    &:hover {
+      color: var(--color-text);
+    }
+
+    &--active {
+      color: var(--accent, #4a9eff);
+      border-bottom-color: var(--accent, #4a9eff);
+    }
+  }
+
+  /* Steam Store tab */
+  &__steam-store {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: calc(globals.$spacing-unit * 6) calc(globals.$spacing-unit * 3);
+    text-align: center;
+  }
+
+  &__steam-store-status {
+    font-size: globals.$small-font-size;
+    color: var(--color-text-secondary);
+  }
+
+  &__steam-install-button {
+    font-size: globals.$small-font-size;
+  }
+
+  &__steam-not-owned {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 1);
+  }
+
+  &__steam-not-owned-text {
+    font-size: globals.$small-font-size;
+    color: var(--color-text-secondary);
+    background-color: var(--color-background-light);
+    padding: calc(globals.$spacing-unit * 1) calc(globals.$spacing-unit * 2);
+    border-radius: 6px;
+  }
 }

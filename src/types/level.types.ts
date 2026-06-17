@@ -222,6 +222,16 @@ export interface UserPreferences {
   classicsUseHeroLayout?: boolean;
   /** Steam Web API key for fetching owned games and family share */
   steamApiKey?: string | null;
+  /** SteamID64 of the logged-in Steam user */
+  steamLoginUserId?: string | null;
+  /** Display name of the logged-in Steam user */
+  steamLoginUsername?: string | null;
+  /** Steam web API access token obtained via BrowserWindow login */
+  steamLoginAccessToken?: string | null;
+  /** ISO timestamp when the access token was obtained */
+  steamLoginTokenObtainedAt?: string | null;
+  /** ISO timestamp of the last successful Steam sync */
+  steamLastSyncAt?: string | null;
   /** SteamID64s of family sharing members to scan */
   steamFamilyShareIds?: string[];
   /** Per-platform scan configuration (keyed by GameShop) */

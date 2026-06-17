@@ -3,6 +3,7 @@ import { envConfig } from "@main/env-config";
 import { ipcMain } from "electron";
 
 import "./auth";
+import "./auth/steam-login";
 import "./autoupdater";
 import "./big-picture";
 import "./catalogue";

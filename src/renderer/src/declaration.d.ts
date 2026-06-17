@@ -5,6 +5,7 @@ import type {
   Steam250Game,
   DownloadProgress,
   SeedingStatus,
+  SteamLoginResult,
   UserPreferences,
   StartGameDownloadPayload,
   RealDebridUser,
@@ -953,6 +954,25 @@ declare global {
     ) => () => Electron.IpcRenderer;
     checkForUpdates: () => Promise<boolean>;
     restartAndInstallUpdate: () => Promise<void>;
+
+    /* Steam Login */
+    steamLogin: () => Promise<SteamLoginResult>;
+    steamLogout: () => Promise<void>;
+    steamGetLoginStatus: () => Promise<{
+      status: "logged-out" | "logged-in" | "expired";
+      steamId64: string | null;
+      username: string | null;
+      lastSyncAt: string | null;
+    }>;
+    steamSync: () => Promise<{
+      imported: number;
+      updated: number;
+      errors: string[];
+      playtimeSynced: number;
+    }>;
+  steamInstallGame: (appId: string) => Promise<void>;
+  steamLaunchGame: (appId: string) => Promise<void>;
+  steamCheckOwnership: (appId: string) => Promise<boolean>;
 
     /* Auth */
     getAuth: () => Promise<Auth | null>;

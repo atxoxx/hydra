@@ -13,6 +13,13 @@ import type { GameShop, UnlockedAchievement } from "./game.types";
 export type FriendRequestAction = "ACCEPTED" | "REFUSED" | "CANCEL";
 export * from "./download-contract";
 
+/** Result of a successful Steam BrowserWindow login */
+export interface SteamLoginResult {
+  steamId64: string;
+  username: string;
+  accessToken: string;
+}
+
 export type HydraCloudFeature =
   | "achievements"
   | "backup"

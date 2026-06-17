@@ -30,6 +30,13 @@ export function useGameActions(game: LibraryGame) {
   } = useDownload();
 
   const [creatingSteamShortcut, setCreatingSteamShortcut] = useState(false);
+  const [steamLoggedIn, setSteamLoggedIn] = useState(false);
+
+  useEffect(() => {
+    window.electron.steamGetLoginStatus().then((status) => {
+      setSteamLoggedIn(status.status === "logged-in");
+    });
+  }, []);
   const [creatingShortcut, setCreatingShortcut] = useState(false);
   const [isGameRunning, setIsGameRunning] = useState(false);
   const [rpcs3ConfirmPending, setRpcs3ConfirmPending] = useState<{
@@ -243,6 +250,30 @@ export function useGameActions(game: LibraryGame) {
     }
   };
 
+  const handlePlayViaSteam = async () => {
+    try {
+      await window.electron.steamLaunchGame(game.objectId);
+      showSuccessToast(t("launching_via_steam"));
+    } catch {
+      showErrorToast(t("steam_launch_failed"));
+    }
+  };
+
+  const handleInstallViaSteam = async () => {
+    try {
+      await window.electron.steamInstallGame(game.objectId);
+      showSuccessToast(t("installing_via_steam"));
+    } catch {
+      showErrorToast(t("steam_install_failed"));
+    }
+  };
+
+  const isSteamGame = game.shop === "steam";
+  const showSteamPlay =
+    isSteamGame && steamLoggedIn && !isGameRunning;
+  const showSteamInstall =
+    isSteamGame && steamLoggedIn && !canPlay;
+
   const handleOpenDownloadOptions = () => {
     const path = buildGameDetailsPath({
       ...game,
@@ -342,6 +373,10 @@ export function useGameActions(game: LibraryGame) {
     creatingShortcut,
     creatingSteamShortcut,
     rpcs3ConfirmPending,
+    showSteamPlay,
+    showSteamInstall,
+    handlePlayViaSteam,
+    handleInstallViaSteam,
     handlePlayGame,
     handleCloseGame,
     handleToggleFavorite,

@@ -10,6 +10,7 @@ import {
 } from "@renderer/components";
 import { settingsContext } from "@renderer/context";
 import { useAppSelector } from "@renderer/hooks";
+import { useSteamLogin } from "@renderer/hooks/use-steam-login";
 import type { GameShop, PlatformScanConfig, PlatformGame } from "@types";
 import { LinkIcon } from "@primer/octicons-react";
 import "./settings-platform-import.scss";
@@ -62,8 +63,12 @@ export function SettingsContextPlatformImport() {
     "wizard"
   );
   const [scanningStatus, setScanningStatus] = useState<string | null>(null);
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [discoveredGames, setDiscoveredGames] = useState<PlatformGame[]>([]);
   const [showDiscoveryModal, setShowDiscoveryModal] = useState(false);
+  const [showApiKeyFallback, setShowApiKeyFallback] = useState(false);
+
+  const steamLogin = useSteamLogin();
 
   // Load from user preferences
   useEffect(() => {
@@ -134,12 +139,6 @@ export function SettingsContextPlatformImport() {
     await savePlatformConfigs(enablePlatformImport, next, fetchOwned);
   };
 
-  const handleToggleFetchOwned = async (shop: GameShop) => {
-    const next = { ...fetchOwned, [shop]: !fetchOwned[shop] };
-    setFetchOwned(next);
-    await savePlatformConfigs(enablePlatformImport, scanInstalled, next);
-  };
-
   const handleSteamApiKeyChange = async (value: string) => {
     setSteamApiKey(value);
     await updateUserPreferences({ steamApiKey: value || null });
@@ -161,7 +160,6 @@ export function SettingsContextPlatformImport() {
     try {
       const result = await window.electron.scanPlatforms();
 
-      // Collect all games from all platform scanners
       const platformKeys: Array<keyof typeof result> = [
         "epic",
         "gog",
@@ -199,6 +197,38 @@ export function SettingsContextPlatformImport() {
       setScanningStatus(t("scan_failed"));
     } finally {
       setTimeout(() => setScanningStatus(null), 5000);
+    }
+  };
+
+  const handleSteamSync = async () => {
+    setSyncStatus(t("steam_syncing"));
+    steamLogin.setSyncing();
+    try {
+      const result = await window.electron.steamSync();
+      steamLogin.setLastSyncAt(new Date().toISOString());
+      steamLogin.setLoggedIn();
+
+      if (result.errors.length > 0) {
+        setSyncStatus(
+          t("steam_sync_complete_with_errors", {
+            imported: result.imported,
+            updated: result.updated,
+            errors: result.errors.length,
+          })
+        );
+      } else {
+        setSyncStatus(
+          t("steam_sync_complete", {
+            imported: result.imported,
+            updated: result.updated,
+          })
+        );
+      }
+    } catch {
+      steamLogin.setLoggedIn();
+      setSyncStatus(t("steam_sync_failed"));
+    } finally {
+      setTimeout(() => setSyncStatus(null), 5000);
     }
   };
 
@@ -258,60 +288,149 @@ export function SettingsContextPlatformImport() {
 
                   {platform.needsApiKey && (
                     <>
-                      <CheckboxField
-                        label={t("fetch_owned_games")}
-                        checked={fetchOwned[platform.shop] ?? false}
-                        onChange={() => handleToggleFetchOwned(platform.shop)}
-                      />
+                      {/* Steam Login Panel */}
+                      {platform.shop === "steam" && (
+                        <div className="settings-platform-import__steam-login">
+                          {steamLogin.hasCredentials ? (
+                            <div className="settings-platform-import__steam-status">
+                              <div className="settings-platform-import__steam-status-header">
+                                <span
+                                  className={`settings-platform-import__steam-dot ${
+                                    steamLogin.status === "expired"
+                                      ? "settings-platform-import__steam-dot--expired"
+                                      : "settings-platform-import__steam-dot--online"
+                                  }`}
+                                />
+                                <span className="settings-platform-import__steam-username">
+                                  {steamLogin.status === "expired"
+                                    ? t("steam_session_expired")
+                                    : t("steam_logged_in_as", {
+                                        username: steamLogin.username ?? "",
+                                      })}
+                                </span>
+                                <Button
+                                  theme="outline"
+                                  onClick={steamLogin.logout}
+                                >
+                                  {t("steam_logout")}
+                                </Button>
+                              </div>
+                              {steamLogin.status === "expired" && (
+                                <p className="settings-platform-import__steam-sync-info settings-platform-import__steam-sync-info--expired">
+                                  {t("steam_session_expired_message")}
+                                </p>
+                              )}
+                              <p className="settings-platform-import__steam-sync-info">
+                                {steamLogin.lastSyncAt
+                                  ? t("steam_last_synced", {
+                                      time: formatRelativeTime(
+                                        steamLogin.lastSyncAt
+                                      ),
+                                    })
+                                  : t("steam_never_synced")}
+                              </p>
 
-                      {fetchOwned[platform.shop] && (
-                        <div className="settings-platform-import__api-key-row">
-                          <TextField
-                            label={t(platform.apiKeyLabel ?? "api_key")}
-                            value={steamApiKey}
-                            placeholder={t(
-                              platform.apiKeyPlaceholder ??
-                                "api_key_placeholder"
-                            )}
-                            onChange={(e) =>
-                              handleSteamApiKeyChange(e.target.value)
-                            }
-                            theme="dark"
-                            type="password"
-                          />
-                          {platform.setupUrl && (
-                            <a
-                              href={platform.setupUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="settings-platform-import__setup-link"
-                            >
-                              <LinkIcon size={12} />
-                              {t("get_api_key_at", { url: platform.setupUrl })}
-                            </a>
+                              <div className="settings-platform-import__steam-sync-actions">
+                                <Button
+                                  theme="outline"
+                                  onClick={handleSteamSync}
+                                  disabled={syncStatus !== null}
+                                >
+                                  {syncStatus ?? t("steam_sync")}
+                                </Button>
+                              </div>
+
+                              {steamLogin.status === "expired" && (
+                                <Button
+                                  theme="primary"
+                                  onClick={steamLogin.login}
+                                >
+                                  {t("steam_relogin")}
+                                </Button>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="settings-platform-import__steam-login-row">
+                              <Button
+                                theme="primary"
+                                onClick={steamLogin.login}
+                                disabled={steamLogin.status === "logging-in"}
+                              >
+                                {steamLogin.status === "logging-in"
+                                  ? t("steam_logging_in")
+                                  : t("steam_login_button")}
+                              </Button>
+                              <button
+                                type="button"
+                                className="settings-platform-import__toggle-api-key"
+                                onClick={() =>
+                                  setShowApiKeyFallback(!showApiKeyFallback)
+                                }
+                              >
+                                {showApiKeyFallback ? "▾" : "▸"}{" "}
+                                {t("steam_api_key_fallback")}
+                              </button>
+                            </div>
                           )}
                         </div>
                       )}
 
-                      {/* Steam Family Sharing */}
-                      {platform.shop === "steam" && (
-                        <div className="settings-platform-import__family-share">
-                          <TextField
-                            label={t("steam_family_share_ids")}
-                            value={steamFamilyShareIds}
-                            placeholder={t(
-                              "steam_family_share_ids_placeholder"
+                      {/* Collapsible API Key fallback (only when logged out) */}
+                      {platform.shop === "steam" &&
+                        steamLogin.status === "logged-out" &&
+                        showApiKeyFallback && (
+                          <div className="settings-platform-import__api-key-row">
+                            <TextField
+                              label={t(
+                                platform.apiKeyLabel ?? "api_key"
+                              )}
+                              value={steamApiKey}
+                              placeholder={t(
+                                platform.apiKeyPlaceholder ??
+                                  "api_key_placeholder"
+                              )}
+                              onChange={(e) =>
+                                handleSteamApiKeyChange(e.target.value)
+                              }
+                              theme="dark"
+                              type="password"
+                            />
+                            {platform.setupUrl && (
+                              <a
+                                href={platform.setupUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="settings-platform-import__setup-link"
+                              >
+                                <LinkIcon size={12} />
+                                {t("get_api_key_at", {
+                                  url: platform.setupUrl,
+                                })}
+                              </a>
                             )}
-                            onChange={(e) =>
-                              handleSteamFamilyShareIdsChange(e.target.value)
-                            }
-                            theme="dark"
-                          />
-                          <span className="settings-platform-import__hint">
-                            {t("steam_family_share_ids_hint")}
-                          </span>
-                        </div>
-                      )}
+                          </div>
+                        )}
+
+                      {/* Steam Family Sharing — only visible when logged in */}
+                      {platform.shop === "steam" &&
+                        steamLogin.hasCredentials && (
+                          <div className="settings-platform-import__family-share">
+                            <TextField
+                              label={t("steam_family_share_ids")}
+                              value={steamFamilyShareIds}
+                              placeholder={t(
+                                "steam_family_share_ids_placeholder"
+                              )}
+                              onChange={(e) =>
+                                handleSteamFamilyShareIdsChange(e.target.value)
+                              }
+                              theme="dark"
+                            />
+                            <span className="settings-platform-import__hint">
+                              {t("steam_family_share_ids_hint")}
+                            </span>
+                          </div>
+                        )}
                     </>
                   )}
                 </div>
@@ -360,6 +479,16 @@ export function SettingsContextPlatformImport() {
                 {scanningStatus ?? t("scan_for_games")}
               </Button>
 
+              {steamLogin.hasCredentials && (
+                <Button
+                  theme="outline"
+                  onClick={handleSteamSync}
+                  disabled={scanningStatus !== null || syncStatus !== null}
+                >
+                  {syncStatus ?? t("steam_sync")}
+                </Button>
+              )}
+
               <Button
                 theme="outline"
                 onClick={async () => {
@@ -387,7 +516,10 @@ export function SettingsContextPlatformImport() {
                   }
                   setTimeout(() => setScanningStatus(null), 5000);
                 }}
-                disabled={scanningStatus !== null || !steamApiKey}
+                disabled={
+                  scanningStatus !== null ||
+                  (!steamApiKey && !steamLogin.hasCredentials)
+                }
               >
                 {t("scan_steam_family")}
               </Button>
@@ -396,6 +528,11 @@ export function SettingsContextPlatformImport() {
             {scanningStatus && (
               <p className="settings-platform-import__status">
                 {scanningStatus}
+              </p>
+            )}
+            {syncStatus && !scanningStatus && (
+              <p className="settings-platform-import__status">
+                {syncStatus}
               </p>
             )}
           </div>
@@ -417,4 +554,22 @@ function parseSteamIds(input: string): string[] {
     .split(/[,;\s]+/)
     .map((s) => s.trim())
     .filter((s) => /^\d{17}$/.test(s));
+}
+
+function formatRelativeTime(isoTimestamp: string): string {
+  const now = Date.now();
+  const then = new Date(isoTimestamp).getTime();
+  const diffMs = now - then;
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffSeconds < 60) return "just now";
+  if (diffMinutes < 2) return "1 minute ago";
+  if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
+  if (diffHours < 2) return "1 hour ago";
+  if (diffHours < 24) return `${diffHours} hours ago`;
+  if (diffDays < 2) return "yesterday";
+  return `${diffDays} days ago`;
 }

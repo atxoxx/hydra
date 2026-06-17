@@ -77,6 +77,41 @@ export class SteamWebApi {
   }
 
   /**
+   * Fetches owned games using an access_token (from BrowserWindow login)
+   * instead of a Web API key.
+   */
+  static async getOwnedGamesWithToken(
+    steamId64: string,
+    accessToken: string,
+    includeFreeGames = true
+  ): Promise<SteamOwnedGame[]> {
+    try {
+      const response = await axios.get<GetOwnedGamesResponse>(
+        `${STEAM_API_BASE}/IPlayerService/GetOwnedGames/v0001/`,
+        {
+          params: {
+            access_token: accessToken,
+            steamid: steamId64,
+            include_appinfo: 1,
+            include_extended_appinfo: 1,
+            include_played_free_games: includeFreeGames ? 1 : 0,
+            include_free_sub: 1,
+          },
+          timeout: 15000,
+        }
+      );
+
+      return response.data.response.games ?? [];
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.error(
+        `[SteamAPI] Failed to fetch owned games with token for ${steamId64}: ${message}`
+      );
+      throw err;
+    }
+  }
+
+  /**
    * Fetches player summaries for given SteamID64s.
    * Returns empty array for empty input; throws on API errors.
    */
@@ -93,6 +128,72 @@ export class SteamWebApi {
       {
         params: {
           key: apiKey,
+          steamids: steamIds.join(","),
+        },
+        timeout: 10000,
+      }
+    );
+
+    return response.data.response.players.map((p) => ({
+      steamid: p.steamid,
+      personaname: p.personaname,
+      avatarfull: p.avatarfull,
+    }));
+  }
+
+  /**
+   * Checks if a specific appId is owned by the user using their access token.
+   * Calls GetOwnedGames with appids_filter for a lightweight single-game check.
+   * Returns true if the game is in the user's Steam library.
+   */
+  static async checkGameOwnership(
+    steamId64: string,
+    accessToken: string,
+    appId: number
+  ): Promise<boolean> {
+    try {
+      const response = await axios.get<GetOwnedGamesResponse>(
+        `${STEAM_API_BASE}/IPlayerService/GetOwnedGames/v0001/`,
+        {
+          params: {
+            access_token: accessToken,
+            steamid: steamId64,
+            include_appinfo: 0,
+            include_extended_appinfo: 0,
+            include_played_free_games: 1,
+            appids_filter: [appId],
+          },
+          timeout: 10000,
+        }
+      );
+
+      const games = response.data.response.games ?? [];
+      return games.some((g) => g.appid === appId);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.error(
+        `[SteamAPI] Failed to check ownership for appId ${appId}: ${message}`
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Fetches player summaries using an access_token (from BrowserWindow login).
+   */
+  static async getPlayerSummariesWithToken(
+    steamIds: string[],
+    accessToken: string
+  ): Promise<
+    Array<{ steamid: string; personaname: string; avatarfull: string }>
+  > {
+    if (steamIds.length === 0) return [];
+
+    const response = await axios.get<GetPlayerSummariesResponse>(
+      `${STEAM_API_BASE}/ISteamUser/GetPlayerSummaries/v0002/`,
+      {
+        params: {
+          access_token: accessToken,
           steamids: steamIds.join(","),
         },
         timeout: 10000,

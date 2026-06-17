@@ -1123,6 +1123,18 @@ contextBridge.exposeInMainWorld("electron", {
   getUnlockedAchievements: (objectId: string, shop: GameShop) =>
     ipcRenderer.invoke("getUnlockedAchievements", objectId, shop),
 
+  /* Steam Login */
+  steamLogin: () => ipcRenderer.invoke("steamLogin"),
+  steamLogout: () => ipcRenderer.invoke("steamLogout"),
+  steamGetLoginStatus: () => ipcRenderer.invoke("steamGetLoginStatus"),
+  steamSync: () => ipcRenderer.invoke("steamSync"),
+  steamInstallGame: (appId: string) =>
+    ipcRenderer.invoke("steamInstallGame", appId),
+  steamLaunchGame: (appId: string) =>
+    ipcRenderer.invoke("steamLaunchGame", appId),
+  steamCheckOwnership: (appId: string) =>
+    ipcRenderer.invoke("steamCheckOwnership", appId),
+
   /* Auth */
   getAuth: () => ipcRenderer.invoke("getAuth"),
   signOut: () => ipcRenderer.invoke("signOut"),

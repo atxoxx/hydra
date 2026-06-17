@@ -3,6 +3,7 @@ import {
   GearIcon,
   HeartFillIcon,
   HeartIcon,
+  LinkExternalIcon,
   ListUnorderedIcon,
   PinIcon,
   PinSlashIcon,
@@ -316,6 +317,40 @@ export function HeroPanelActions() {
     if (game) window.electron.closeGame(game.shop, game.objectId);
   };
 
+  const [steamLoggedIn, setSteamLoggedIn] = useState(false);
+
+  useEffect(() => {
+    if (game?.shop === "steam") {
+      window.electron.steamGetLoginStatus().then((status) => {
+        setSteamLoggedIn(status.status === "logged-in");
+      });
+    } else {
+      setSteamLoggedIn(false);
+    }
+  }, [game?.shop]);
+
+  const handlePlayViaSteam = async () => {
+    if (game) {
+      try {
+        await window.electron.steamLaunchGame(game.objectId);
+        showSuccessToast(t("launching_via_steam"));
+      } catch {
+        showErrorToast(t("steam_launch_failed"));
+      }
+    }
+  };
+
+  const handleInstallViaSteam = async () => {
+    if (game) {
+      try {
+        await window.electron.steamInstallGame(game.objectId);
+        showSuccessToast(t("installing_via_steam"));
+      } catch {
+        showErrorToast(t("steam_install_failed"));
+      }
+    }
+  };
+
   const deleting = game ? isGameDeleting(game?.id) : false;
 
   const addGameToLibraryButton = (
@@ -450,9 +485,38 @@ export function HeroPanelActions() {
   }
 
   if (game) {
+    const isSteamGame = game.shop === "steam";
+    const showSteamPlay =
+      isSteamGame && steamLoggedIn && !isGameRunning;
+    const showSteamInstall =
+      isSteamGame && steamLoggedIn && !game.executablePath;
+
     return (
       <div className="hero-panel-actions__container">
         {gameActionButton()}
+
+        {showSteamPlay && (
+          <Button
+            onClick={handlePlayViaSteam}
+            theme="outline"
+            className="hero-panel-actions__action"
+          >
+            <LinkExternalIcon />
+            {t("play_via_steam")}
+          </Button>
+        )}
+
+        {showSteamInstall && (
+          <Button
+            onClick={handleInstallViaSteam}
+            theme="outline"
+            className="hero-panel-actions__action"
+          >
+            <DownloadIcon />
+            {t("install_via_steam")}
+          </Button>
+        )}
+
         <div className="hero-panel-actions__separator" />
         <Button
           onClick={toggleGameFavorite}

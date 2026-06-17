@@ -4,6 +4,7 @@ import fs from "node:fs";
 import { crc32 } from "crc";
 import WinReg from "winreg";
 import { parseBuffer, writeBuffer } from "steam-shortcut-editor";
+import { shell } from "electron";
 
 import type { SteamAppDetails, SteamShortcut } from "@types";
 
@@ -187,4 +188,37 @@ export const writeSteamShortcuts = async (
     ),
     buffer
   );
+};
+
+// --- Steam Protocol Helpers ---
+
+/** Returns the path to steam.exe, or null if Steam is not installed */
+export const getSteamExecutablePath = async (): Promise<string | null> => {
+  try {
+    const steamPath = await getSteamLocation();
+    const exePath =
+      process.platform === "win32"
+        ? path.join(steamPath, "steam.exe")
+        : process.platform === "darwin"
+          ? path.join(steamPath, "Contents", "MacOS", "steam_osx")
+          : path.join(steamPath, "steam.sh");
+
+    return fs.existsSync(exePath) ? exePath : null;
+  } catch {
+    return null;
+  }
+};
+
+/** Opens steam://install/{appId} to trigger a Steam game install */
+export const openSteamInstall = async (appId: string): Promise<void> => {
+  const url = `steam://install/${appId}`;
+  logger.info(`[Steam] Opening install URL: ${url}`);
+  await shell.openExternal(url);
+};
+
+/** Opens steam://rungameid/{appId} to launch a game via Steam */
+export const openSteamLaunch = async (appId: string): Promise<void> => {
+  const url = `steam://rungameid/${appId}`;
+  logger.info(`[Steam] Opening launch URL: ${url}`);
+  await shell.openExternal(url);
 };

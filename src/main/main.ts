@@ -24,6 +24,7 @@ import {
   WSClient,
   WindowManager,
   logger,
+  SteamGameSync,
 } from "@main/services";
 import { migrateDownloadSources } from "./helpers/migrate-download-sources";
 import { getDirSize } from "./services/download/helpers";
@@ -99,6 +100,10 @@ export const loadState = async () => {
     (async () => {
       await DownloadSourcesChecker.checkForChanges();
     })();
+
+    // Auto-sync Steam library if user is logged in
+    void SteamGameSync.autoSyncIfLoggedIn();
+
     WSClient.connect();
   });
 

@@ -5,6 +5,7 @@ import {
   PlusCircleIcon,
   ChevronDownIcon,
   ChevronUpIcon,
+  DownloadIcon,
 } from "@primer/octicons-react";
 import { Tooltip } from "react-tooltip";
 
@@ -64,6 +65,11 @@ export function RepacksModal({
   const [viewedRepackIds, setViewedRepackIds] = useState<Set<string>>(
     new Set()
   );
+
+  const [activeTab, setActiveTab] = useState<"hydra" | "steam">("hydra");
+  const [isOwned, setIsOwned] = useState<boolean | null>(null);
+  const [isCheckingOwnership, setIsCheckingOwnership] = useState(false);
+  const [isSteamLoggedIn, setIsSteamLoggedIn] = useState(false);
 
   const { game, repacks } = useContext(gameDetailsContext);
 
@@ -139,6 +145,51 @@ export function RepacksModal({
       dispatch(clearNewDownloadOptions({ gameId }));
     }
   }, [visible, game, dispatch]);
+
+  useEffect(() => {
+    if (visible && game?.shop === "steam") {
+      window.electron.steamGetLoginStatus().then((status) => {
+        setIsSteamLoggedIn(status.status === "logged-in");
+      });
+    } else {
+      setIsSteamLoggedIn(false);
+    }
+  }, [visible, game?.shop]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (activeTab === "steam" && isSteamLoggedIn && game?.objectId) {
+      setIsCheckingOwnership(true);
+      setIsOwned(null);
+      window.electron
+        .steamCheckOwnership(game.objectId)
+        .then((owned) => {
+          if (!cancelled) setIsOwned(owned);
+        })
+        .catch(() => {
+          if (!cancelled) setIsOwned(false);
+        })
+        .finally(() => {
+          if (!cancelled) setIsCheckingOwnership(false);
+        });
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, isSteamLoggedIn, game?.objectId]);
+
+  const handleInstallViaSteam = async () => {
+    if (game) {
+      try {
+        await window.electron.steamInstallGame(game.objectId);
+        onClose();
+      } catch {
+        // Keep modal open so user can try again or pick a Hydra source
+      }
+    }
+  };
 
   const sortedRepacks = useMemo(() => {
     return orderBy(repacks, [(repack) => repack.uploadDate], ["desc"]);
@@ -236,8 +287,12 @@ export function RepacksModal({
       setFilterTerm("");
       setSelectedFingerprints([]);
       setIsFilterDrawerOpen(false);
+      setActiveTab("hydra");
+      setIsOwned(null);
     }
   }, [visible]);
+
+  const showSteamTab = game?.shop === "steam" && isSteamLoggedIn;
 
   return (
     <>
@@ -254,129 +309,175 @@ export function RepacksModal({
         description={t("repacks_modal_description")}
         onClose={onClose}
       >
-        <div
-          className={`repacks-modal__filter-container ${isFilterDrawerOpen ? "repacks-modal__filter-container--drawer-open" : ""}`}
-        >
-          <div className="repacks-modal__filter-top">
-            <TextField
-              placeholder={t("filter")}
-              value={filterTerm}
-              onChange={handleFilter}
-            />
-            {downloadSources.length > 0 && (
-              <Button
-                type="button"
-                theme="outline"
-                onClick={() => setIsFilterDrawerOpen(!isFilterDrawerOpen)}
-                className="repacks-modal__filter-toggle"
-              >
-                {t("filter_by_source")}
-                {isFilterDrawerOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
-              </Button>
-            )}
+        {showSteamTab && (
+          <div className="repacks-modal__tabs">
+            <button
+              type="button"
+              className={`repacks-modal__tab ${activeTab === "hydra" ? "repacks-modal__tab--active" : ""}`}
+              onClick={() => setActiveTab("hydra")}
+            >
+              {t("hydra_sources")}
+            </button>
+            <button
+              type="button"
+              className={`repacks-modal__tab ${activeTab === "steam" ? "repacks-modal__tab--active" : ""}`}
+              onClick={() => setActiveTab("steam")}
+            >
+              {t("steam_store")}
+            </button>
           </div>
+        )}
 
-          <div
-            className={`repacks-modal__download-sources ${isFilterDrawerOpen ? "repacks-modal__download-sources--open" : ""}`}
-          >
-            <div className="repacks-modal__source-grid">
-              {downloadSources
-                .filter(
-                  (
-                    source
-                  ): source is DownloadSource & { fingerprint: string } =>
-                    source.fingerprint !== undefined
-                )
-                .map((source) => {
-                  const label = source.name || source.url;
-                  const truncatedLabel =
-                    label.length > 16 ? label.substring(0, 16) + "..." : label;
-                  return (
-                    <div
-                      key={source.fingerprint}
-                      className="repacks-modal__source-item"
-                    >
-                      <CheckboxField
-                        label={truncatedLabel}
-                        checked={selectedFingerprints.includes(
-                          source.fingerprint
-                        )}
-                        onChange={() => toggleFingerprint(source.fingerprint)}
-                      />
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-        </div>
-
-        <div className="repacks-modal__repacks">
-          {filteredRepacks.length === 0 ? (
-            <div className="repacks-modal__no-results">
-              <div className="repacks-modal__no-results-content">
-                <div className="repacks-modal__no-results-text">
-                  {t("no_repacks_found")}
-                </div>
-                <div className="repacks-modal__no-results-button">
+        {activeTab === "hydra" ? (
+          <>
+            <div
+              className={`repacks-modal__filter-container ${isFilterDrawerOpen ? "repacks-modal__filter-container--drawer-open" : ""}`}
+            >
+              <div className="repacks-modal__filter-top">
+                <TextField
+                  placeholder={t("filter")}
+                  value={filterTerm}
+                  onChange={handleFilter}
+                />
+                {downloadSources.length > 0 && (
                   <Button
                     type="button"
-                    theme="primary"
-                    onClick={() => {
-                      onClose();
-                      navigate("/settings?tab=2");
-                    }}
+                    theme="outline"
+                    onClick={() => setIsFilterDrawerOpen(!isFilterDrawerOpen)}
+                    className="repacks-modal__filter-toggle"
                   >
-                    <PlusCircleIcon />
-                    {t("add_download_source", { ns: "settings" })}
+                    {t("filter_by_source")}
+                    {isFilterDrawerOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
                   </Button>
+                )}
+              </div>
+
+              <div
+                className={`repacks-modal__download-sources ${isFilterDrawerOpen ? "repacks-modal__download-sources--open" : ""}`}
+              >
+                <div className="repacks-modal__source-grid">
+                  {downloadSources
+                    .filter(
+                      (
+                        source
+                      ): source is DownloadSource & { fingerprint: string } =>
+                        source.fingerprint !== undefined
+                    )
+                    .map((source) => {
+                      const label = source.name || source.url;
+                      const truncatedLabel =
+                        label.length > 16 ? label.substring(0, 16) + "..." : label;
+                      return (
+                        <div
+                          key={source.fingerprint}
+                          className="repacks-modal__source-item"
+                        >
+                          <CheckboxField
+                            label={truncatedLabel}
+                            checked={selectedFingerprints.includes(
+                              source.fingerprint
+                            )}
+                            onChange={() => toggleFingerprint(source.fingerprint)}
+                          />
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             </div>
-          ) : (
-            filteredRepacks.map((repack) => {
-              const isLastDownloadedOption =
-                checkIfLastDownloadedOption(repack);
-              const availabilityStatus = getRepackAvailabilityStatus(repack);
-              const tooltipId = `availability-orb-${repack.id}`;
 
-              return (
-                <Button
-                  key={repack.id}
-                  theme="dark"
-                  onClick={() => handleRepackClick(repack)}
-                  className="repacks-modal__repack-button"
-                >
-                  <span
-                    className={`repacks-modal__availability-orb repacks-modal__availability-orb--${availabilityStatus}`}
-                    data-tooltip-id={tooltipId}
-                    data-tooltip-content={t(`source_${availabilityStatus}`)}
-                  />
-                  <Tooltip id={tooltipId} />
+            <div className="repacks-modal__repacks">
+              {filteredRepacks.length === 0 ? (
+                <div className="repacks-modal__no-results">
+                  <div className="repacks-modal__no-results-content">
+                    <div className="repacks-modal__no-results-text">
+                      {t("no_repacks_found")}
+                    </div>
+                    <div className="repacks-modal__no-results-button">
+                      <Button
+                        type="button"
+                        theme="primary"
+                        onClick={() => {
+                          onClose();
+                          navigate("/settings?tab=2");
+                        }}
+                      >
+                        <PlusCircleIcon />
+                        {t("add_download_source", { ns: "settings" })}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                filteredRepacks.map((repack) => {
+                  const isLastDownloadedOption =
+                    checkIfLastDownloadedOption(repack);
+                  const availabilityStatus = getRepackAvailabilityStatus(repack);
+                  const tooltipId = `availability-orb-${repack.id}`;
 
-                  <p className="repacks-modal__repack-title">
-                    {repack.title}
-                    {userPreferences?.enableNewDownloadOptionsBadges !==
-                      false &&
-                      isNewRepack(repack) && (
-                        <span className="repacks-modal__new-badge">
-                          {t("new_download_option")}
-                        </span>
+                  return (
+                    <Button
+                      key={repack.id}
+                      theme="dark"
+                      onClick={() => handleRepackClick(repack)}
+                      className="repacks-modal__repack-button"
+                    >
+                      <span
+                        className={`repacks-modal__availability-orb repacks-modal__availability-orb--${availabilityStatus}`}
+                        data-tooltip-id={tooltipId}
+                        data-tooltip-content={t(`source_${availabilityStatus}`)}
+                      />
+                      <Tooltip id={tooltipId} />
+
+                      <p className="repacks-modal__repack-title">
+                        {repack.title}
+                        {userPreferences?.enableNewDownloadOptionsBadges !==
+                          false &&
+                          isNewRepack(repack) && (
+                            <span className="repacks-modal__new-badge">
+                              {t("new_download_option")}
+                            </span>
+                          )}
+                      </p>
+
+                      {isLastDownloadedOption && (
+                        <Badge>{t("last_downloaded_option")}</Badge>
                       )}
-                  </p>
 
-                  {isLastDownloadedOption && (
-                    <Badge>{t("last_downloaded_option")}</Badge>
-                  )}
-
-                  <p className="repacks-modal__repack-info">
-                    {repack.fileSize} - {repack.downloadSourceName} -{" "}
-                    {repack.uploadDate ? formatDate(repack.uploadDate) : ""}
-                  </p>
-                </Button>
-              );
-            })
-          )}
-        </div>
+                      <p className="repacks-modal__repack-info">
+                        {repack.fileSize} - {repack.downloadSourceName} -{" "}
+                        {repack.uploadDate ? formatDate(repack.uploadDate) : ""}
+                      </p>
+                    </Button>
+                  );
+                })
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="repacks-modal__steam-store">
+            {isCheckingOwnership ? (
+              <p className="repacks-modal__steam-store-status">
+                {t("checking_ownership")}
+              </p>
+            ) : isOwned ? (
+              <Button
+                onClick={handleInstallViaSteam}
+                theme="outline"
+                className="repacks-modal__steam-install-button"
+              >
+                <DownloadIcon />
+                {t("install_via_steam")}
+              </Button>
+            ) : (
+              <div className="repacks-modal__steam-not-owned">
+                <p className="repacks-modal__steam-not-owned-text">
+                  {t("not_in_steam_library")}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </Modal>
     </>
   );

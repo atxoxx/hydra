@@ -206,7 +206,7 @@ interface InstallResult {
  * Checks if a Steam game is installed by parsing its ACF manifest file.
  * Falls back to folder name scan if manifest parsing fails.
  */
-function findInstalledGame(
+export function findInstalledGame(
   libraryFolders: string[],
   appId: number
 ): InstallResult {
