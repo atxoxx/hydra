@@ -32,6 +32,8 @@ export * from "./decky-plugin";
 export * from "./user";
 export * from "./download-sources-checker";
 export * from "./notifications/local-notifications";
+export * from "./crackwatch-service";
+export * from "./news-service";
 export * from "./power-save-blocker";
 export * from "./duckduckgo-image-search";
 export * from "./native-addon";

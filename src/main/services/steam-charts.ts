@@ -441,10 +441,7 @@ export async function getSteamReviewSummaryData(
     totalPositive: allTime.totalPositive,
     totalNegative: allTime.totalNegative,
     totalReviews: allTime.totalReviews,
-    reviewScore: calculateScore(
-      allTime.totalPositive,
-      allTime.totalReviews
-    ),
+    reviewScore: calculateScore(allTime.totalPositive, allTime.totalReviews),
     recentReviewScoreDescriptor: recent?.reviewScoreDesc ?? null,
     recentPositive: recent?.totalPositive ?? null,
     recentNegative: recent?.totalNegative ?? null,

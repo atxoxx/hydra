@@ -9,13 +9,19 @@ import {
   DownloadIcon,
   GearIcon,
   ListUnorderedIcon,
+  MailIcon,
   PeopleIcon,
   TagIcon,
   VideoIcon,
 } from "@primer/octicons-react";
 import cn from "classnames";
 
-import { useDownload, useLibrary, useUserDetails } from "@renderer/hooks";
+import {
+  useDownload,
+  useLibrary,
+  useAppSelector,
+  useUserDetails,
+} from "@renderer/hooks";
 import type { ProfileFriends } from "@types";
 
 import { DownloadsDropdown } from "../downloads-dropdown/downloads-dropdown";
@@ -50,6 +56,11 @@ const TABS: Tab[] = [
     render: () => <ClockIcon size={16} />,
   },
   {
+    labelKey: "news",
+    path: "/news",
+    render: () => <MailIcon size={16} />,
+  },
+  {
     labelKey: "deals",
     path: "/deals",
     render: () => <TagIcon size={16} />,
@@ -64,10 +75,14 @@ export function TabBar() {
   const { userDetails } = useUserDetails();
   const { lastPacket } = useDownload();
   const { library } = useLibrary();
+  const userPreferences = useAppSelector(
+    (state) => state.userPreferences.value
+  );
 
   const [onlineFriendsCount, setOnlineFriendsCount] = useState(0);
   const [showDownloadsDropdown, setShowDownloadsDropdown] = useState(false);
   const downloadsButtonRef = useRef<HTMLButtonElement>(null);
+  const [unreadNewsCount, setUnreadNewsCount] = useState(0);
 
   const hasActiveDownload = useMemo(
     () =>
@@ -89,6 +104,29 @@ export function TabBar() {
       ).length,
     [library]
   );
+
+  const isNewsTabEnabled = userPreferences?.sidebarShowNewsTab !== false; // default true
+
+  useEffect(() => {
+    let cancelled = false;
+    window.electron
+      .getNewsSnapshot(false)
+      .then((snapshot) => {
+        if (!cancelled) setUnreadNewsCount(snapshot.totalUnread);
+      })
+      .catch(() => {
+        if (!cancelled) setUnreadNewsCount(0);
+      });
+    const unsubscribe = window.electron.onUnreadNewsCountUpdated(
+      ({ count }) => {
+        setUnreadNewsCount(count);
+      }
+    );
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
 
   const updateOnlineFriendsCount = useCallback(async () => {
     if (!userDetails) {
@@ -167,21 +205,28 @@ export function TabBar() {
     <div className="tab-bar">
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-to-interactive-role */}
       <nav className="tab-bar__tabs" role="tablist">
-        {TABS.map((tab) => (
-          <button
-            key={tab.path}
-            type="button"
-            role="tab"
-            className={cn("tab-bar__tab", {
-              "tab-bar__tab--active": tab.path === activePath,
-            })}
-            onClick={() => handleTabClick(tab.path)}
-            aria-selected={tab.path === activePath}
-          >
-            {tab.render()}
-            <span>{t(tab.labelKey, { defaultValue: tab.labelKey })}</span>
-          </button>
-        ))}
+        {TABS.filter((tab) => tab.path !== "/news" || isNewsTabEnabled).map(
+          (tab) => (
+            <button
+              key={tab.path}
+              type="button"
+              role="tab"
+              className={cn("tab-bar__tab", {
+                "tab-bar__tab--active": tab.path === activePath,
+              })}
+              onClick={() => handleTabClick(tab.path)}
+              aria-selected={tab.path === activePath}
+            >
+              {tab.render()}
+              <span>{t(tab.labelKey, { defaultValue: tab.labelKey })}</span>
+              {tab.path === "/news" && unreadNewsCount > 0 && (
+                <span className="tab-bar__badge tab-bar__badge--count">
+                  {unreadNewsCount > 99 ? "99+" : unreadNewsCount}
+                </span>
+              )}
+            </button>
+          )
+        )}
       </nav>
 
       <div className="tab-bar__actions">

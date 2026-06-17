@@ -12,6 +12,7 @@ import {
   CloudIcon,
   DownloadIcon,
   GearIcon,
+  MailIcon,
   PlayIcon,
   ShieldCheckIcon,
 } from "@primer/octicons-react";
@@ -24,6 +25,7 @@ import { SettingsContextIntegrations } from "./settings-context-integrations";
 import { SettingsContextCompatibility } from "./settings-context-compatibility";
 import { SettingsContextPlatformImport } from "./settings-context-platform-import";
 import { SettingsContextEmulation } from "./emulation/settings-context-emulation";
+import { SettingsContextNews } from "./settings-context-news";
 
 export default function Settings() {
   const { t } = useTranslation("settings");
@@ -61,6 +63,11 @@ export default function Settings() {
         id: "platform_import" as const,
         label: t("platform_import"),
         icon: <Gamepad2 size={16} />,
+      },
+      {
+        id: "news" as const,
+        label: t("news"),
+        icon: <MailIcon size={16} />,
       },
       {
         id: "compatibility" as const,
@@ -119,6 +126,10 @@ export default function Settings() {
 
             if (selectedCategoryId === "platform_import") {
               return <SettingsContextPlatformImport />;
+            }
+
+            if (selectedCategoryId === "news") {
+              return <SettingsContextNews />;
             }
 
             if (selectedCategoryId === "compatibility") {

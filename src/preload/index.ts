@@ -1372,6 +1372,31 @@ contextBridge.exposeInMainWorld("electron", {
   /* ITAD Giveaways */
   getItadGiveaways: (forceRefresh?: boolean) =>
     ipcRenderer.invoke("getItadGiveaways", forceRefresh),
+  /* CrackWatch */
+  getCrackWatchStatus: (objectId: string, shop: GameShop, title: string) =>
+    ipcRenderer.invoke("getCrackWatchStatus", objectId, shop, title),
+  /* News (RSS aggregator) */
+  getNewsSnapshot: (forceRefresh?: boolean) =>
+    ipcRenderer.invoke("getNewsSnapshot", forceRefresh),
+  listNewsFeeds: () => ipcRenderer.invoke("listNewsFeeds"),
+  addNewsFeed: (data: { url: string; label: string }) =>
+    ipcRenderer.invoke("addNewsFeed", data),
+  removeNewsFeed: (url: string) => ipcRenderer.invoke("removeNewsFeed", url),
+  toggleNewsFeed: (url: string, enabled: boolean) =>
+    ipcRenderer.invoke("toggleNewsFeed", url, enabled),
+  markNewsArticleRead: (guid: string) =>
+    ipcRenderer.invoke("markNewsArticleRead", guid),
+  markAllNewsRead: () => ipcRenderer.invoke("markAllNewsRead"),
+  clearNewsReadHistory: () => ipcRenderer.invoke("clearNewsReadHistory"),
+  listNewsReadGuids: () =>
+    ipcRenderer.invoke("listNewsReadGuids") as Promise<string[]>,
+  onUnreadNewsCountUpdated: (cb: (value: { count: number }) => void) => {
+    const listener = (_e: Electron.IpcRendererEvent, v: { count: number }) =>
+      cb(v);
+    ipcRenderer.on("onUnreadNewsCountUpdated", listener);
+    return () =>
+      ipcRenderer.removeListener("onUnreadNewsCountUpdated", listener);
+  },
   /* Metadata */
   fetchGameMetadata: (shop: string, objectId: string, gameTitle: string) =>
     ipcRenderer.invoke("fetchGameMetadata", shop, objectId, gameTitle),

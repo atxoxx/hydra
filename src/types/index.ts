@@ -649,3 +649,5 @@ export * from "./metadata.types";
 export * from "./level.types";
 export * from "./theme.types";
 export * from "./emulator.types";
+export * from "./crackwatch.types";
+export * from "./news.types";

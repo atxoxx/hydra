@@ -40,4 +40,7 @@ export const levelKeys = {
   watchlistEntry: (shop: GameShop, objectId: string) => `${shop}:${objectId}`,
   metadataCache: "metadataCache",
   metadataCacheEntry: (shop: string, objectId: string) => `${shop}:${objectId}`,
+  crackwatchCache: "crackwatchCache",
+  newsFeeds: "newsFeeds",
+  newsReadState: "newsReadState",
 };

@@ -12,6 +12,8 @@ $warning-color: #ffc107;
 
 $brand-teal: #16b195;
 $brand-blue: #3e62c0;
+/* Primary accent — matches the runtime --accent variable used elsewhere in the app (e.g. var(--accent, #4a9eff)). */
+$primary-color: #4a9eff;
 
 $classics-rainbow: conic-gradient(
   from 0deg,

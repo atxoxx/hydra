@@ -23,6 +23,7 @@ import "./watchlist";
 import "./library/transfer-game-files";
 import "./emulators";
 import "./itad-giveaways";
+import "./news";
 import "./sessions/get-game-sessions";
 import "./sessions/clear-activity-data";
 import "./metadata/fetch-game-metadata";

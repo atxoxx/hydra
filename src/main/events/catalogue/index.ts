@@ -8,3 +8,4 @@ import "./get-steam-review-analysis";
 import "./get-steam-reviews";
 import "./search-game-assets";
 import "./search-game-assets-multi";
+import "./get-crackwatch-status";

@@ -68,6 +68,7 @@ export function SettingsContextGeneral({
     sidebarShowPlaytimeBadge: true,
     sidebarShowAchievementsBadge: true,
     sidebarShowFriendsBadge: true,
+    sidebarShowNewsTab: true,
   });
 
   useEffect(() => {
@@ -119,6 +120,7 @@ export function SettingsContextGeneral({
       sidebarShowAchievementsBadge:
         userPreferences.sidebarShowAchievementsBadge ?? true,
       sidebarShowFriendsBadge: userPreferences.sidebarShowFriendsBadge ?? true,
+      sidebarShowNewsTab: userPreferences.sidebarShowNewsTab ?? true,
     });
   }, [userPreferences, defaultDownloadsPath]);
 
@@ -347,6 +349,16 @@ export function SettingsContextGeneral({
           onChange={() =>
             handleChange({
               sidebarShowFriendsBadge: !form.sidebarShowFriendsBadge,
+            })
+          }
+        />
+
+        <CheckboxField
+          label={t("sidebar_show_news_tab")}
+          checked={form.sidebarShowNewsTab}
+          onChange={() =>
+            handleChange({
+              sidebarShowNewsTab: !form.sidebarShowNewsTab,
             })
           }
         />

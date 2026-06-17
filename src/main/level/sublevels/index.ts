@@ -17,3 +17,6 @@ export * from "./ps2-memory-card-saves";
 export * from "./ps1-memory-card-saves";
 export * from "./watchlist";
 export * from "./metadata-cache";
+export * from "./crackwatch-cache";
+export * from "./news-feeds";
+export * from "./news-read-state";

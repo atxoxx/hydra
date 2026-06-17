@@ -1,5 +1,6 @@
 import { lazy, Suspense, useContext, useEffect, useState } from "react";
 import type {
+  CrackWatchStatus,
   HowLongToBeatCategory,
   ProtonDBData,
   SteamAppDetails,
@@ -12,6 +13,7 @@ import { gameDetailsContext } from "@renderer/context";
 import { useFormat } from "@renderer/hooks";
 import { DownloadIcon, PeopleIcon, StarIcon } from "@primer/octicons-react";
 import { HowLongToBeatSection } from "./how-long-to-beat-section";
+import { CrackWatchSection } from "./crackwatch-section";
 import { LaunchboxDetailsSection } from "./launchbox-details-section";
 import { SidebarSection } from "../sidebar-section/sidebar-section";
 import "./sidebar.scss";
@@ -71,6 +73,10 @@ export function Sidebar({ activeTab }: Readonly<{ activeTab: GameTabId }>) {
     isLoading: boolean;
     data: ProtonDBData | null;
   }>({ isLoading: shouldShowProtonFeatures, data: null });
+  const [crackwatch, setCrackwatch] = useState<{
+    isLoading: boolean;
+    data: CrackWatchStatus | null;
+  }>({ isLoading: true, data: null });
 
   const [activeRequirement, setActiveRequirement] =
     useState<keyof SteamAppDetails["pc_requirements"]>("minimum");
@@ -126,6 +132,24 @@ export function Sidebar({ activeTab }: Readonly<{ activeTab: GameTabId }>) {
         setProtonDB({ isLoading: false, data: null });
       });
   }, [shouldShowProtonFeatures, effectiveObjectId, effectiveShop]);
+
+  useEffect(() => {
+    if (!objectId || shop !== "steam" || !gameTitle) {
+      setCrackwatch({ isLoading: false, data: null });
+      return;
+    }
+
+    setCrackwatch({ isLoading: true, data: null });
+
+    window.electron
+      .getCrackWatchStatus(objectId, shop, gameTitle)
+      .then((data) => {
+        setCrackwatch({ isLoading: false, data });
+      })
+      .catch(() => {
+        setCrackwatch({ isLoading: false, data: null });
+      });
+  }, [objectId, shop, gameTitle]);
 
   return (
     <aside className="content-sidebar">
@@ -185,6 +209,11 @@ export function Sidebar({ activeTab }: Readonly<{ activeTab: GameTabId }>) {
           <HowLongToBeatSection
             howLongToBeatData={howLongToBeat.data}
             isLoading={howLongToBeat.isLoading}
+          />
+
+          <CrackWatchSection
+            data={crackwatch.data}
+            isLoading={crackwatch.isLoading}
           />
 
           {shop !== "launchbox" && (

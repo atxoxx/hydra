@@ -244,6 +244,10 @@ export interface UserPreferences {
   sidebarShowAchievementsBadge?: boolean;
   /** Show friends badge on sidebar game items */
   sidebarShowFriendsBadge?: boolean;
+  /** Show the News tab in the top navigation (default true) */
+  sidebarShowNewsTab?: boolean;
+  /** Show only unread articles in the News tab (default true) */
+  newsShowOnlyUnread?: boolean;
   /** Hardware monitoring configuration */
   hardwareMonitorConfig?: {
     enabled: boolean;

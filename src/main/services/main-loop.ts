@@ -5,6 +5,7 @@ import { AchievementWatcherManager } from "./achievements/achievement-watcher-ma
 import { UpdateManager } from "./update-manager";
 import { INTERVALS } from "@main/constants";
 import { PowerSaveBlockerManager } from "./power-save-blocker";
+import { NewsService } from "./news-service";
 import { logger } from "./logger";
 
 const wrapInLoop = (fn: () => unknown, interval: number) => {
@@ -47,4 +48,8 @@ export const startMainLoop = async () => {
         ),
     });
   }, INTERVALS.powerSaveBlockerSync);
+
+  // Kick off the news service first so subscribers see a populated snapshot on mount.
+  void NewsService.init();
+  wrapInLoop(() => NewsService.pollOnce(), INTERVALS.newsWatcher);
 };

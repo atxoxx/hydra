@@ -51,6 +51,7 @@ export const INTERVALS = {
   seedStatusWatcher: 2_000,
   updateChecker: 60_000 * 50, // 50 minutes
   powerSaveBlockerSync: 20_000,
+  newsWatcher: 15 * 60_000, // 15 minutes for the RSS aggregator
 };
 
 export const DEFAULT_ACHIEVEMENT_SOUND_VOLUME = 0.15;
