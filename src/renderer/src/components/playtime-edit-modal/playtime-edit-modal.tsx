@@ -84,7 +84,9 @@ export function PlaytimeEditModal({
 
       if (!result.ok) {
         showErrorToast(
-          t("playtime_edit_save_failed", result.error ?? "Save failed")
+          t("playtime_edit_save_failed", {
+            message: result.error ?? "Save failed",
+          })
         );
         return;
       }

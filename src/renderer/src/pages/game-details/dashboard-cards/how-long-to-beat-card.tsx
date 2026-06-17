@@ -9,7 +9,7 @@ import {
   ChevronUpIcon,
   SearchIcon,
 } from "@primer/octicons-react";
-import type { HowLongToBeatCategory } from "@types";
+import type { HowLongToBeatCategory, PlaytimeProviderId } from "@types";
 import { gameDetailsContext } from "@renderer/context";
 import { useToast } from "@renderer/hooks";
 import { PlaytimeEditModal } from "@renderer/components/playtime-edit-modal/playtime-edit-modal";
@@ -65,9 +65,15 @@ export function HowLongToBeatCard({
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isExtended, setIsExtended] = useState(false);
 
+  const [savedMapping, setSavedMapping] = useState<{
+    provider: PlaytimeProviderId;
+    externalId: string;
+  } | null>(null);
+
   const { state, refetch } = usePlaytimeData({
     game,
     disabled: isLoadingProp,
+    forcedMapping: savedMapping,
   });
 
   const userPlaytimeSeconds = useMemo(
@@ -97,8 +103,10 @@ export function HowLongToBeatCard({
     }
   };
 
-  // Re-fetch whenever the Edit modal closes — the new mapping is now
-  // persisted so the cloud endpoint will return correct data.
+  // Re-fetch whenever the Edit modal closes. The savedMapping (set by
+  // onSaved) triggers a forced fetch with the just-selected provider
+  // + externalId, skipping auto-match so the card updates immediately
+  // with the user's chosen entry.
   useEffect(() => {
     if (!isEditOpen) refetch();
   }, [isEditOpen, refetch]);
@@ -196,6 +204,9 @@ export function HowLongToBeatCard({
             visible={isEditOpen}
             game={game}
             onClose={() => setIsEditOpen(false)}
+            onSaved={(provider, externalId) =>
+              setSavedMapping({ provider, externalId })
+            }
           />
         )}
       </SkeletonTheme>
@@ -275,6 +286,9 @@ export function HowLongToBeatCard({
             game={game}
             initialProvider={state.provider}
             onClose={() => setIsEditOpen(false)}
+            onSaved={(provider, externalId) =>
+              setSavedMapping({ provider, externalId })
+            }
           />
         )}
       </SkeletonTheme>
@@ -366,6 +380,9 @@ export function HowLongToBeatCard({
             undefined
           }
           onClose={() => setIsEditOpen(false)}
+          onSaved={(provider, externalId) =>
+            setSavedMapping({ provider, externalId })
+          }
         />
       )}
     </SkeletonTheme>

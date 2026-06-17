@@ -1,6 +1,5 @@
 import { registerEvent } from "../register-event";
-import { db, levelKeys } from "@main/level";
-import { invalidateProvider } from "@main/services/playtime-providers/cache";
+import { gamesSublevel, levelKeys } from "@main/level";
 import type { Game, PlaytimeMapping } from "@types";
 
 export interface SaveGamePlaytimeMappingArgs {
@@ -35,9 +34,7 @@ export function registerSaveGamePlaytimeMapping() {
         }
 
         const key = levelKeys.game(shop as Game["shop"], objectId);
-        const existing = (await db.get(key, {
-          valueEncoding: "json",
-        })) as unknown as Game | undefined;
+        const existing = await gamesSublevel.get(key).catch(() => null);
 
         if (!existing) {
           return {
@@ -60,11 +57,7 @@ export function registerSaveGamePlaytimeMapping() {
           playtimeMapping: mapping,
         };
 
-        await db.put(key, updated, { valueEncoding: "json" });
-
-        // Evict any cached entries tied to the previous provider so
-        // the renderer's next request fires against fresh state.
-        invalidateProvider(provider);
+        await gamesSublevel.put(key, updated);
 
         return { ok: true, mapping };
       } catch (error) {

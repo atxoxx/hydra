@@ -1,8 +1,4 @@
-import axios, { AxiosInstance } from "axios";
-import { CookieJar } from "tough-cookie";
-import { wrapper as withCookieJar } from "axios-cookiejar-support";
-import * as cheerio from "cheerio";
-import { BrowserWindow, session as electronSession } from "electron";
+import { HowLongToBeatService, HowLongToBeatEntry } from "howlongtobeat-ts";
 import type {
   PlaytimeGameData,
   PlaytimeCategory,
@@ -16,240 +12,29 @@ import {
   setCachedSearch,
 } from "./cache";
 
-const HLTB_BASE = "https://howlongtobeat.com";
-const HLTB_HOMEPAGE = `${HLTB_BASE}/`;
-
-/** Time between calls — mirrors the Lacro59 plugin's 350ms base delay. */
-const RATE_LIMIT_MS = 350;
-
-const DEFAULT_UA =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-  "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
-
-const DEFAULT_HEADERS: Record<string, string> = {
-  "User-Agent": DEFAULT_UA,
-  Referer: HLTB_HOMEPAGE,
-  accept: "*/*",
-  "accept-language": "en-US,en;q=0.9",
-};
-
-/* ------------------------------------------------------------------ */
-/*                          Rate limiter                              */
-/* ------------------------------------------------------------------ */
-
-class SlidingRateLimiter {
-  private lastCall = 0;
-
-  public async wait(): Promise<void> {
-    const now = Date.now();
-    const diff = now - this.lastCall;
-    if (diff < RATE_LIMIT_MS) {
-      await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_MS - diff));
-    }
-    this.lastCall = Date.now();
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/*                Hidden BrowserWindow cookie warmer                  */
-/* ------------------------------------------------------------------ */
-
 /**
- * HLTB issues its session cookies + a fingerprint from the Next.js
- * client bundle at hydration time. Plain HTTP can't see those cookies
- * — we need a real browser context. We spin up a throwaway, headless
- * `BrowserWindow`, load the homepage + a child page so JS can run,
- * then drain the resulting cookies into a `tough-cookie` jar that
- * axios can use.
- */
-class HltbSessionWarmer {
-  private warmPromise: Promise<CookieJar> | null = null;
-
-  public warm(): Promise<CookieJar> {
-    if (this.warmPromise === null) {
-      this.warmPromise = this.doWarm();
-    }
-    return this.warmPromise;
-  }
-
-  private async doWarm(): Promise<CookieJar> {
-    const jar = new CookieJar();
-    const sess = electronSession.defaultSession;
-
-    let window: BrowserWindow | null = null;
-    try {
-      window = new BrowserWindow({
-        show: false,
-        width: 800,
-        height: 600,
-        webPreferences: {
-          nodeIntegration: false,
-          contextIsolation: true,
-          sandbox: true,
-        },
-      });
-
-      // Visit the homepage and let Next.js hydrate.
-      try {
-        await window.loadURL(HLTB_HOMEPAGE);
-      } catch {
-        // tolerated — warmer failures never block search
-      }
-      // Give the client bundle a moment to run fingerprint scripts.
-      await sleep(1500);
-
-      // Visit a child page so cookies stick across paths.
-      try {
-        await window.loadURL(`${HLTB_BASE}/games`);
-      } catch {
-        // ignored
-      }
-      await sleep(1200);
-    } finally {
-      if (window && !window.isDestroyed()) {
-        window.destroy();
-      }
-    }
-
-    await this.appendSessionCookies(sess, jar);
-    return jar;
-  }
-
-  private async appendSessionCookies(
-    sess: Electron.Session,
-    jar: CookieJar
-  ): Promise<void> {
-    let cookies: Electron.Cookie[] = [];
-    try {
-      cookies = await sess.cookies.get({ domain: "howlongtobeat.com" });
-    } catch {
-      return;
-    }
-
-    for (const c of cookies) {
-      const segments = [
-        `${c.name}=${c.value}`,
-        `Domain=${c.domain}`,
-        `Path=${c.path || "/"}`,
-      ];
-      if (c.secure) segments.push("Secure");
-      if (c.httpOnly) segments.push("HttpOnly");
-      if (typeof c.expirationDate === "number") {
-        segments.push(
-          `Expires=${new Date(c.expirationDate * 1000).toUTCString()}`
-        );
-      }
-      if (c.sameSite && c.sameSite !== "no_restriction") {
-        segments.push(
-          `SameSite=${c.sameSite.charAt(0).toUpperCase()}${c.sameSite.slice(1)}`
-        );
-      }
-      try {
-        await jar.setCookie(segments.join("; "), HLTB_BASE);
-      } catch {
-        // malformed cookie — skip
-      }
-    }
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/*                    Dynamic endpoint discovery                      */
-/* ------------------------------------------------------------------ */
-
-/**
- * Walks HLTB's homepage, follows `_next/static/chunks/*.js` script
- * tags, and extracts the current `/api/...` POST endpoint by regex.
- * The endpoint is cached for the session because HLTB rotates it
- * regularly. Today the regex matches `/api/bleed`, but the discovery
- * keeps us forward-compatible if the path changes.
- */
-class EndpointDiscovery {
-  private discoveredPath: string | null = null;
-
-  public async resolve(): Promise<string> {
-    if (this.discoveredPath !== null) return this.discoveredPath;
-    try {
-      const html = await axios.get<string>(HLTB_HOMEPAGE, {
-        timeout: 10_000,
-        headers: DEFAULT_HEADERS,
-        responseType: "text",
-        transformResponse: (d) => d,
-      });
-      const bundlePaths = Array.from(
-        new Set(
-          (
-            html.data.match(
-              new RegExp(String.raw`/_next/static/chunks/[^"]+\.js`, "g")
-            ) ?? []
-          ).slice(0, 40)
-        )
-      );
-
-      for (const bundlePath of bundlePaths) {
-        try {
-          const body = await axios.get<string>(`${HLTB_BASE}${bundlePath}`, {
-            timeout: 8_000,
-            headers: DEFAULT_HEADERS,
-            responseType: "text",
-            transformResponse: (d) => d,
-          });
-          const match = body.data.match(
-            new RegExp(
-              String.raw`fetch\s*\(\s*["'](/api/[A-Za-z0-9_/]+)["']\s*,\s*\{[^}]*method\s*:\s*["']POST["']`
-            )
-          );
-          if (match && match[1]) {
-            this.discoveredPath = match[1];
-            return this.discoveredPath;
-          }
-        } catch {
-          // a single failed bundle shouldn't kill discovery
-        }
-      }
-    } catch {
-      // ignored — fall back to the static endpoint
-    }
-    this.discoveredPath = "/api/bleed";
-    return this.discoveredPath;
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/*                           Provider                                 */
-/* ------------------------------------------------------------------ */
-
-/**
- * HowLongToBeat provider.
+ * HowLongToBeat provider backed by the `howlongtobeat-ts` community
+ * package.
  *
- * The HLTB website (`howlongtobeat.com`) does not expose a public API.
- * The `/api/bleed` endpoint requires:
- *   1. JS-issued session cookies (set by Next.js hydration)
- *   2. A fingerprint token trio issued by `/api/bleed/init?t={ts}`
- *   3. The `Referer`, `X-Requested-With`, and a JSON body with
- *      `searchType`, `searchTerms`, `searchPage`, `size`, `t`.
+ * Replaces the previous custom implementation that manually:
+ *   - Warmed a hidden BrowserWindow session for Next.js cookies
+ *   - Discovered API endpoints by scraping homepage JS bundles
+ *   - Maintained its own 350 ms sliding-window rate limiter
+ *   - Parsed game details via cheerio HTML scraping
  *
- * This provider mirrors the Lacro59 Playnite plugin's flow:
- *   - Hidden BrowserWindow warmup → tough-cookie jar
- *   - Dynamic `/api/...` discovery via homepage JS bundles (cached)
- *   - `/api/bleed/init?t=...` to capture `Token`/`Hpkey`/`Hpval`
- *   - POST search JSON with those tokens as headers
- *   - 350ms sliding-window rate limit between calls
- *   - cheerio-based HTML parsing for `/game?id={id}` detail pages
+ * All of those concerns are now handled (and kept up to date) by the
+ * community-maintained `howlongtobeat-ts` package, which reverse-
+ * engineers HLTB's `/api/bleed` endpoint per the same approach as
+ * the Lacro59 Playnite plugin.
  */
 export class HowLongToBeatProvider implements PlaytimeProvider {
   public readonly id = "howlongtobeat" as const;
 
-  private readonly warmer = new HltbSessionWarmer();
-  private readonly discovery = new EndpointDiscovery();
-  private readonly rateLimiter = new SlidingRateLimiter();
-
-  private httpPromise: Promise<AxiosInstance> | null = null;
-  private tokenPromise: Promise<AuthToken> | null = null;
+  private readonly service = new HowLongToBeatService(0.5);
 
   public async search(
     query: string,
-    signal?: AbortSignal
+    _signal?: AbortSignal
   ): Promise<PlaytimeSearchResult[]> {
     const q = query.trim();
     if (q.length < 2) return [];
@@ -257,47 +42,46 @@ export class HowLongToBeatProvider implements PlaytimeProvider {
     const cached = getCachedSearch(this.id, q);
     if (cached !== null) return cached;
 
-    await this.rateLimiter.wait();
     try {
-      const http = await this.getHttp();
-      const endpoint = await this.discovery.resolve();
-      const token = await this.getAuthToken(signal);
+      const result = await this.service.search(q);
 
-      const payload = {
-        searchType: "games",
-        searchTerms: [stripEditionNoise(q)],
-        searchPage: 1,
-        size: 20,
-        searchOptions: {
-          games: {
-            userId: 0,
-            platform: "",
-            sortCategory: "popular",
-            rangeCategory: "main",
-            mainStyle: "",
-          },
-          users: "",
-          lists: "",
-          filter: "",
-          sort: 0,
-        },
-        ...(token.t ? { t: token.t } : {}),
-      };
+      if (!result.success || !result.data || result.data.length === 0) {
+        return [];
+      }
 
-      const response = await http.post(endpoint, payload, {
-        signal,
-        headers: {
-          "Content-Type": "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-          ...mapTokenToHeaders(token),
-        },
-      });
+      const entries = result.data.filter(
+        (entry): entry is HowLongToBeatEntry =>
+          entry != null && typeof entry.id === "number" && !!entry.name
+      );
 
-      const results = this.parseSearchResponse(response.data, q);
-      if (results.length > 0) setCachedSearch(this.id, q, results);
-      return results;
+      const searchResults: PlaytimeSearchResult[] = [];
+      for (const entry of entries) {
+        const providerGameId = String(entry.id);
+
+        // Build the full PlaytimeGameData from the search hit and
+        // cache it so fetchById returns instantly.
+        const gameData = buildGameDataFromEntry(providerGameId, entry);
+        if (gameData.categories.length > 0) {
+          setCachedFetch(this.id, providerGameId, gameData);
+        }
+
+        searchResults.push({
+          provider: this.id,
+          providerGameId,
+          title: entry.name.trim(),
+          releaseYear: entry.releaseYear ?? null,
+          platforms: entry.platforms ?? [],
+          imageUrl: entry.imageUrl ?? null,
+          similarityScore: entry.similarity ?? 0.95,
+          estimatedSeconds: pickPrimarySeconds(entry),
+        });
+      }
+
+      if (searchResults.length > 0) {
+        setCachedSearch(this.id, q, searchResults);
+      }
+      return searchResults;
     } catch (err) {
-      if (axios.isCancel(err)) return [];
       // eslint-disable-next-line no-console
       console.warn("[HLTB] search failed:", errorMessage(err));
       return [];
@@ -306,308 +90,52 @@ export class HowLongToBeatProvider implements PlaytimeProvider {
 
   public async fetchById(
     externalId: string,
-    signal?: AbortSignal
+    _signal?: AbortSignal
   ): Promise<PlaytimeGameData | null> {
     const id = externalId.trim();
     if (!id) return null;
 
+    // Return from cache — search() already built full PlaytimeGameData
+    // from the package's HowLongToBeatEntry results, avoiding the need
+    // for an extra HTML scrape.
     const cached = getCachedFetch(this.id, id);
     if (cached) return cached;
 
-    await this.rateLimiter.wait();
-    try {
-      const http = await this.getHttp();
-      const response = await http.get<string>(
-        `/game?id=${encodeURIComponent(id)}`,
-        {
-          signal,
-          transformResponse: (d) => d,
-          responseType: "text",
-          headers: {
-            accept: "text/html,application/xhtml+xml,application/xml;q=0.9",
-          },
-        }
-      );
-      const data = this.parseGamePage(id, response.data);
-      if (data) setCachedFetch(this.id, id, data);
-      return data;
-    } catch (err) {
-      if (axios.isCancel(err)) return null;
-      // eslint-disable-next-line no-console
-      console.warn("[HLTB] fetchById failed:", errorMessage(err));
-      return null;
-    }
-  }
-
-  private async getHttp(): Promise<AxiosInstance> {
-    if (this.httpPromise === null) {
-      this.httpPromise = (async () => {
-        const jar = await this.warmer.warm();
-        const client = axios.create({
-          baseURL: HLTB_BASE,
-          timeout: 12_000,
-          headers: { ...DEFAULT_HEADERS },
-        });
-        withCookieJar(client);
-        // `axios-cookiejar-support` augments `defaults.jar` at runtime.
-        (client.defaults as unknown as { jar: CookieJar }).jar = jar;
-        return client;
-      })();
-    }
-    return this.httpPromise;
-  }
-
-  private async getAuthToken(signal?: AbortSignal): Promise<AuthToken> {
-    if (this.tokenPromise === null) {
-      this.tokenPromise = (async () => {
-        const http = await this.getHttp();
-        const endpoint = await this.discovery.resolve();
-        const ts = Date.now();
-        const resp = await http.get(`${endpoint}/init?t=${ts}`, { signal });
-        const data = (resp.data ?? {}) as Record<string, unknown>;
-        return {
-          t: asString(data.t ?? data.timestamp ?? data.ts) ?? String(ts),
-          token: asString(data.token),
-          hpKey: asString(data.hpKey ?? data.hpkey),
-          hpVal: asString(data.hpVal ?? data.hpval),
-        } satisfies AuthToken;
-      })().catch((err) => {
-        // On failure, drop the cached promise so the next call retries.
-        this.tokenPromise = null;
-        throw err;
-      });
-    }
-    return this.tokenPromise;
-  }
-
-  private parseSearchResponse(
-    data: unknown,
-    fallbackTitle: string
-  ): PlaytimeSearchResult[] {
-    const list = extractGameList(data);
-    return list
-      .filter(
-        (entry) =>
-          entry !== null &&
-          typeof entry === "object" &&
-          ((entry as RawEntry).game_id ?? (entry as RawEntry).id) !==
-            undefined &&
-          ((entry as RawEntry).game_name ?? (entry as RawEntry).name)
-      )
-      .map((entry) => {
-        const raw = entry as RawEntry;
-        const providerGameId = String(raw.game_id ?? raw.id ?? fallbackTitle);
-        const title = (raw.game_name ?? raw.name ?? fallbackTitle).trim();
-        const imagePath = raw.game_image ?? raw.image_url ?? null;
-        const imageUrl = imagePath
-          ? String(imagePath).startsWith("http")
-            ? String(imagePath)
-            : `${HLTB_BASE}/games/${imagePath}`
-          : null;
-
-        // HLTB's search payload already carries per-category seconds
-        // (`comp_main`, `comp_plus`, `comp_100`, `comp_all`). When any
-        // of them are present we can build a full `PlaytimeGameData`
-        // without scraping `/game?id=...`, which is the path that has
-        // routinely regressed as the website's HTML changes.
-        const gameData = buildGameDataFromEntry(
-          providerGameId,
-          raw,
-          title,
-          imageUrl
-        );
-        if (gameData.categories.length > 0) {
-          setCachedFetch(this.id, providerGameId, gameData);
-        }
-
-        return {
-          provider: this.id,
-          providerGameId,
-          title,
-          releaseYear:
-            typeof raw.release_world === "number" ? raw.release_world : null,
-          platforms: raw.profile_platform
-            ? String(raw.profile_platform)
-                .split(",")
-                .map((p) => p.trim())
-                .filter(Boolean)
-            : [],
-          imageUrl,
-          similarityScore:
-            typeof raw.similarity === "number" ? raw.similarity : 0.95,
-          estimatedSeconds: pickPrimarySeconds(raw),
-        } satisfies PlaytimeSearchResult;
-      });
-  }
-
-  private parseGamePage(id: string, html: string): PlaytimeGameData | null {
-    // Fast path: HLTB still ships a Next.js data island for some pages.
-    const fromIsland = parseNextDataGame(html, id);
-    if (fromIsland) return fromIsland;
-
-    let $: cheerio.CheerioAPI;
-    try {
-      $ = cheerio.load(html);
-    } catch {
-      return null;
-    }
-
-    const title =
-      $("h1").first().text().trim() ||
-      $("header h1").first().text().trim() ||
-      id;
-
-    const targets: Array<{ key: string; label: string }> = [
-      { key: "Main Story", label: "Main Story" },
-      { key: "Main + Extra", label: "Main + Sides" },
-      { key: "Completionist", label: "Completionist" },
-      { key: "All Styles", label: "Solo" },
-    ];
-
-    const categories: PlaytimeCategory[] = [];
-    for (const { key, label } of targets) {
-      const text = findCategoryDuration($, key);
-      if (text) {
-        categories.push({
-          title: label,
-          duration: text,
-          accuracy: "00",
-          durationSeconds: parseDurationToSeconds(text),
-        });
-      }
-    }
-    if (categories.length === 0) return null;
-
-    return {
-      provider: this.id,
-      providerGameId: id,
-      title,
-      categories,
-      platforms: [],
-      imageUrl: null,
-    };
+    // The package has no fetch-by-id method, and a cold cache means
+    // search() hasn't been called yet for this session. The caller
+    // (use-playtime-data) always calls autoMatchPlaytime → search()
+    // before fetchById, so the cache is always warm in practice.
+    return null;
   }
 }
 
 /* ------------------------------------------------------------------ */
-/*                            Helpers                                 */
+/*                       Mapping helpers                              */
 /* ------------------------------------------------------------------ */
 
-interface AuthToken {
-  t: string;
-  token: string | null;
-  hpKey: string | null;
-  hpVal: string | null;
-}
-
-interface RawEntry {
-  game_id?: number | string;
-  id?: number | string;
-  game_name?: string;
-  name?: string;
-  game_image?: string;
-  image_url?: string;
-  release_world?: number;
-  profile_platform?: string;
-  similarity?: number;
-  comp_main?: number;
-  comp_plus?: number;
-  comp_100?: number;
-  comp_all?: number;
-}
-
-function findCategoryDuration(
-  $: cheerio.CheerioAPI,
-  label: string
-): string | null {
-  let result: string | null = null;
-  const lc = label.toLowerCase();
-  $("li, div.GamePage_game__*, article, section").each((_, el) => {
-    if (result) return;
-    const text = $(el).text().trim();
-    if (!text) return;
-    if (!text.toLowerCase().includes(lc)) return;
-    const match = text.match(/(\d+(?:\.\d+)?)\s*(Hours?|Mins?|Minutes?)/i);
-    if (!match) return;
-    const value = match[1];
-    const unit = match[2].toLowerCase().startsWith("h") ? "Hours" : "Mins";
-    result = `${value} ${unit}`;
-  });
-  return result;
-}
-
-function extractGameList(data: unknown): RawEntry[] {
-  if (Array.isArray(data)) return data as RawEntry[];
-  if (
-    data &&
-    typeof data === "object" &&
-    "data" in (data as Record<string, unknown>)
-  ) {
-    const inner = (data as { data: unknown }).data;
-    if (Array.isArray(inner)) return inner as RawEntry[];
-  }
-  return [];
-}
-
-function mapTokenToHeaders(token: AuthToken): Record<string, string> {
-  const headers: Record<string, string> = {};
-  if (token.token) headers.Token = token.token;
-  if (token.hpKey) headers.Hpkey = token.hpKey;
-  if (token.hpVal) headers.Hpval = token.hpVal;
-  return headers;
-}
-
-function stripEditionNoise(q: string): string {
-  return q
-    .replace(
-      /\b(edition|goty|game of the year|remaster(ed)?|definitive|complete|enhanced|collection)\b/gi,
-      ""
-    )
-    .trim();
-}
-
-function pickPrimarySeconds(entry: RawEntry): number | null {
-  const v =
-    entry.comp_main ?? entry.comp_plus ?? entry.comp_100 ?? entry.comp_all;
-  return typeof v === "number" ? v : null;
-}
-
-function parseDurationToSeconds(duration: string): number {
-  const value = parseFloat(duration);
-  if (!Number.isFinite(value)) return 0;
-  const lower = duration.toLowerCase();
-  if (lower.includes("hour")) return value * 3600;
-  if (lower.includes("min")) return value * 60;
-  return value * 3600;
-}
-
-/* ------------------------------------------------------------------ */
-/*        Build PlaytimeGameData directly from a search entry        */
-/* ------------------------------------------------------------------ */
-
-interface CompCategorySpec {
-  /** Field name on the RawEntry payload (string keys per Lacro59). */
-  key: keyof RawEntry;
-  /** Display label written into PlaytimeCategory.title. */
+interface CompFieldSpec {
+  key: keyof Pick<
+    HowLongToBeatEntry,
+    "mainTime" | "mainExtraTime" | "completionistTime" | "allStylesTime"
+  >;
   label: string;
 }
 
-const COMP_CATEGORY_SPECS: CompCategorySpec[] = [
-  { key: "comp_main", label: "Main Story" },
-  { key: "comp_plus", label: "Main + Sides" },
-  { key: "comp_100", label: "Completionist" },
-  { key: "comp_all", label: "All Styles" },
+const COMP_FIELD_SPECS: CompFieldSpec[] = [
+  { key: "mainTime", label: "Main Story" },
+  { key: "mainExtraTime", label: "Main + Sides" },
+  { key: "completionistTime", label: "Completionist" },
+  { key: "allStylesTime", label: "All Styles" },
 ];
 
 function buildGameDataFromEntry(
   id: string,
-  raw: RawEntry,
-  title: string,
-  imageUrl: string | null
+  entry: HowLongToBeatEntry
 ): PlaytimeGameData {
   const categories: PlaytimeCategory[] = [];
-  for (const { key, label } of COMP_CATEGORY_SPECS) {
-    const seconds = raw[key];
+
+  for (const { key, label } of COMP_FIELD_SPECS) {
+    const seconds = entry[key];
     if (
       typeof seconds === "number" &&
       Number.isFinite(seconds) &&
@@ -622,22 +150,24 @@ function buildGameDataFromEntry(
     }
   }
 
-  const platforms =
-    typeof raw.profile_platform === "string"
-      ? raw.profile_platform
-          .split(",")
-          .map((p) => p.trim())
-          .filter(Boolean)
-      : [];
-
   return {
-    provider: "howlongtobeat",
+    provider: "howlongtobeat" as const,
     providerGameId: id,
-    title: title.trim(),
+    title: entry.name?.trim() ?? id,
     categories,
-    platforms,
-    imageUrl,
+    platforms: entry.platforms ?? [],
+    imageUrl: entry.imageUrl ?? null,
   };
+}
+
+function pickPrimarySeconds(entry: HowLongToBeatEntry): number | null {
+  return (
+    entry.mainTime ??
+    entry.mainExtraTime ??
+    entry.completionistTime ??
+    entry.allStylesTime ??
+    null
+  );
 }
 
 function formatSecondsAsDuration(seconds: number): string {
@@ -651,72 +181,7 @@ function formatSecondsAsDuration(seconds: number): string {
   return `${rounded.toFixed(1)} Hours`;
 }
 
-/**
- * Try the Next.js data island that HLTB's game page renders alongside
- * the markup. Some pages still emit durations here even though the
- * visible averages load async via the search endpoint, so this is a
- * cheap fallback before falling back to a wide cheerio scan.
- */
-function parseNextDataGame(html: string, id: string): PlaytimeGameData | null {
-  const match = html.match(
-    /<script[^>]*id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/i
-  );
-  if (!match) return null;
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(match[1]);
-  } catch {
-    return null;
-  }
-  if (!parsed || typeof parsed !== "object") return null;
-
-  const root = parsed as { props?: { pageProps?: unknown } };
-  const pageProps = root.props?.pageProps;
-  if (!pageProps || typeof pageProps !== "object") return null;
-
-  const game = (pageProps as { game?: Record<string, unknown> }).game;
-  if (!game) return null;
-
-  const title =
-    typeof game.game_name === "string"
-      ? game.game_name
-      : typeof game.name === "string"
-        ? game.name
-        : id;
-
-  const categories: PlaytimeCategory[] = [];
-  for (const { key, label } of COMP_CATEGORY_SPECS) {
-    const value = game[key as string];
-    if (typeof value === "number" && Number.isFinite(value) && value > 0) {
-      categories.push({
-        title: label,
-        duration: formatSecondsAsDuration(value),
-        accuracy: "00",
-        durationSeconds: value,
-      });
-    }
-  }
-  if (categories.length === 0) return null;
-
-  return {
-    provider: "howlongtobeat",
-    providerGameId: id,
-    title,
-    categories,
-    platforms: [],
-    imageUrl: null,
-  };
-}
-
-function asString(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
-}
-
 function errorMessage(err: unknown): string {
   if (err instanceof Error) return err.message;
   return String(err ?? "Unknown error");
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }

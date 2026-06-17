@@ -11,6 +11,13 @@ export interface UsePlaytimeDataArgs {
   game: Game | null;
   /** Disabled-on-mount path (e.g. for the sidebar mirror). */
   disabled?: boolean;
+  /**
+   * When set, skip auto-match and fetch data for this specific
+   * provider/externalId directly. Used after a manual mapping is
+   * saved so the refetch uses the just-selected entry rather than
+   * re-running auto-match against the game title.
+   */
+  forcedMapping?: { provider: PlaytimeProviderId; externalId: string } | null;
 }
 
 export type PlaytimeState =
@@ -56,7 +63,11 @@ export type PlaytimeState =
  *   3. Persist the best hit as an `auto` mapping on the Game record so
  *      subsequent visits don't repeat the roundtrip.
  */
-export function usePlaytimeData({ game, disabled }: UsePlaytimeDataArgs): {
+export function usePlaytimeData({
+  game,
+  disabled,
+  forcedMapping,
+}: UsePlaytimeDataArgs): {
   state: PlaytimeState;
   refetch: () => Promise<void>;
 } {
@@ -100,6 +111,42 @@ export function usePlaytimeData({ game, disabled }: UsePlaytimeDataArgs): {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.warn("[usePlaytimeData] cloud fetch failed:", err);
+    }
+
+    // Step 1.5: if a forced mapping was provided (e.g. after a manual
+    // save via the Edit modal), skip auto-match and go directly to
+    // fetchPlaytimeData with that mapping.
+    if (forcedMapping) {
+      const { provider: fp, externalId: fe } = forcedMapping;
+      let data: PlaytimeGameData | null = null;
+      try {
+        data = await window.electron.fetchPlaytimeData({
+          provider: fp,
+          externalId: fe,
+        });
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn("[usePlaytimeData] forced fetch failed:", e);
+      }
+
+      if (controller.signal.aborted) return;
+
+      if (data && data.categories.length > 0) {
+        setState({
+          status: "loaded",
+          provider: fp,
+          title: data.title || game.title,
+          platforms: data.platforms,
+          imageUrl: data.imageUrl,
+          categories: data.categories,
+          similarityScore: 0.95,
+          manual: true,
+        });
+        return;
+      }
+
+      // Forced mapping had no data in cache. Fall through to auto-match
+      // so we don't leave the user with a blank card.
     }
 
     // Step 2: cross-provider auto-match fallback.
@@ -177,7 +224,7 @@ export function usePlaytimeData({ game, disabled }: UsePlaytimeDataArgs): {
         message: err instanceof Error ? err.message : "Unknown error",
       });
     }
-  }, [game, disabled]);
+  }, [game, disabled, forcedMapping]);
 
   useEffect(() => {
     void performFetch();
