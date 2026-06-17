@@ -57,11 +57,6 @@ export function HeroPanelActions() {
     transferProgress,
   } = useContext(gameDetailsContext);
 
-  const { lastPacket } = useDownload();
-
-  const isGameDownloading =
-    game?.download?.status === "active" && lastPacket?.gameId === game?.id;
-
   const { updateLibrary } = useLibrary();
 
   const { showSuccessToast, showErrorToast } = useToast();
@@ -396,16 +391,6 @@ export function HeroPanelActions() {
     </Button>
   );
 
-  const showDownloadOptionsButton = (
-    <Button
-      onClick={() => setShowRepacksModal(true)}
-      theme="outline"
-      disabled={deleting}
-      className="hero-panel-actions__action"
-    >
-      {t("open_download_options")}
-    </Button>
-  );
 
   const gameActionButton = () => {
     if (isTransferring) {
@@ -459,8 +444,7 @@ export function HeroPanelActions() {
       <Button
         onClick={() => setShowRepacksModal(true)}
         theme="outline"
-        disabled={isGameDownloading}
-        className={`hero-panel-actions__action ${repacks.length === 0 ? "hero-panel-actions__action--disabled" : ""}`}
+        className="hero-panel-actions__action"
       >
         <DownloadIcon />
         {t("download")}
@@ -468,12 +452,26 @@ export function HeroPanelActions() {
     );
   };
 
+  // Per spec §4.1: the Download button is always clickable. Any of the three
+  // branches below render it so the user always has a path into the modal,
+  // which then explains empty/error states.
+  const downloadButton = (
+    <Button
+      onClick={() => setShowRepacksModal(true)}
+      theme="outline"
+      className="hero-panel-actions__action"
+    >
+      <DownloadIcon />
+      {t("download")}
+    </Button>
+  );
+
   if (repacks.length && !game) {
     return (
       <>
         {addGameToLibraryButton}
         {watchlistButton}
-        {showDownloadOptionsButton}
+        {downloadButton}
 
         <WatchlistModal
           visible={showWatchlistModal}
@@ -594,6 +592,7 @@ export function HeroPanelActions() {
     <>
       {addGameToLibraryButton}
       {watchlistButton}
+      {downloadButton}
 
       <WatchlistModal
         visible={showWatchlistModal}

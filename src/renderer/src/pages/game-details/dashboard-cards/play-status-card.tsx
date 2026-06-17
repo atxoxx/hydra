@@ -362,21 +362,19 @@ export function PlayStatusCard() {
       );
     }
 
-    if (repacks.length > 0) {
-      return (
-        <Button
-          onClick={() => setShowRepacksModal(true)}
-          theme="outline"
-          disabled={isGameDownloading}
-          className="play-status-card__action"
-        >
-          <DownloadIcon />
-          {t("download")}
-        </Button>
-      );
-    }
-
-    return null;
+    // Per spec §4.1, the Download button is always clickable. Even when
+    // there are no repacks yet (e.g. user hasn't configured sources), the
+    // button opens the modal which then shows the "no source" empty state.
+    return (
+      <Button
+        onClick={() => setShowRepacksModal(true)}
+        theme="outline"
+        className="play-status-card__action"
+      >
+        <DownloadIcon />
+        {t("download")}
+      </Button>
+    );
   };
 
   return (

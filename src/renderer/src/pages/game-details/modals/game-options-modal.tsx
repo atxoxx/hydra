@@ -74,7 +74,6 @@ export function GameOptionsModal({
   const {
     updateGame,
     setShowRepacksModal,
-    repacks,
     selectGameExecutable,
     achievements,
     shopDetails,
@@ -962,7 +961,6 @@ export function GameOptionsModal({
                 game={game}
                 deleting={deleting}
                 isGameDownloading={isGameDownloading}
-                repacksLength={repacks.length}
                 onOpenRepacks={() => setShowRepacksModal(true)}
                 onOpenDownloadFolder={handleOpenDownloadFolder}
               />

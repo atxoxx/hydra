@@ -7,7 +7,6 @@ interface DownloadsSettingsSectionProps {
   game: LibraryGame;
   deleting: boolean;
   isGameDownloading: boolean;
-  repacksLength: number;
   onOpenRepacks: () => void;
   onOpenDownloadFolder: () => Promise<void>;
 }
@@ -16,7 +15,6 @@ export function DownloadsSettingsSection({
   game,
   deleting,
   isGameDownloading,
-  repacksLength,
   onOpenRepacks,
   onOpenDownloadFolder,
 }: Readonly<DownloadsSettingsSectionProps>) {
@@ -43,7 +41,7 @@ export function DownloadsSettingsSection({
         <Button
           onClick={onOpenRepacks}
           theme="outline"
-          disabled={deleting || isGameDownloading || !repacksLength}
+          disabled={deleting || isGameDownloading}
         >
           {t("open_download_options")}
         </Button>

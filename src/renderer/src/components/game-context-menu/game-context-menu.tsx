@@ -28,6 +28,7 @@ import {
 } from "..";
 import { useGameCollections, useToast, useUserDetails } from "@renderer/hooks";
 
+
 interface GameContextMenuProps extends Omit<ContextMenuProps, "items"> {
   game: LibraryGame;
 }
@@ -85,7 +86,7 @@ export function GameContextMenu({
     isDeleting,
     isGameDownloading,
     isGameRunning,
-    hasRepacks,
+    hasRepacks: _hasRepacks,
     creatingShortcut,
     creatingSteamShortcut,
     handlePlayGame,
@@ -350,7 +351,7 @@ export function GameContextMenu({
                 label: t("open_download_options"),
                 icon: <PlayIcon size={16} />,
                 onClick: handleOpenDownloadOptions,
-                disabled: isDeleting || isGameDownloading || !hasRepacks,
+                disabled: isDeleting,
               },
             ]
           : []),
