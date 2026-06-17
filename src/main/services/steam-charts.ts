@@ -410,7 +410,10 @@ async function getReviewSummaryRaw(
 export async function getSteamReviewSummaryData(
   appId: number
 ): Promise<SteamReviewSummary | null> {
-  const cacheKey = `review_summary:${appId}`;
+  // v2 cache key — bumps when the `reviewScore` shape changed from
+  // Steam's 0-10 bucket index to a true 0-100 percentage. Bypasses the
+  // 5-minute in-memory TTL on rollout so users see the fix immediately.
+  const cacheKey = `review_summary:v2:${appId}`;
   const cached = getCached(reviewSummaryCache, cacheKey);
   if (cached) return cached;
 
@@ -421,17 +424,34 @@ export async function getSteamReviewSummaryData(
 
   if (!allTime) return null;
 
+  // Steam's `review_score` is a 0-10 bucket index (e.g. 8 = "Very Positive"),
+  // not a percentage. Compute the actual positive ratio from totals so the UI
+  // displays a real percentage (matches Steam's storefront text and the bar
+  // fill width we already render).
+  const calculateScore = (
+    positive: number | null,
+    total: number | null
+  ): number => {
+    if (!positive || !total || total <= 0) return 0;
+    return Math.round((positive / total) * 100);
+  };
+
   const result: SteamReviewSummary = {
     reviewScoreDescriptor: allTime.reviewScoreDesc,
     totalPositive: allTime.totalPositive,
     totalNegative: allTime.totalNegative,
     totalReviews: allTime.totalReviews,
-    reviewScore: allTime.reviewScore,
+    reviewScore: calculateScore(
+      allTime.totalPositive,
+      allTime.totalReviews
+    ),
     recentReviewScoreDescriptor: recent?.reviewScoreDesc ?? null,
     recentPositive: recent?.totalPositive ?? null,
     recentNegative: recent?.totalNegative ?? null,
     recentTotal: recent?.totalReviews ?? null,
-    recentReviewScore: recent?.reviewScore ?? null,
+    recentReviewScore: recent
+      ? calculateScore(recent.totalPositive, recent.totalReviews)
+      : null,
   };
 
   setCache(reviewSummaryCache, cacheKey, result);
