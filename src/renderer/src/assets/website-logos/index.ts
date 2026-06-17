@@ -26,4 +26,12 @@ export const WEBSITE_LOGOS: Record<WebsiteId, string> = {
   howlongtobeat: howlongtobeatLogo,
   igdb: igdbLogo,
   youtube: youtubeLogo,
+  // Steam community sub-pages reuse the Steam logo
+  steam_store: steamLogo,
+  steam_discussions: steamLogo,
+  steam_screenshots: steamLogo,
+  steam_videos: steamLogo,
+  steam_allnews: steamLogo,
+  steam_guides: steamLogo,
+  steam_workshop: steamLogo,
 };

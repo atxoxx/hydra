@@ -20,7 +20,25 @@ export type WebsiteId =
   | "metacritic"
   | "howlongtobeat"
   | "igdb"
-  | "youtube";
+  | "youtube"
+  // Steam community sub-pages (only shown under the Steam parent tab)
+  | "steam_store"
+  | "steam_discussions"
+  | "steam_screenshots"
+  | "steam_videos"
+  | "steam_allnews"
+  | "steam_guides"
+  | "steam_workshop";
+
+export const STEAM_COMMUNITY_IDS: WebsiteId[] = [
+  "steam_store",
+  "steam_discussions",
+  "steam_screenshots",
+  "steam_videos",
+  "steam_allnews",
+  "steam_guides",
+  "steam_workshop",
+];
 
 export const DEFAULT_WEBSITE_ORDER: WebsiteId[] = [
   "steam",
@@ -53,6 +71,14 @@ const WEBSITE_META: Record<
   howlongtobeat: { nameKey: "howlongtobeat", isEmbeddable: true },
   igdb: { nameKey: "igdb", isEmbeddable: true },
   youtube: { nameKey: "youtube", isEmbeddable: true },
+  // Steam community sub-pages metadata (not in DEFAULT_WEBSITE_ORDER)
+  steam_store: { nameKey: "steam_link_store", isEmbeddable: true },
+  steam_discussions: { nameKey: "steam_link_discussions", isEmbeddable: true },
+  steam_screenshots: { nameKey: "steam_link_screenshots", isEmbeddable: true },
+  steam_videos: { nameKey: "steam_link_videos", isEmbeddable: true },
+  steam_allnews: { nameKey: "steam_link_all_news", isEmbeddable: true },
+  steam_guides: { nameKey: "steam_link_guides", isEmbeddable: true },
+  steam_workshop: { nameKey: "steam_link_workshop", isEmbeddable: true },
 };
 
 function slugify(text: string): string {
@@ -139,6 +165,14 @@ export function buildWebsiteLinks(params: {
     igdb: () => `https://www.igdb.com/games/${slug}`,
     youtube: () =>
       `https://www.youtube.com/results?search_query=${encodedTitle}+gameplay`,
+    // Steam community sub-pages — only generated via buildSteamSubLinks()
+    steam_store: () => "",
+    steam_discussions: () => "",
+    steam_screenshots: () => "",
+    steam_videos: () => "",
+    steam_allnews: () => "",
+    steam_guides: () => "",
+    steam_workshop: () => "",
   };
 
   return DEFAULT_WEBSITE_ORDER.map((id) => {
@@ -148,6 +182,48 @@ export function buildWebsiteLinks(params: {
       name: meta.nameKey,
       iconId: id,
       url: builders[id](),
+      isEmbeddable: meta.isEmbeddable,
+    };
+  });
+}
+
+/**
+ * Build the list of Steam community sub-tabs (Store Page, Discussions, etc.)
+ * that appear under the "Steam" parent tab when a steamAppId is available.
+ */
+export function buildSteamSubLinks(steamAppId: string): WebsiteLink[] {
+  const baseUrl = `https://steamcommunity.com/app/${steamAppId}`;
+
+  const urlBuilders: Record<WebsiteId, () => string> = {
+    steam_store: () => `https://store.steampowered.com/app/${steamAppId}`,
+    steam_discussions: () => `${baseUrl}/discussions/`,
+    steam_screenshots: () => `${baseUrl}/screenshots/`,
+    steam_videos: () => `${baseUrl}/videos/`,
+    steam_allnews: () => `${baseUrl}/allnews/`,
+    steam_guides: () => `${baseUrl}/guides/`,
+    steam_workshop: () => `${baseUrl}/workshop/`,
+    // Stubs required by the WebsiteId type — unused here
+    steam: () => "",
+    steamdb: () => "",
+    protondb: () => "",
+    pcgamingwiki: () => "",
+    twitch: () => "",
+    nexusmods: () => "",
+    moddb: () => "",
+    gamefaqs: () => "",
+    metacritic: () => "",
+    howlongtobeat: () => "",
+    igdb: () => "",
+    youtube: () => "",
+  };
+
+  return STEAM_COMMUNITY_IDS.map((id) => {
+    const meta = WEBSITE_META[id];
+    return {
+      id,
+      name: meta.nameKey,
+      iconId: "steam" as WebsiteId,
+      url: urlBuilders[id](),
       isEmbeddable: meta.isEmbeddable,
     };
   });

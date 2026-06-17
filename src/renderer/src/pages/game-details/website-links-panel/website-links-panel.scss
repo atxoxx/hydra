@@ -52,6 +52,37 @@
       max-height: 900px;
     }
   }
+
+  /* Sub-tab bar for Steam community links */
+  &__sub-tabs {
+    border-bottom: 1px solid globals.$border-color;
+
+    .website-links-tab-bar {
+      border-top: none;
+      border-bottom: none;
+      background-color: globals.$background-color;
+      height: 38px;
+
+      .website-links-tab-bar__tab {
+        font-size: 11px;
+        padding: 0 calc(globals.$spacing-unit * 1.5);
+
+        &--active {
+          color: globals.$brand-teal;
+          border-bottom-color: globals.$brand-teal;
+        }
+      }
+
+      .website-links-tab-bar__tab-icon {
+        width: 14px;
+        height: 14px;
+      }
+
+      .website-links-tab-bar__tab-label {
+        max-width: 100px;
+      }
+    }
+  }
 }
 
 .website-links-tab-bar {

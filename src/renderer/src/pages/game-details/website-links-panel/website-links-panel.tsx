@@ -4,6 +4,7 @@ import { ChevronDownIcon } from "@primer/octicons-react";
 
 import { gameDetailsContext } from "@renderer/context";
 import {
+  buildSteamSubLinks,
   buildWebsiteLinks,
   DEFAULT_WEBSITE_ORDER,
   type WebsiteId,
@@ -35,7 +36,20 @@ function saveJson<T>(key: string, value: T): void {
 
 export function WebsiteLinksPanel() {
   const { t } = useTranslation("game_details");
-  const { objectId, shop, gameTitle } = useContext(gameDetailsContext);
+  const { objectId, shop, gameTitle, effectiveShop, effectiveObjectId } =
+    useContext(gameDetailsContext);
+
+  const steamAppId = useMemo<string | null>(() => {
+    return effectiveShop === "steam" && effectiveObjectId
+      ? effectiveObjectId
+      : null;
+  }, [effectiveShop, effectiveObjectId]);
+
+  // Steam community sub-tabs (Store Page, Discussions, etc.)
+  const steamSubLinks = useMemo(() => {
+    if (!steamAppId) return [];
+    return buildSteamSubLinks(steamAppId);
+  }, [steamAppId]);
 
   const [isOpen, setIsOpen] = useState(true);
 
@@ -73,6 +87,33 @@ export function WebsiteLinksPanel() {
   }, [links, _siteOrder, _enabledSites]);
 
   const [activeTabId, setActiveTabId] = useState<WebsiteId | null>(null);
+  const [activeSubTabId, setActiveSubTabId] = useState<WebsiteId | null>(null);
+
+  // When the active main tab changes, manage sub-tab state
+  useEffect(() => {
+    if (activeTabId === "steam" && steamSubLinks.length > 0) {
+      // Steam tab selected with available sub-tabs: default to first (Store Page)
+      setActiveSubTabId((prev) => {
+        if (prev && steamSubLinks.some((l) => l.id === prev)) {
+          return prev; // Keep existing sub-tab if still valid
+        }
+        return steamSubLinks[0].id;
+      });
+    } else if (activeSubTabId !== null) {
+      // Non-Steam tab selected: clear sub-tab
+      setActiveSubTabId(null);
+    }
+  }, [activeTabId, steamSubLinks]);
+
+  // Determine which link to show in the iframe
+  const activeLink = useMemo(() => {
+    if (activeTabId === "steam" && activeSubTabId) {
+      // Show the active sub-tab's content
+      return steamSubLinks.find((l) => l.id === activeSubTabId) ?? null;
+    }
+    // Show the main tab's content
+    return orderedLinks.find((l) => l.id === activeTabId) ?? null;
+  }, [orderedLinks, activeTabId, steamSubLinks, activeSubTabId]);
 
   useEffect(() => {
     if (orderedLinks.length === 0) {
@@ -89,11 +130,6 @@ export function WebsiteLinksPanel() {
     setActiveTabId(validLastTab ?? orderedLinks[0].id);
   }, [orderedLinks, gameKey]);
 
-  const activeLink = useMemo(
-    () => orderedLinks.find((l) => l.id === activeTabId) ?? null,
-    [orderedLinks, activeTabId]
-  );
-
   const handleTabChange = useCallback(
     (tabId: WebsiteId) => {
       setActiveTabId(tabId);
@@ -104,6 +140,13 @@ export function WebsiteLinksPanel() {
       }
     },
     [gameKey, lastTabs]
+  );
+
+  const handleSubTabChange = useCallback(
+    (tabId: WebsiteId) => {
+      setActiveSubTabId(tabId);
+    },
+    []
   );
 
   if (!objectId || !gameTitle || orderedLinks.length === 0) {
@@ -131,6 +174,17 @@ export function WebsiteLinksPanel() {
           activeTabId={activeTabId}
           onTabChange={handleTabChange}
         />
+
+        {/* Steam sub-tab bar — visible only when Steam tab is active and sub-tabs exist */}
+        {activeTabId === "steam" && steamSubLinks.length > 0 && (
+          <div className="website-links-panel__sub-tabs">
+            <WebsiteLinksTabBar
+              links={steamSubLinks}
+              activeTabId={activeSubTabId}
+              onTabChange={handleSubTabChange}
+            />
+          </div>
+        )}
 
         {activeLink && (
           <WebsiteLinksIframe key={activeLink.id} link={activeLink} />

@@ -970,7 +970,15 @@
     "uncracked": "Uncracked",
     "crack_group": "Group",
     "crack_date": "Crack date",
-    "protection": "Protection"
+    "protection": "Protection",
+    "steam_community": "Steam Community",
+    "steam_link_store": "Store Page",
+    "steam_link_discussions": "Discussions",
+    "steam_link_screenshots": "Screenshots",
+    "steam_link_videos": "Videos",
+    "steam_link_all_news": "All News",
+    "steam_link_guides": "Guides",
+    "steam_link_workshop": "Workshop"
   },
   "activation": {
     "title": "Activate Hydra",
