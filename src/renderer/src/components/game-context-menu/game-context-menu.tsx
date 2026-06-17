@@ -28,7 +28,6 @@ import {
 } from "..";
 import { useGameCollections, useToast, useUserDetails } from "@renderer/hooks";
 
-
 interface GameContextMenuProps extends Omit<ContextMenuProps, "items"> {
   game: LibraryGame;
 }

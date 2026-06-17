@@ -391,7 +391,6 @@ export function HeroPanelActions() {
     </Button>
   );
 
-
   const gameActionButton = () => {
     if (isTransferring) {
       const percent = Math.round(transferProgress * 100);

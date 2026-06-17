@@ -57,8 +57,9 @@ export function RepacksModal({
   const [downloadSources, setDownloadSources] = useState<DownloadSource[]>([]);
   const [isLoadingDownloadSources, setIsLoadingDownloadSources] =
     useState(true);
-  const [downloadSourcesLoadError, setDownloadSourcesLoadError] =
-    useState<"broken" | null>(null);
+  const [downloadSourcesLoadError, setDownloadSourcesLoadError] = useState<
+    "broken" | null
+  >(null);
   const [sourcesRevision, setSourcesRevision] = useState(0);
   const [selectedFingerprints, setSelectedFingerprints] = useState<string[]>(
     []
