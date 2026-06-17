@@ -493,11 +493,9 @@ function CardRow({
 }: Readonly<CardRowProps>) {
   const estimatedSeconds = parseDurationToSeconds(category.duration);
   const safeEstimated = Math.max(estimatedSeconds, 0);
-  const ratio =
-    safeEstimated > 0 ? userPlaytimeSeconds / safeEstimated : 0;
+  const ratio = safeEstimated > 0 ? userPlaytimeSeconds / safeEstimated : 0;
   const clampedPercent = Math.max(0, Math.min(ratio, 1)) * 100;
-  const isComplete =
-    userPlaytimeSeconds >= safeEstimated && safeEstimated > 0;
+  const isComplete = userPlaytimeSeconds >= safeEstimated && safeEstimated > 0;
   const hasPlaytime = userPlaytimeSeconds > 0;
   const showProgress = safeEstimated > 0;
   const playtimeHoursLabel = formatHoursShort(userPlaytimeSeconds);

@@ -410,7 +410,12 @@ export class HowLongToBeatProvider implements PlaytimeProvider {
         // of them are present we can build a full `PlaytimeGameData`
         // without scraping `/game?id=...`, which is the path that has
         // routinely regressed as the website's HTML changes.
-        const gameData = buildGameDataFromEntry(providerGameId, raw, title, imageUrl);
+        const gameData = buildGameDataFromEntry(
+          providerGameId,
+          raw,
+          title,
+          imageUrl
+        );
         if (gameData.categories.length > 0) {
           setCachedFetch(this.id, providerGameId, gameData);
         }
@@ -603,7 +608,11 @@ function buildGameDataFromEntry(
   const categories: PlaytimeCategory[] = [];
   for (const { key, label } of COMP_CATEGORY_SPECS) {
     const seconds = raw[key];
-    if (typeof seconds === "number" && Number.isFinite(seconds) && seconds > 0) {
+    if (
+      typeof seconds === "number" &&
+      Number.isFinite(seconds) &&
+      seconds > 0
+    ) {
       categories.push({
         title: label,
         duration: formatSecondsAsDuration(seconds),
