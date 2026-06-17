@@ -140,9 +140,9 @@ async function getSessionToken(): Promise<string> {
     });
 
     request.on("response", (response) => {
-      let body = "";
+      let _body = "";
       response.on("data", (chunk) => {
-        body += chunk.toString();
+        _body += chunk.toString();
       });
 
       response.on("end", async () => {

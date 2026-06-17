@@ -178,10 +178,11 @@ class EndpointDiscovery {
       });
       const bundlePaths = Array.from(
         new Set(
-          (html.data.match(/\/_next\/static\/chunks\/[^"]+\.js/g) ?? []).slice(
-            0,
-            40
-          )
+          (
+            html.data.match(
+              new RegExp(String.raw`/_next/static/chunks/[^"]+\.js`, "g")
+            ) ?? []
+          ).slice(0, 40)
         )
       );
 
@@ -194,7 +195,9 @@ class EndpointDiscovery {
             transformResponse: (d) => d,
           });
           const match = body.data.match(
-            /fetch\s*\(\s*["'](\/api\/[A-Za-z0-9_\/]+)["']\s*,\s*\{[^}]*method\s*:\s*["']POST["']/
+            new RegExp(
+              String.raw`fetch\s*\(\s*["'](/api/[A-Za-z0-9_/]+)["']\s*,\s*\{[^}]*method\s*:\s*["']POST["']`
+            )
           );
           if (match && match[1]) {
             this.discoveredPath = match[1];

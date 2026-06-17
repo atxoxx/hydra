@@ -511,12 +511,16 @@ export function MetadataSearchModal({
                   field.key as MergeFieldKey
                 );
                 if (!displayValue) return null;
+                const fieldId = `metadata-field-${field.key}`;
                 return (
                   <label
                     key={field.key}
+                    htmlFor={fieldId}
+                    aria-label={t(field.labelKey)}
                     className="metadata-search-modal__preview-field metadata-search-modal__preview-field--checkable"
                   >
                     <input
+                      id={fieldId}
                       type="checkbox"
                       className="metadata-search-modal__preview-checkbox"
                       checked={checkedFields[field.key as MergeFieldKey]}

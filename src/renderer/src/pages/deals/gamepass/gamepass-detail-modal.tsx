@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { XIcon } from "@primer/octicons-react";
 import type { GamePassGame } from "./gamepass-service";
@@ -18,6 +19,17 @@ export function GamePassDetailModal({
 }: GamePassDetailModalProps) {
   const { t } = useTranslation("deals");
 
+  // Close on Escape — registered globally rather than via `onKeyDown` on
+  // the dialog itself to satisfy `jsx-a11y/no-noninteractive-element-interactions`
+  // (the `dialog` role isn't in the plugin's interactive set).
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   const releaseDate = game.releaseDate
     ? new Date(game.releaseDate).toLocaleDateString(undefined, {
         year: "numeric",
@@ -27,10 +39,15 @@ export function GamePassDetailModal({
     : null;
 
   return (
-    <div className="gamepass-detail-backdrop" onClick={onClose}>
+    <div
+      className="gamepass-detail-backdrop"
+      role="presentation"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div
         className="gamepass-detail-modal"
-        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-label={game.name}
       >

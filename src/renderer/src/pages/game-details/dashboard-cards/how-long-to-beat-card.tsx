@@ -223,7 +223,7 @@ export function HowLongToBeatCard({
           <div className="dashboard-card__body">
             <div className="hltb-card__empty">
               <p className="hltb-card__empty-body">
-                Matched "<strong>{state.providerTitle}</strong>" via{" "}
+                Matched &quot;<strong>{state.providerTitle}</strong>&quot; via{" "}
                 {providerMeta.displayName}, but no detailed playtime data is
                 available for this provider.
               </p>

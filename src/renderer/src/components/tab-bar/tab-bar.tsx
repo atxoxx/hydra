@@ -165,6 +165,7 @@ export function TabBar() {
 
   return (
     <div className="tab-bar">
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-to-interactive-role */}
       <nav className="tab-bar__tabs" role="tablist">
         {TABS.map((tab) => (
           <button
