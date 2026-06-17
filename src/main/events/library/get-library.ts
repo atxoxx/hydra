@@ -128,9 +128,7 @@ const getLibrary = async (): Promise<LibraryGame[]> => {
                 acquisitionSource = "manual";
               }
               game.acquisitionSource = acquisitionSource;
-              migrationPuts.push(
-                gamesSublevel.put(key, game).catch(() => {})
-              );
+              migrationPuts.push(gamesSublevel.put(key, game).catch(() => {}));
             }
 
             return {

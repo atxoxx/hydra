@@ -170,13 +170,10 @@ export default function Library() {
     localStorage.setItem("library-classics-subtab", value);
   }, []);
 
-  const handleVisibilityFilterChange = useCallback(
-    (next: VisibilityFilter) => {
-      setVisibilityFilter(next);
-      localStorage.setItem("library-visibility-filter", next);
-    },
-    []
-  );
+  const handleVisibilityFilterChange = useCallback((next: VisibilityFilter) => {
+    setVisibilityFilter(next);
+    localStorage.setItem("library-visibility-filter", next);
+  }, []);
 
   const searchQuery = useAppSelector((state) => state.library.searchQuery);
   const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -581,7 +578,9 @@ export default function Library() {
     }
 
     return Array.from(counts.entries())
-      .sort((a, b) => a[0].localeCompare(b[0], undefined, { sensitivity: "base" }))
+      .sort((a, b) =>
+        a[0].localeCompare(b[0], undefined, { sensitivity: "base" })
+      )
       .map(([name, count]) => ({ value: name, label: name, count }));
   }, [library]);
 
@@ -625,9 +624,7 @@ export default function Library() {
     } else if (effectiveCategory === "classics") {
       filtered = filtered.filter((game) => game.shop === "launchbox");
       if (classicsSubTab) {
-        filtered = filtered.filter(
-          (game) => game.platform === classicsSubTab
-        );
+        filtered = filtered.filter((game) => game.platform === classicsSubTab);
       }
     } else if (selectedPlatform) {
       // All category: filter by classics platform

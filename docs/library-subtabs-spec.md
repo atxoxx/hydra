@@ -17,6 +17,7 @@ Replace the PC platform dropdown in the Library page with store-specific sub-tab
 ### Top-Level Tabs (unchanged)
 
 The three top-level category tabs remain:
+
 - **All** — flat view, no sub-tabs. Keeps the existing Classics platform dropdown for filtering launchbox games by console.
 - **PC** — gains sub-tabs for stores (Local, Steam, Epic, GOG, etc.)
 - **Classics** — gains sub-tabs for console platforms (dynamically generated)
@@ -30,19 +31,19 @@ The three top-level category tabs remain:
 
 ### Sub-Tab Visibility Rules
 
-| Sub-Tab | Visibility Condition |
-|---------|---------------------|
-| **Local** | **Always visible** under PC |
-| **Steam** | Shown only if **Steam login is active** (user authenticated with Steam) |
-| **Epic** | Shown only if scanner found at least one Epic game |
-| **GOG** | Shown only if scanner found at least one GOG game |
-| **Battle.net** | Shown only if scanner found at least one Battle.net game |
-| **Amazon** | Shown only if scanner found at least one Amazon game |
-| **Ubisoft** | Shown only if scanner found at least one Ubisoft game |
-| **Xbox** | Shown only if scanner found at least one Xbox game |
-| **Rockstar** | Shown only if scanner found at least one Rockstar game |
-| **Itch.io** | Shown only if scanner found at least one Itch.io game |
-| **Humble** | Shown only if scanner found at least one Humble game |
+| Sub-Tab        | Visibility Condition                                                    |
+| -------------- | ----------------------------------------------------------------------- |
+| **Local**      | **Always visible** under PC                                             |
+| **Steam**      | Shown only if **Steam login is active** (user authenticated with Steam) |
+| **Epic**       | Shown only if scanner found at least one Epic game                      |
+| **GOG**        | Shown only if scanner found at least one GOG game                       |
+| **Battle.net** | Shown only if scanner found at least one Battle.net game                |
+| **Amazon**     | Shown only if scanner found at least one Amazon game                    |
+| **Ubisoft**    | Shown only if scanner found at least one Ubisoft game                   |
+| **Xbox**       | Shown only if scanner found at least one Xbox game                      |
+| **Rockstar**   | Shown only if scanner found at least one Rockstar game                  |
+| **Itch.io**    | Shown only if scanner found at least one Itch.io game                   |
+| **Humble**     | Shown only if scanner found at least one Humble game                    |
 
 ### Sub-Tab Order
 
@@ -59,22 +60,22 @@ Add `acquisitionSource: string` to the game data model. This tracks HOW a game w
 
 ### Values
 
-| Value | Meaning | Maps to Sub-Tab |
-|-------|---------|----------------|
-| `hydra_catalogue` | Downloaded via Hydra catalogue | Local |
-| `manual` | Added via "Add Custom Game" button | Local |
-| `folder_scan` | Discovered by local folder scanning | Local |
-| `steam_scan` | Discovered by Steam install-folder scanner | Steam |
-| `epic_scan` | Discovered by Epic platform scanner | Epic |
-| `gog_scan` | Discovered by GOG platform scanner | GOG |
-| `battle_net_scan` | Discovered by Battle.net scanner | Battle.net |
-| `amazon_scan` | Discovered by Amazon scanner | Amazon |
-| `ubisoft_scan` | Discovered by Ubisoft scanner | Ubisoft |
-| `xbox_scan` | Discovered by Xbox scanner | Xbox |
-| `rockstar_scan` | Discovered by Rockstar scanner | Rockstar |
-| `itch_io_scan` | Discovered by Itch.io scanner | Itch.io |
-| `humble_scan` | Discovered by Humble scanner | Humble |
-| `launchbox` | Imported via LaunchBox / classics | Classics (by platform) |
+| Value             | Meaning                                    | Maps to Sub-Tab        |
+| ----------------- | ------------------------------------------ | ---------------------- |
+| `hydra_catalogue` | Downloaded via Hydra catalogue             | Local                  |
+| `manual`          | Added via "Add Custom Game" button         | Local                  |
+| `folder_scan`     | Discovered by local folder scanning        | Local                  |
+| `steam_scan`      | Discovered by Steam install-folder scanner | Steam                  |
+| `epic_scan`       | Discovered by Epic platform scanner        | Epic                   |
+| `gog_scan`        | Discovered by GOG platform scanner         | GOG                    |
+| `battle_net_scan` | Discovered by Battle.net scanner           | Battle.net             |
+| `amazon_scan`     | Discovered by Amazon scanner               | Amazon                 |
+| `ubisoft_scan`    | Discovered by Ubisoft scanner              | Ubisoft                |
+| `xbox_scan`       | Discovered by Xbox scanner                 | Xbox                   |
+| `rockstar_scan`   | Discovered by Rockstar scanner             | Rockstar               |
+| `itch_io_scan`    | Discovered by Itch.io scanner              | Itch.io                |
+| `humble_scan`     | Discovered by Humble scanner               | Humble                 |
+| `launchbox`       | Imported via LaunchBox / classics          | Classics (by platform) |
 
 ### Mapping to Sub-Tabs
 
@@ -156,10 +157,10 @@ No sub-tabs. Existing filtering logic remains. The existing platform dropdown fo
 
 Add three filter options at the **top** of the sort dropdown, visually separated from sort-order options:
 
-| Option | Behavior |
-|--------|----------|
-| **Show All** | No filtering (default). Show all games. |
-| **Show Installed** | Only show games where `executablePath` is set OR `installedSizeInBytes != null`. |
+| Option                 | Behavior                                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------- |
+| **Show All**           | No filtering (default). Show all games.                                               |
+| **Show Installed**     | Only show games where `executablePath` is set OR `installedSizeInBytes != null`.      |
 | **Show Not Installed** | Only show games where `executablePath` is NOT set AND `installedSizeInBytes == null`. |
 
 ### Sorting Behavior
@@ -176,21 +177,24 @@ When "Show Installed" or "Show Not Installed" is selected, the remaining sort-or
 ## UI Layout Changes
 
 ### Before (Current)
+
 ```
 [  All  ] [  PC  ] [  Classics  ]          [Sort ▽] [Platform ▽] [View ○○○]
 [                    Collections                    ]
 ```
 
 ### After
+
 ```
 [  All  ] [  PC  ] [  Classics  ]          [Sort ▽] [Platform ▽]* [View ○○○]
 [  Local(45)  ] [ Steam(12) ] [ Epic(8) ] [ GOG(3) ]            ← sub-tabs (PC)
 [                    Collections                    ]
 ```
 
-*Platform dropdown only shown on All and Classics tabs (for Classics tab, removed due to sub-tabs).
+\*Platform dropdown only shown on All and Classics tabs (for Classics tab, removed due to sub-tabs).
 
 ### Classics Tab After
+
 ```
 [  All  ] [  PC  ] [  Classics  ]            [Sort ▽] [View ○○○]
 [ PlayStation(20) ] [ Nintendo(15) ] [ Xbox 360(8) ] [ Sega(4) ]   ← sub-tabs
@@ -202,20 +206,20 @@ When "Show Installed" or "Show Not Installed" is selected, the remaining sort-or
 
 ### New State
 
-| State | Type | Default | Persisted |
-|-------|------|---------|-----------|
-| `pcSubTab` | `string \| null` | `"local"` | Yes (localStorage `library-pc-subtab`) |
-| `classicsSubTab` | `string \| null` | `null` (all) | Yes (localStorage `library-classics-subtab`) |
-| `visibilityFilter` | `"all" \| "installed" \| "not_installed"` | `"all"` | Yes (localStorage `library-visibility-filter`) |
+| State              | Type                                      | Default      | Persisted                                      |
+| ------------------ | ----------------------------------------- | ------------ | ---------------------------------------------- |
+| `pcSubTab`         | `string \| null`                          | `"local"`    | Yes (localStorage `library-pc-subtab`)         |
+| `classicsSubTab`   | `string \| null`                          | `null` (all) | Yes (localStorage `library-classics-subtab`)   |
+| `visibilityFilter` | `"all" \| "installed" \| "not_installed"` | `"all"`      | Yes (localStorage `library-visibility-filter`) |
 
 ### Existing State Changes
 
-| State | Change |
-|-------|--------|
-| `category` | Unchanged |
-| `selectedPlatform` | Kept for All tab only. Not used under PC or Classics tabs. |
-| `selectedPcPlatform` | **Removed** — replaced by `pcSubTab` |
-| `sortBy` | Unchanged |
+| State                | Change                                                     |
+| -------------------- | ---------------------------------------------------------- |
+| `category`           | Unchanged                                                  |
+| `selectedPlatform`   | Kept for All tab only. Not used under PC or Classics tabs. |
+| `selectedPcPlatform` | **Removed** — replaced by `pcSubTab`                       |
+| `sortBy`             | Unchanged                                                  |
 
 ---
 
@@ -228,21 +232,23 @@ The sidebar filter menu (which has its own store multi-select filter and library
 ## Files to Modify
 
 ### New Files
-- *(potentially)* A new `SourceSubTabs` component if extracted from CategoryFilter
+
+- _(potentially)_ A new `SourceSubTabs` component if extracted from CategoryFilter
 
 ### Modified Files
 
-| File | Changes |
-|------|---------|
-| `src/renderer/src/pages/library/library.tsx` | Add sub-tab state, filtering logic, remove old PC dropdown state, wire new filter options |
-| `src/renderer/src/pages/library/category-filter.tsx` | Add sub-tab rendering beneath PC/Classics, remove the `<select>` dropdown, add visibility filter integration |
-| `src/renderer/src/pages/library/category-filter.scss` | Styles for sub-tab row |
-| `src/renderer/src/pages/library/filter-options.tsx` | Add "Show All / Show Installed / Show Not Installed" as first group in sort dropdown |
-| `src/types/game.types.ts` | *(potentially)* Add `acquisitionSource` to relevant types |
-| `src/types/level.types.ts` | Add `acquisitionSource` field to Game type |
-| `src/main/` (various) | Set `acquisitionSource` when games are added (catalogue download, custom add, folder scan, platform scan) |
+| File                                                  | Changes                                                                                                      |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `src/renderer/src/pages/library/library.tsx`          | Add sub-tab state, filtering logic, remove old PC dropdown state, wire new filter options                    |
+| `src/renderer/src/pages/library/category-filter.tsx`  | Add sub-tab rendering beneath PC/Classics, remove the `<select>` dropdown, add visibility filter integration |
+| `src/renderer/src/pages/library/category-filter.scss` | Styles for sub-tab row                                                                                       |
+| `src/renderer/src/pages/library/filter-options.tsx`   | Add "Show All / Show Installed / Show Not Installed" as first group in sort dropdown                         |
+| `src/types/game.types.ts`                             | _(potentially)_ Add `acquisitionSource` to relevant types                                                    |
+| `src/types/level.types.ts`                            | Add `acquisitionSource` field to Game type                                                                   |
+| `src/main/` (various)                                 | Set `acquisitionSource` when games are added (catalogue download, custom add, folder scan, platform scan)    |
 
 ### Files NOT Modified
+
 - Big Picture mode library (out of scope)
 - Sidebar components (independent)
 - Sidebar filter menu (independent)

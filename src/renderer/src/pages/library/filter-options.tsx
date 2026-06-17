@@ -30,11 +30,13 @@ export function FilterOptions({
     <div className="library-filter-options__wrapper">
       {/* Visibility filter pills */}
       <div className="library-filter-options__visibility-pills">
-        {([
-          { value: "all", label: t("visibility_all") },
-          { value: "installed", label: t("visibility_installed") },
-          { value: "not_installed", label: t("visibility_not_installed") },
-        ] as { value: VisibilityFilter; label: string }[]).map((option) => (
+        {(
+          [
+            { value: "all", label: t("visibility_all") },
+            { value: "installed", label: t("visibility_installed") },
+            { value: "not_installed", label: t("visibility_not_installed") },
+          ] as { value: VisibilityFilter; label: string }[]
+        ).map((option) => (
           <button
             key={option.value}
             type="button"
