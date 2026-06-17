@@ -7,5 +7,6 @@ import "./get-steam-review-summary";
 import "./get-steam-review-analysis";
 import "./get-steam-reviews";
 import "./search-game-assets";
+import "./search-game-assets-aggregated";
 import "./search-game-assets-multi";
 import "./get-crackwatch-status";

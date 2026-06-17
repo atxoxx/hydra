@@ -288,6 +288,21 @@ declare global {
       }[];
       query: string;
     }>;
+    searchGameAssetsAggregated: (
+      gameTitle: string,
+      assetType: "icon" | "logo" | "hero"
+    ) => Promise<{
+      results: {
+        id: string;
+        thumbnailUrl: string;
+        fullImageUrl: string;
+        sourceUrl: string;
+        sourceName: string;
+        width: number | null;
+        height: number | null;
+      }[];
+      query: string;
+    }>;
     onUpdateAchievements: (
       objectId: string,
       shop: GameShop,

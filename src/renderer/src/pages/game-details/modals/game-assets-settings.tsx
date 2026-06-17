@@ -10,12 +10,13 @@ import "./game-assets-settings.scss";
 
 type AssetType = "icon" | "logo" | "hero";
 type SearchStatus = "idle" | "loading" | "loaded" | "empty" | "error";
-type ImageSource = "google" | "steamgriddb" | "igdb" | "steamcdn";
+type ImageSource = "all" | "google" | "steamgriddb" | "igdb" | "steamcdn";
 
 const IMAGE_SOURCES: {
   id: ImageSource;
   labelKey: string;
 }[] = [
+  { id: "all", labelKey: "edit_game_modal_source_all" },
   { id: "google", labelKey: "edit_game_modal_source_google" },
   { id: "steamgriddb", labelKey: "edit_game_modal_source_steamgriddb" },
   { id: "igdb", labelKey: "edit_game_modal_source_igdb" },
@@ -35,6 +36,7 @@ interface AssetSearchResult {
 interface SearchGameAssetsResponse {
   results: AssetSearchResult[];
   query: string;
+  contributingSources?: string[];
 }
 
 interface ElectronFile extends File {
@@ -155,6 +157,32 @@ export function GameAssetsSettings({
     query: string,
     source: ImageSource
   ) => `${game.id}:${source}:${query}:${assetType}`;
+
+  /**
+   * Issue a single image search request, dispatching to the aggregated or
+   * per-source backend event based on the active tab. Keeps the surface area
+   * tiny so the cache + abort + retry wiring below stays untouched.
+   */
+  const dispatchSearch = useCallback(
+    async (
+      trimmedQuery: string,
+      assetType: AssetType,
+      source: ImageSource
+    ): Promise<SearchGameAssetsResponse> => {
+      if (source === "all") {
+        return window.electron.searchGameAssetsAggregated(
+          trimmedQuery,
+          assetType
+        );
+      }
+      return window.electron.searchGameAssetsMulti(
+        trimmedQuery,
+        assetType,
+        source
+      );
+    },
+    []
+  );
 
   const isCustomGame = useCallback(
     (currentGame: LibraryGame | Game): boolean => {
@@ -325,11 +353,7 @@ export function GameAssetsSettings({
       setSearchResults(null);
 
       try {
-        const response = await window.electron.searchGameAssetsMulti(
-          trimmedQuery,
-          assetType,
-          source
-        );
+        const response = await dispatchSearch(trimmedQuery, assetType, source);
 
         // Discard stale results if controller was aborted
         if (controller.signal.aborted) return;
@@ -1047,27 +1071,43 @@ export function GameAssetsSettings({
   const renderResultsGrid = () => {
     if (!searchResults || searchResults.results.length === 0) return null;
 
+    const dimensionLabel = (result: AssetSearchResult) =>
+      result.width && result.height ? `${result.width}×${result.height}` : null;
+
     return (
       <>
         <div className="game-assets-settings__results-grid">
-          {searchResults.results.map((result) => (
-            <button
-              key={result.id}
-              type="button"
-              className="game-assets-settings__result-thumb"
-              aria-label={result.sourceName}
-              onClick={() => handlePreviewOpen(result)}
-            >
-              <img
-                src={result.thumbnailUrl}
-                alt={result.sourceName}
-                loading="lazy"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                }}
-              />
-            </button>
-          ))}
+          {searchResults.results.map((result) => {
+            const dims = dimensionLabel(result);
+            return (
+              <button
+                key={result.id}
+                type="button"
+                className="game-assets-settings__result-thumb"
+                aria-label={`${result.sourceName}${
+                  dims ? ` (${dims})` : ""
+                }`}
+                onClick={() => handlePreviewOpen(result)}
+              >
+                <img
+                  src={result.thumbnailUrl}
+                  alt={result.sourceName}
+                  loading="lazy"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+                <span className="game-assets-settings__result-source-badge">
+                  {result.sourceName}
+                </span>
+                {dims && (
+                  <span className="game-assets-settings__result-dims-badge">
+                    {dims}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         <div className="game-assets-settings__search-footer">
