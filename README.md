@@ -30,6 +30,11 @@
 > This is a **personal fork** built for my own use, heavily inspired by
 > [Playnite](https://www.playnite.app/) and its rich plugin ecosystem. It is a
 > **vibe-coded with AI assistance** project — more features will come.
+> Linux feature are planned think about Lutris/Faugus Launcher/Bottles launcher
+> Store import and HLTB are BROKEN for now, will be fixed (I hope) 
+> The goal is to have all games reunited in one place + Useful feature
+> If you don't like AI SLOP/Vibe coded app, don't use it 
+> Code won't be perfect, but I'll try my best to optimise it and make it work well
 
 ### New integrations & services
 
@@ -40,7 +45,7 @@
 | `Enhanced` | HowLongToBeat card                  | Multi-provider fan-out across HLTB, Backlogged and IGDB/Steam stats with an Edit picker that persists `{provider, externalId}` on the game record.                |
 | `Refactor` | Steam Reviews sub-tab               | In-page sub-tab on the game details page modeled on the Playnite ReviewViewer plugin — sort tabs, filters, per-review metadata and cursor-based infinite scroll.  |
 | `New`      | Steam Stats panel                   | A live player-count badge on the hero banner (Steam Web API + SteamSpy peak + SteamCharts trend) and a sidebar Steam rating / review breakdown section.           |
-| `New`      | Multi-store OAuth library import    | OAuth-based sign-in for Steam, Epic, GOG, Amazon, Xbox, Battle.net, Ubisoft, Rockstar, itch.io and Humble; imports owned libraries into Hydra.                    |
+| `New` Broken     | Multi-store OAuth library import    | OAuth-based sign-in for Steam, Epic, GOG, Amazon, Xbox, Battle.net, Ubisoft, Rockstar, itch.io and Humble; imports owned libraries into Hydra.                    |
 | `New`      | Steam Family Share import           | Parses local Steam config to discover family members and imports their libraries as separate entries with an owner badge.                                         |
 | `Refactor` | Multi-platform file system scanning | `platform-scanner.ts` extended for Epic, GOG, Battle.net, Amazon, Ubisoft, Xbox, Rockstar, itch.io and Humble install-path discovery on top of the Steam scanner. |
 
