@@ -399,6 +399,22 @@ export class HowLongToBeatProvider implements PlaytimeProvider {
         const providerGameId = String(raw.game_id ?? raw.id ?? fallbackTitle);
         const title = (raw.game_name ?? raw.name ?? fallbackTitle).trim();
         const imagePath = raw.game_image ?? raw.image_url ?? null;
+        const imageUrl = imagePath
+          ? String(imagePath).startsWith("http")
+            ? String(imagePath)
+            : `${HLTB_BASE}/games/${imagePath}`
+          : null;
+
+        // HLTB's search payload already carries per-category seconds
+        // (`comp_main`, `comp_plus`, `comp_100`, `comp_all`). When any
+        // of them are present we can build a full `PlaytimeGameData`
+        // without scraping `/game?id=...`, which is the path that has
+        // routinely regressed as the website's HTML changes.
+        const gameData = buildGameDataFromEntry(providerGameId, raw, title, imageUrl);
+        if (gameData.categories.length > 0) {
+          setCachedFetch(this.id, providerGameId, gameData);
+        }
+
         return {
           provider: this.id,
           providerGameId,
@@ -411,11 +427,7 @@ export class HowLongToBeatProvider implements PlaytimeProvider {
                 .map((p) => p.trim())
                 .filter(Boolean)
             : [],
-          imageUrl: imagePath
-            ? String(imagePath).startsWith("http")
-              ? String(imagePath)
-              : `${HLTB_BASE}/games/${imagePath}`
-            : null,
+          imageUrl,
           similarityScore:
             typeof raw.similarity === "number" ? raw.similarity : 0.95,
           estimatedSeconds: pickPrimarySeconds(raw),
@@ -424,6 +436,10 @@ export class HowLongToBeatProvider implements PlaytimeProvider {
   }
 
   private parseGamePage(id: string, html: string): PlaytimeGameData | null {
+    // Fast path: HLTB still ships a Next.js data island for some pages.
+    const fromIsland = parseNextDataGame(html, id);
+    if (fromIsland) return fromIsland;
+
     let $: cheerio.CheerioAPI;
     try {
       $ = cheerio.load(html);
@@ -558,6 +574,129 @@ function parseDurationToSeconds(duration: string): number {
   if (lower.includes("hour")) return value * 3600;
   if (lower.includes("min")) return value * 60;
   return value * 3600;
+}
+
+/* ------------------------------------------------------------------ */
+/*        Build PlaytimeGameData directly from a search entry        */
+/* ------------------------------------------------------------------ */
+
+interface CompCategorySpec {
+  /** Field name on the RawEntry payload (string keys per Lacro59). */
+  key: keyof RawEntry;
+  /** Display label written into PlaytimeCategory.title. */
+  label: string;
+}
+
+const COMP_CATEGORY_SPECS: CompCategorySpec[] = [
+  { key: "comp_main", label: "Main Story" },
+  { key: "comp_plus", label: "Main + Sides" },
+  { key: "comp_100", label: "Completionist" },
+  { key: "comp_all", label: "All Styles" },
+];
+
+function buildGameDataFromEntry(
+  id: string,
+  raw: RawEntry,
+  title: string,
+  imageUrl: string | null
+): PlaytimeGameData {
+  const categories: PlaytimeCategory[] = [];
+  for (const { key, label } of COMP_CATEGORY_SPECS) {
+    const seconds = raw[key];
+    if (typeof seconds === "number" && Number.isFinite(seconds) && seconds > 0) {
+      categories.push({
+        title: label,
+        duration: formatSecondsAsDuration(seconds),
+        accuracy: "00",
+        durationSeconds: seconds,
+      });
+    }
+  }
+
+  const platforms =
+    typeof raw.profile_platform === "string"
+      ? raw.profile_platform
+          .split(",")
+          .map((p) => p.trim())
+          .filter(Boolean)
+      : [];
+
+  return {
+    provider: "howlongtobeat",
+    providerGameId: id,
+    title: title.trim(),
+    categories,
+    platforms,
+    imageUrl,
+  };
+}
+
+function formatSecondsAsDuration(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "0 Hours";
+  if (seconds < 60) return `${Math.round(seconds)} Mins`;
+  const totalHours = seconds / 3600;
+  const rounded = Math.round(totalHours * 10) / 10;
+  if (Math.abs(rounded - Math.round(rounded)) < 1e-6) {
+    return `${Math.round(rounded)} Hours`;
+  }
+  return `${rounded.toFixed(1)} Hours`;
+}
+
+/**
+ * Try the Next.js data island that HLTB's game page renders alongside
+ * the markup. Some pages still emit durations here even though the
+ * visible averages load async via the search endpoint, so this is a
+ * cheap fallback before falling back to a wide cheerio scan.
+ */
+function parseNextDataGame(html: string, id: string): PlaytimeGameData | null {
+  const match = html.match(
+    /<script[^>]*id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/i
+  );
+  if (!match) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(match[1]);
+  } catch {
+    return null;
+  }
+  if (!parsed || typeof parsed !== "object") return null;
+
+  const root = parsed as { props?: { pageProps?: unknown } };
+  const pageProps = root.props?.pageProps;
+  if (!pageProps || typeof pageProps !== "object") return null;
+
+  const game = (pageProps as { game?: Record<string, unknown> }).game;
+  if (!game) return null;
+
+  const title =
+    typeof game.game_name === "string"
+      ? game.game_name
+      : typeof game.name === "string"
+        ? game.name
+        : id;
+
+  const categories: PlaytimeCategory[] = [];
+  for (const { key, label } of COMP_CATEGORY_SPECS) {
+    const value = game[key as string];
+    if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+      categories.push({
+        title: label,
+        duration: formatSecondsAsDuration(value),
+        accuracy: "00",
+        durationSeconds: value,
+      });
+    }
+  }
+  if (categories.length === 0) return null;
+
+  return {
+    provider: "howlongtobeat",
+    providerGameId: id,
+    title,
+    categories,
+    platforms: [],
+    imageUrl: null,
+  };
 }
 
 function asString(value: unknown): string | null {

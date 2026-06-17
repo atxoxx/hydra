@@ -952,6 +952,7 @@
     "hltb_category_solo": "Solo",
     "hltb_category_speedrun": "Speedrun",
     "hltb_category_coop": "Co-op",
+    "hltb_status_complete": "Complete",
     "playtime_edit_title": "Edit playtime data",
     "playtime_edit_provider_label": "Provider",
     "playtime_edit_search_label": "Search by title",

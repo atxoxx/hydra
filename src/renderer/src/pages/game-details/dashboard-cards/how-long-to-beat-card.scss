@@ -137,6 +137,11 @@
       padding: 4px 8px;
       background-color: transparent;
     }
+
+    &--complete {
+      background-color: rgba(28, 151, 73, 0.06);
+      border-color: rgba(28, 151, 73, 0.18);
+    }
   }
 
   &__item-title {
@@ -160,16 +165,23 @@
   &__progress-container {
     grid-column: 1 / -1;
     display: flex;
-    align-items: center;
-    gap: calc(globals.$spacing-unit);
+    flex-direction: column;
+    gap: 4px;
   }
 
   &__progress-track {
+    position: relative;
     flex-grow: 1;
+    grid-column: 1 / -1;
     height: 4px;
     background-color: rgba(255, 255, 255, 0.08);
     border-radius: 999px;
-    overflow: hidden;
+    overflow: visible;
+
+    &--compact {
+      height: 3px;
+      margin-top: 2px;
+    }
   }
 
   &__progress-fill {
@@ -180,15 +192,74 @@
       globals.$brand-teal
     );
     border-radius: 999px;
-    transition: width 0.3s ease;
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  &__progress-label {
+  &__item--complete &__progress-fill {
+    background: linear-gradient(
+      90deg,
+      rgba(28, 151, 73, 0.8),
+      globals.$success-color
+    );
+  }
+
+  &__progress-marker {
+    position: absolute;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: globals.$muted-color;
+    border: 2px solid globals.$brand-teal;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    transform: translate(-50%, -50%);
+    transition:
+      left 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.3s ease,
+      background-color 0.3s ease;
+    pointer-events: none;
+    margin-top: 0;
+  }
+
+  &__item--complete &__progress-marker {
+    border-color: globals.$success-color;
+    background-color: globals.$success-color;
+  }
+
+  &__progress-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-size: 11px;
-    color: globals.$brand-teal;
     font-variant-numeric: tabular-nums;
-    min-width: 32px;
-    text-align: right;
+    color: globals.$muted-color;
+    line-height: 1.2;
+  }
+
+  &__progress-time {
+    color: globals.$muted-color;
+  }
+
+  &__item--complete &__progress-time {
+    color: globals.$success-color;
+    font-weight: 600;
+  }
+
+  &__progress-separator {
+    color: rgba(208, 209, 215, 0.4);
+    margin: 0 2px;
+  }
+
+  &__progress-status {
+    margin-left: calc(globals.$spacing-unit);
+    padding: 1px 6px;
+    border-radius: 4px;
+    background-color: rgba(28, 151, 73, 0.18);
+    color: globals.$success-color;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
   &__submit-btn {

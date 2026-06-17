@@ -31,6 +31,21 @@ function parseDurationToSeconds(duration: string): number {
   return 0;
 }
 
+/**
+ * Format a duration in seconds as a short `Xh` label (matches the spec
+ * for the playtime/estimated display beside the progress bar). Drops
+ * the trailing `.0` while keeping fractional precision for half steps.
+ */
+function formatHoursShort(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "0";
+  const hours = seconds / 3600;
+  const rounded = Math.round(hours * 10) / 10;
+  if (Math.abs(rounded - Math.round(rounded)) < 1e-6) {
+    return `${Math.round(rounded)}`;
+  }
+  return rounded.toFixed(1);
+}
+
 export interface HowLongToBeatCardProps {
   /** Skeleton-only mode for placeholders before the page hydrates. */
   isLoading?: boolean;
@@ -65,12 +80,6 @@ export function HowLongToBeatCard({
     return `${value} ${t(durationTranslation[unit] ?? "hours")}`;
   };
 
-  const getProgressPercent = (duration: string): number => {
-    const estimated = parseDurationToSeconds(duration);
-    if (estimated <= 0) return 0;
-    return Math.min(Math.round((userPlaytimeSeconds / estimated) * 100), 100);
-  };
-
   const handleSubmitPlaytime = async () => {
     if (!game || (state.status !== "loaded" && state.status !== "empty"))
       return;
@@ -100,17 +109,39 @@ export function HowLongToBeatCard({
     return (
       <div className="hltb-card hltb-card--compact">
         <ul className="hltb-card__list hltb-card__list--compact">
-          {state.categories.slice(0, 4).map((category) => (
-            <li
-              key={category.title}
-              className="hltb-card__item hltb-card__item--compact"
-            >
-              <span className="hltb-card__item-title">{category.title}</span>
-              <span className="hltb-card__item-duration">
-                {formatDuration(category.duration)}
-              </span>
-            </li>
-          ))}
+          {state.categories.slice(0, 4).map((category) => {
+            const estimated = parseDurationToSeconds(category.duration);
+            const safeEstimated = Math.max(estimated, 0);
+            const ratio =
+              safeEstimated > 0 ? userPlaytimeSeconds / safeEstimated : 0;
+            const clampedPercent = Math.max(0, Math.min(ratio, 1)) * 100;
+            const isComplete =
+              userPlaytimeSeconds >= safeEstimated && safeEstimated > 0;
+            return (
+              <li
+                key={category.title}
+                className={`hltb-card__item hltb-card__item--compact ${
+                  isComplete ? "hltb-card__item--complete" : ""
+                }`}
+                title={`${formatHoursShort(userPlaytimeSeconds)}h / ${formatHoursShort(
+                  safeEstimated
+                )}h`}
+              >
+                <span className="hltb-card__item-title">{category.title}</span>
+                <span className="hltb-card__item-duration">
+                  {formatDuration(category.duration)}
+                </span>
+                {safeEstimated > 0 && (
+                  <div className="hltb-card__progress-track hltb-card__progress-track--compact">
+                    <div
+                      className="hltb-card__progress-fill"
+                      style={{ width: `${clampedPercent}%` }}
+                    />
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </div>
     );
@@ -288,7 +319,7 @@ export function HowLongToBeatCard({
                 category={category}
                 userPlaytimeSeconds={userPlaytimeSeconds}
                 formatDuration={formatDuration}
-                getProgressPercent={getProgressPercent}
+                completeLabel={t("hltb_status_complete", "Complete")}
               />
             ))}
 
@@ -304,7 +335,7 @@ export function HowLongToBeatCard({
                   category={category}
                   userPlaytimeSeconds={userPlaytimeSeconds}
                   formatDuration={formatDuration}
-                  getProgressPercent={getProgressPercent}
+                  completeLabel={t("hltb_status_complete", "Complete")}
                 />
               ))}
             </div>
@@ -451,18 +482,33 @@ interface CardRowProps {
   category: HowLongToBeatCategory;
   userPlaytimeSeconds: number;
   formatDuration: (d: string) => string;
-  getProgressPercent: (d: string) => number;
+  completeLabel: string;
 }
 
 function CardRow({
   category,
   userPlaytimeSeconds,
   formatDuration,
-  getProgressPercent,
+  completeLabel,
 }: Readonly<CardRowProps>) {
-  const progress = getProgressPercent(category.duration);
+  const estimatedSeconds = parseDurationToSeconds(category.duration);
+  const safeEstimated = Math.max(estimatedSeconds, 0);
+  const ratio =
+    safeEstimated > 0 ? userPlaytimeSeconds / safeEstimated : 0;
+  const clampedPercent = Math.max(0, Math.min(ratio, 1)) * 100;
+  const isComplete =
+    userPlaytimeSeconds >= safeEstimated && safeEstimated > 0;
+  const hasPlaytime = userPlaytimeSeconds > 0;
+  const showProgress = safeEstimated > 0;
+  const playtimeHoursLabel = formatHoursShort(userPlaytimeSeconds);
+  const estimatedHoursLabel = formatHoursShort(safeEstimated);
+
   return (
-    <div className="hltb-card__item">
+    <div
+      className={`hltb-card__item ${
+        isComplete ? "hltb-card__item--complete" : ""
+      }`}
+    >
       <span className="hltb-card__item-title">{category.title}</span>
       <span className="hltb-card__item-duration">
         {formatDuration(category.duration)}
@@ -472,15 +518,35 @@ function CardRow({
           {`${category.accuracy}% accuracy`}
         </span>
       )}
-      {userPlaytimeSeconds > 0 && (
+      {showProgress && (
         <div className="hltb-card__progress-container">
           <div className="hltb-card__progress-track">
             <div
               className="hltb-card__progress-fill"
-              style={{ width: `${progress}%` }}
+              style={{ width: `${clampedPercent}%` }}
             />
+            {hasPlaytime && (
+              <div
+                className="hltb-card__progress-marker"
+                style={{ left: `${clampedPercent}%` }}
+                aria-label={`${Math.round(ratio * 100)}%`}
+              />
+            )}
           </div>
-          <span className="hltb-card__progress-label">{progress}%</span>
+          <span className="hltb-card__progress-meta">
+            <span className="hltb-card__progress-time">
+              {playtimeHoursLabel}h
+            </span>
+            <span className="hltb-card__progress-separator">/</span>
+            <span className="hltb-card__progress-time">
+              {estimatedHoursLabel}h
+            </span>
+            {isComplete && (
+              <span className="hltb-card__progress-status">
+                {completeLabel}
+              </span>
+            )}
+          </span>
         </div>
       )}
     </div>
