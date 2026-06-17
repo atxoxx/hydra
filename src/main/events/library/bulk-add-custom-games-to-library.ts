@@ -88,6 +88,7 @@ const bulkAddCustomGamesToLibrary = async (
         favorite: false,
         automaticCloudSync: false,
         hasManuallyUpdatedPlaytime: false,
+        acquisitionSource: "manual",
       };
 
       await gamesSublevel.put(gameKey, game);

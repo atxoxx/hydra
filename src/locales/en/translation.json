@@ -1763,7 +1763,11 @@
     "context_menu_remove_from_library": "Remove from Library",
     "context_menu_add_to_library": "Add to Library",
     "filter_by_platform": "Filter by platform",
-    "category_platform_all": "All PC"
+    "category_platform_all": "All PC",
+    "subtab_local": "Local",
+    "visibility_all": "Show All",
+    "visibility_installed": "Show Installed",
+    "visibility_not_installed": "Show Not Installed"
   },
   "achievement": {
     "achievement_unlocked": "Achievement unlocked",

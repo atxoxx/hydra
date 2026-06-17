@@ -1,25 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { StackIcon, DeviceDesktopIcon } from "@primer/octicons-react";
-import type { GameShop } from "@types";
-import { MODERN_SHOPS } from "@types";
 import "./category-filter.scss";
 
 export type LibraryCategory = "all" | "pc" | "classics";
 
-const PLATFORM_LABEL_KEYS: Record<GameShop, string> = {
-  steam: "platform_steam",
-  epic: "platform_epic",
-  gog: "platform_gog",
-  "battle-net": "platform_battle_net",
-  amazon: "platform_amazon",
-  ubisoft: "platform_ubisoft",
-  xbox: "platform_xbox",
-  rockstar: "platform_rockstar",
-  "itch-io": "platform_itch_io",
-  humble: "platform_humble",
-  custom: "",
-  launchbox: "",
-};
+export interface SubTab {
+  value: string;
+  label: string;
+  count: number;
+}
 
 export function ClassicsIcon({
   size = 14,
@@ -68,16 +57,28 @@ export function ClassicsIcon({
 
 interface CategoryFilterProps {
   category: LibraryCategory;
-  selectedPcPlatform: GameShop | null;
   onCategoryChange: (category: LibraryCategory) => void;
-  onPcPlatformChange: (platform: GameShop | null) => void;
+
+  /** Sub-tabs for the PC category */
+  pcSubTab: string | null;
+  onPcSubTabChange: (value: string) => void;
+  pcSubTabs: SubTab[];
+
+  /** Sub-tabs for the Classics category */
+  classicsSubTab: string | null;
+  onClassicsSubTabChange: (value: string) => void;
+  classicsSubTabs: SubTab[];
 }
 
 export function CategoryFilter({
   category,
-  selectedPcPlatform,
   onCategoryChange,
-  onPcPlatformChange,
+  pcSubTab,
+  onPcSubTabChange,
+  pcSubTabs,
+  classicsSubTab,
+  onClassicsSubTabChange,
+  classicsSubTabs,
 }: Readonly<CategoryFilterProps>) {
   const { t } = useTranslation(["library", "settings"]);
 
@@ -103,55 +104,80 @@ export function CategoryFilter({
     },
   ];
 
+  const hasPcSubTabs = category === "pc" && pcSubTabs.length > 0;
+  const hasClassicsSubTabs =
+    category === "classics" && classicsSubTabs.length > 0;
+
   return (
-    <div className="library-category-filter__row">
-      <div className="library-category-filter__container">
-        {categoryOptions.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            className={`library-category-filter__option ${
-              category === option.value
-                ? "library-category-filter__option--active"
-                : ""
-            }`}
-            onClick={() => {
-              onCategoryChange(option.value);
-              if (option.value !== "pc") {
-                onPcPlatformChange(null);
-              }
-            }}
-          >
-            {option.icon}
-            <span>{option.label}</span>
-          </button>
-        ))}
+    <div className="library-category-filter">
+      <div className="library-category-filter__row">
+        <div className="library-category-filter__container">
+          {categoryOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={`library-category-filter__option ${
+                category === option.value
+                  ? "library-category-filter__option--active"
+                  : ""
+              }`}
+              onClick={() => onCategoryChange(option.value)}
+            >
+              {option.icon}
+              <span>{option.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Platform dropdown shown when PC category is active */}
-      {category === "pc" && (
-        <select
-          className="library-category-filter__platform-select"
-          value={selectedPcPlatform ?? "all_pc"}
-          onChange={(e) => {
-            const val = e.target.value;
-            if (val === "all_pc") {
-              onPcPlatformChange(null);
-            } else {
-              onPcPlatformChange(val as GameShop);
-            }
-          }}
-          aria-label={t("filter_by_platform", { ns: "library" })}
-        >
-          <option value="all_pc">
-            {t("category_platform_all", { ns: "library" })}
-          </option>
-          {MODERN_SHOPS.map((shop) => (
-            <option key={shop} value={shop}>
-              {t(PLATFORM_LABEL_KEYS[shop] ?? shop, { ns: "settings" })}
-            </option>
-          ))}
-        </select>
+      {/* PC sub-tabs */}
+      {hasPcSubTabs && (
+        <div className="library-category-filter__subtab-row">
+          <div className="library-category-filter__subtab-container">
+            {pcSubTabs.map((subTab) => (
+              <button
+                key={subTab.value}
+                type="button"
+                className={`library-category-filter__subtab ${
+                  pcSubTab === subTab.value
+                    ? "library-category-filter__subtab--active"
+                    : ""
+                }`}
+                onClick={() => onPcSubTabChange(subTab.value)}
+              >
+                <span>{subTab.label}</span>
+                <span className="library-category-filter__subtab-count">
+                  {subTab.count}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Classics sub-tabs */}
+      {hasClassicsSubTabs && (
+        <div className="library-category-filter__subtab-row">
+          <div className="library-category-filter__subtab-container">
+            {classicsSubTabs.map((subTab) => (
+              <button
+                key={subTab.value}
+                type="button"
+                className={`library-category-filter__subtab ${
+                  classicsSubTab === subTab.value
+                    ? "library-category-filter__subtab--active"
+                    : ""
+                }`}
+                onClick={() => onClassicsSubTabChange(subTab.value)}
+              >
+                <span>{subTab.label}</span>
+                <span className="library-category-filter__subtab-count">
+                  {subTab.count}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

@@ -91,6 +91,8 @@ export interface Game {
   linkedShop?: GameShop | null;
   /** When a custom game is linked to a catalogue entry, the original objectId */
   linkedObjectId?: string | null;
+  /** How the game was acquired (hydra_catalogue, manual, steam_scan, etc.) */
+  acquisitionSource?: string | null;
   /** Whether the game is on the user's watchlist */
   watched?: boolean;
   /** User-defined game status tag */

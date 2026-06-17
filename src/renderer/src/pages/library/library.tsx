@@ -24,7 +24,7 @@ import {
   SyncIcon,
 } from "@primer/octicons-react";
 import { useTranslation } from "react-i18next";
-import { GameCollection, GameShop, LibraryGame } from "@types";
+import { GameCollection, LibraryGame } from "@types";
 import {
   Button,
   ConfirmationModal,
@@ -38,8 +38,9 @@ import { LibraryGameCard } from "./library-game-card";
 import { LibraryGameCardLarge } from "./library-game-card-large";
 import { ViewOptions, ViewMode } from "./view-options";
 import { FilterOptions, SortOption } from "./filter-options";
-import { CategoryFilter, LibraryCategory } from "./category-filter";
+import { CategoryFilter, LibraryCategory, SubTab } from "./category-filter";
 import { PlatformFilter } from "./platform-filter";
+import type { VisibilityFilter } from "./filter-options";
 import {
   ClassicsOnboardingModal,
   hasDismissedClassicsOnboarding,
@@ -116,8 +117,20 @@ export default function Library() {
     return "all";
   });
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
-  const [selectedPcPlatform, setSelectedPcPlatform] = useState<GameShop | null>(
-    null
+  const [pcSubTab, setPcSubTab] = useState<string | null>(() => {
+    const saved = localStorage.getItem("library-pc-subtab");
+    return saved || "local";
+  });
+  const [classicsSubTab, setClassicsSubTab] = useState<string | null>(() => {
+    const saved = localStorage.getItem("library-classics-subtab");
+    return saved || null;
+  });
+  const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>(
+    () => {
+      const saved = localStorage.getItem("library-visibility-filter");
+      if (saved === "installed" || saved === "not_installed") return saved;
+      return "all";
+    }
   );
   const [isImportingClassics, setIsImportingClassics] = useState(false);
 
@@ -142,11 +155,28 @@ export default function Library() {
   const handleCategoryChange = useCallback((next: LibraryCategory) => {
     setCategory(next);
     localStorage.setItem("library-category", next);
-    if (next === "pc") {
+    if (next !== "all") {
       setSelectedPlatform(null);
-      setSelectedPcPlatform(null);
     }
   }, []);
+
+  const handlePcSubTabChange = useCallback((value: string) => {
+    setPcSubTab(value);
+    localStorage.setItem("library-pc-subtab", value);
+  }, []);
+
+  const handleClassicsSubTabChange = useCallback((value: string) => {
+    setClassicsSubTab(value);
+    localStorage.setItem("library-classics-subtab", value);
+  }, []);
+
+  const handleVisibilityFilterChange = useCallback(
+    (next: VisibilityFilter) => {
+      setVisibilityFilter(next);
+      localStorage.setItem("library-visibility-filter", next);
+    },
+    []
+  );
 
   const searchQuery = useAppSelector((state) => state.library.searchQuery);
   const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -491,6 +521,74 @@ export default function Library() {
     });
   }, [library, sortBy]);
 
+  // Compute sub-tabs for PC category based on acquisitionSource
+  const pcSubTabs = useMemo<SubTab[]>(() => {
+    const counts = new Map<string, number>();
+    for (const game of library) {
+      if (game.shop === "launchbox") continue;
+      const source = game.acquisitionSource ?? "manual";
+      counts.set(source, (counts.get(source) ?? 0) + 1);
+    }
+
+    const tabs: SubTab[] = [
+      {
+        value: "local",
+        label: t("subtab_local", { ns: "library" }),
+        count:
+          (counts.get("hydra_catalogue") ?? 0) +
+          (counts.get("manual") ?? 0) +
+          (counts.get("folder_scan") ?? 0),
+      },
+    ];
+
+    const scanSources = [
+      "steam_scan",
+      "epic_scan",
+      "gog_scan",
+      "battle_net_scan",
+      "amazon_scan",
+      "ubisoft_scan",
+      "xbox_scan",
+      "rockstar_scan",
+      "itch_io_scan",
+      "humble_scan",
+    ];
+
+    for (const source of scanSources) {
+      if ((counts.get(source) ?? 0) > 0) {
+        const shopName = source.replace("_scan", "");
+        const shopKey = `platform_${shopName.replace(/-/g, "_")}` as const;
+        tabs.push({
+          value: source,
+          label: t(shopKey, { ns: "settings", defaultValue: shopName }),
+          count: counts.get(source) ?? 0,
+        });
+      }
+    }
+
+    return tabs;
+  }, [library, t]);
+
+  // Compute sub-tabs for Classics category based on platform
+  const classicsSubTabs = useMemo<SubTab[]>(() => {
+    const counts = new Map<string, number>();
+    for (const game of library) {
+      if (game.shop !== "launchbox") continue;
+      const platform = game.platform;
+      if (platform) {
+        counts.set(platform, (counts.get(platform) ?? 0) + 1);
+      }
+    }
+
+    return Array.from(counts.entries())
+      .sort((a, b) => a[0].localeCompare(b[0], undefined, { sensitivity: "base" }))
+      .map(([name, count]) => ({ value: name, label: name, count }));
+  }, [library]);
+
+  const isGameInstalled = useCallback((game: LibraryGame): boolean => {
+    return Boolean(game.executablePath) || game.installedSizeInBytes != null;
+  }, []);
+
   const filteredLibrary = useMemo(() => {
     let filtered = sortedLibrary;
 
@@ -508,15 +606,27 @@ export default function Library() {
       // Filter out classics
       filtered = filtered.filter((game) => game.shop !== "launchbox");
 
-      // If a specific PC platform is selected, filter by shop
-      if (selectedPcPlatform) {
-        filtered = filtered.filter((game) => game.shop === selectedPcPlatform);
+      // Filter by sub-tab (acquisitionSource)
+      if (pcSubTab) {
+        if (pcSubTab === "local") {
+          filtered = filtered.filter(
+            (game) =>
+              !game.acquisitionSource ||
+              game.acquisitionSource === "hydra_catalogue" ||
+              game.acquisitionSource === "manual" ||
+              game.acquisitionSource === "folder_scan"
+          );
+        } else {
+          filtered = filtered.filter(
+            (game) => game.acquisitionSource === pcSubTab
+          );
+        }
       }
     } else if (effectiveCategory === "classics") {
       filtered = filtered.filter((game) => game.shop === "launchbox");
-      if (selectedPlatform) {
+      if (classicsSubTab) {
         filtered = filtered.filter(
-          (game) => game.platform === selectedPlatform
+          (game) => game.platform === classicsSubTab
         );
       }
     } else if (selectedPlatform) {
@@ -525,6 +635,13 @@ export default function Library() {
         (game) =>
           game.shop !== "launchbox" || game.platform === selectedPlatform
       );
+    }
+
+    // Visibility filter
+    if (visibilityFilter === "installed") {
+      filtered = filtered.filter(isGameInstalled);
+    } else if (visibilityFilter === "not_installed") {
+      filtered = filtered.filter((game) => !isGameInstalled(game));
     }
 
     if (!deferredSearchQuery.trim()) return filtered;
@@ -552,7 +669,10 @@ export default function Library() {
     selectedCollectionId,
     effectiveCategory,
     selectedPlatform,
-    selectedPcPlatform,
+    pcSubTab,
+    classicsSubTab,
+    visibilityFilter,
+    isGameInstalled,
   ]);
 
   const uniquePlatforms = useMemo(() => {
@@ -607,15 +727,24 @@ export default function Library() {
             <div className="library__controls-left">
               <CategoryFilter
                 category={effectiveCategory}
-                selectedPcPlatform={selectedPcPlatform}
                 onCategoryChange={handleCategoryChange}
-                onPcPlatformChange={setSelectedPcPlatform}
+                pcSubTab={pcSubTab}
+                onPcSubTabChange={handlePcSubTabChange}
+                pcSubTabs={pcSubTabs}
+                classicsSubTab={classicsSubTab}
+                onClassicsSubTabChange={handleClassicsSubTabChange}
+                classicsSubTabs={classicsSubTabs}
               />
             </div>
 
             <div className="library__controls-right">
-              <FilterOptions sortBy={sortBy} onSortChange={handleSortChange} />
-              {effectiveCategory !== "pc" && (
+              <FilterOptions
+                sortBy={sortBy}
+                onSortChange={handleSortChange}
+                visibilityFilter={visibilityFilter}
+                onVisibilityFilterChange={handleVisibilityFilterChange}
+              />
+              {effectiveCategory === "all" && (
                 <PlatformFilter
                   platform={selectedPlatform}
                   platforms={uniquePlatforms}

@@ -141,6 +141,7 @@ export class SteamFamilyScanner {
         isDeleted: false,
         source: "steam",
         autoImported: true,
+        acquisitionSource: existingGame.acquisitionSource ?? "steam_scan",
         steamFamilyOwnerId: game.isOwnGame ? null : game.ownerSteamId64,
         steamFamilyOwnerName: game.isOwnGame ? null : game.ownerName,
         executablePath: game.isInstalled
@@ -163,6 +164,7 @@ export class SteamFamilyScanner {
         isDeleted: false,
         source: "steam",
         autoImported: true,
+        acquisitionSource: "steam_scan",
         steamFamilyOwnerId: game.isOwnGame ? null : game.ownerSteamId64,
         steamFamilyOwnerName: game.isOwnGame ? null : game.ownerName,
         executablePath: game.isInstalled ? (game.executablePath ?? null) : null,

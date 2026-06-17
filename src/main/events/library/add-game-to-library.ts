@@ -71,6 +71,7 @@ const addGameToLibrary = async (
       lastTimePlayed: null,
       addedToLibraryAt: new Date(),
       platform: resolvedPlatform ?? null,
+      acquisitionSource: "hydra_catalogue",
     };
 
     await gamesSublevel.put(gameKey, game);

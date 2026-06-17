@@ -47,6 +47,7 @@ export class PlatformScanner {
         isDeleted: false,
         source: game.shop,
         autoImported: true,
+        acquisitionSource: existingGame.acquisitionSource ?? `${game.shop}_scan`,
         executablePath: game.executablePath ?? existingGame.executablePath,
       };
 
@@ -65,6 +66,7 @@ export class PlatformScanner {
         isDeleted: false,
         source: game.shop,
         autoImported: true,
+        acquisitionSource: `${game.shop}_scan`,
         executablePath: game.executablePath,
       };
 

@@ -41,6 +41,7 @@ export const prepareGameEntry = async ({
       lastTimePlayed: null,
       addedToLibraryAt: new Date(),
       isDeleted: false,
+      acquisitionSource: "hydra_catalogue",
     });
   }
 };

@@ -99,6 +99,7 @@ export class SteamGameSync {
             isDeleted: false,
             source: "steam",
             autoImported: true,
+            acquisitionSource: existingGame.acquisitionSource ?? "steam_scan",
             executablePath: installResult.installed
               ? (installResult.exePath ?? existingGame.executablePath)
               : existingGame.executablePath,
@@ -122,6 +123,7 @@ export class SteamGameSync {
             isDeleted: false,
             source: "steam",
             autoImported: true,
+            acquisitionSource: "steam_scan",
             executablePath: installResult.installed
               ? installResult.exePath
               : null,

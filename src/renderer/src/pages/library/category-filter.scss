@@ -1,4 +1,8 @@
 .library-category-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
   &__row {
     display: flex;
     align-items: center;
@@ -43,38 +47,64 @@
     }
   }
 
-  &__platform-select {
-    display: inline-flex;
+  &__subtab-row {
+    display: flex;
     align-items: center;
-    padding: 6px 30px 6px 12px;
+    gap: 8px;
+  }
+
+  &__subtab-container {
+    display: flex;
+    gap: 2px;
+    align-items: stretch;
+    padding: 3px;
     background-color: #0d0d0d;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.04);
     border-radius: 8px;
-    color: #e1e1e1;
-    font-size: 13px;
-    font-weight: 500;
+  }
+
+  &__subtab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: #a1a1aa;
+    font-size: 12px;
+    font-weight: 600;
     cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 5L6 8L9 5' stroke='%238b8b8b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    min-width: 130px;
-    transition: border-color 0.15s ease;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease,
+      border-color 0.15s ease;
+    white-space: nowrap;
 
     &:hover {
-      border-color: rgba(255, 255, 255, 0.15);
+      color: #fafafa;
+      background-color: rgba(255, 255, 255, 0.03);
     }
 
-    &:focus {
-      outline: none;
-      border-color: var(--accent, #4a9eff);
+    &--active {
+      background-color: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #fafafa;
     }
+  }
 
-    option {
-      background-color: #1c1c1c;
-      color: #e1e1e1;
-      padding: 8px;
-    }
+  &__subtab-count {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 999px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
   }
 }

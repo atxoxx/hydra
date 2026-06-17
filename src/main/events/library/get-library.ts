@@ -37,6 +37,8 @@ const getLibrary = async (): Promise<LibraryGame[]> => {
     .iterator()
     .all()
     .then((results) => {
+      const migrationPuts: Promise<void>[] = [];
+
       return Promise.all(
         results
           .filter(([_key, game]) => game.isDeleted === false)
@@ -73,7 +75,11 @@ const getLibrary = async (): Promise<LibraryGame[]> => {
 
               if (!fs.existsSync(installerPath)) {
                 installerSizeInBytes = null;
-                gamesSublevel.put(key, { ...game, installerSizeInBytes: null });
+                migrationPuts.push(
+                  gamesSublevel
+                    .put(key, { ...game, installerSizeInBytes: null })
+                    .catch(() => {})
+                );
               }
             }
 
@@ -84,7 +90,9 @@ const getLibrary = async (): Promise<LibraryGame[]> => {
               const cachedPlatform = await lookupCachedPlatform(key);
               if (cachedPlatform) {
                 game.platform = cachedPlatform;
-                gamesSublevel.put(key, game).catch(() => {});
+                migrationPuts.push(
+                  gamesSublevel.put(key, game).catch(() => {})
+                );
               }
             }
 
@@ -95,12 +103,34 @@ const getLibrary = async (): Promise<LibraryGame[]> => {
 
               if (!fs.existsSync(executableDir)) {
                 installedSizeInBytes = null;
-                gamesSublevel.put(key, {
-                  ...game,
-                  installerSizeInBytes,
-                  installedSizeInBytes: null,
-                });
+                migrationPuts.push(
+                  gamesSublevel
+                    .put(key, {
+                      ...game,
+                      installerSizeInBytes,
+                      installedSizeInBytes: null,
+                    })
+                    .catch(() => {})
+                );
               }
+            }
+
+            // Migration: populate acquisitionSource for existing games
+            let acquisitionSource = game.acquisitionSource;
+            if (!acquisitionSource) {
+              if (game.shop === "launchbox") {
+                acquisitionSource = "launchbox";
+              } else if (game.shop === "custom") {
+                acquisitionSource = "manual";
+              } else if (download) {
+                acquisitionSource = "hydra_catalogue";
+              } else {
+                acquisitionSource = "manual";
+              }
+              game.acquisitionSource = acquisitionSource;
+              migrationPuts.push(
+                gamesSublevel.put(key, game).catch(() => {})
+              );
             }
 
             return {
@@ -111,6 +141,7 @@ const getLibrary = async (): Promise<LibraryGame[]> => {
               download: download ?? null,
               unlockedAchievementCount,
               achievementCount: game.achievementCount ?? 0,
+              acquisitionSource,
               // Spread gameAssets last to ensure all image URLs are properly set
               ...gameAssets,
               // Preserve custom image URLs from game if they exist
@@ -119,7 +150,11 @@ const getLibrary = async (): Promise<LibraryGame[]> => {
               customHeroImageUrl: game.customHeroImageUrl,
             };
           })
-      );
+      ).then((library) => {
+        // Await all migration writes after the response is built
+        Promise.allSettled(migrationPuts);
+        return library;
+      });
     });
 };
 
