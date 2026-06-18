@@ -11,13 +11,20 @@ import {
 import { settingsContext } from "@renderer/context";
 import { useAppSelector } from "@renderer/hooks";
 import { useSteamLogin } from "@renderer/hooks/use-steam-login";
-import type { GameShop, PlatformScanConfig, PlatformGame } from "@types";
+import type {
+  GameShop,
+  PlatformScanConfig,
+  PlatformGame,
+  StoreId,
+  StoreStatus,
+} from "@types";
 import { LinkIcon } from "@primer/octicons-react";
 import "./settings-platform-import.scss";
 
 interface PlatformInfo {
   shop: GameShop;
   labelKey: string;
+  storeId?: StoreId;
   needsApiKey: boolean;
   apiKeyLabel?: string;
   apiKeyPlaceholder?: string;
@@ -33,16 +40,59 @@ const IMPORT_PLATFORMS: PlatformInfo[] = [
     apiKeyPlaceholder: "steam_web_api_key_placeholder",
     setupUrl: "https://steamcommunity.com/dev/apikey",
   },
-  { shop: "epic", labelKey: "platform_epic", needsApiKey: false },
-  { shop: "gog", labelKey: "platform_gog", needsApiKey: false },
-  { shop: "battle-net", labelKey: "platform_battle_net", needsApiKey: false },
-  { shop: "amazon", labelKey: "platform_amazon", needsApiKey: false },
-  { shop: "ubisoft", labelKey: "platform_ubisoft", needsApiKey: false },
-  { shop: "xbox", labelKey: "platform_xbox", needsApiKey: false },
+  {
+    shop: "epic",
+    labelKey: "platform_epic",
+    storeId: "epic",
+    needsApiKey: false,
+  },
+  { shop: "gog", labelKey: "platform_gog", storeId: "gog", needsApiKey: false },
+  {
+    shop: "battle-net",
+    labelKey: "platform_battle_net",
+    storeId: "battle-net",
+    needsApiKey: false,
+  },
+  {
+    shop: "amazon",
+    labelKey: "platform_amazon",
+    storeId: "amazon",
+    needsApiKey: false,
+  },
+  {
+    shop: "ubisoft",
+    labelKey: "platform_ubisoft",
+    storeId: "ubisoft",
+    needsApiKey: false,
+  },
+  { shop: "ea", labelKey: "platform_ea", storeId: "ea", needsApiKey: false },
+  {
+    shop: "xbox",
+    labelKey: "platform_xbox",
+    storeId: "xbox",
+    needsApiKey: false,
+  },
   { shop: "rockstar", labelKey: "platform_rockstar", needsApiKey: false },
   { shop: "itch-io", labelKey: "platform_itch_io", needsApiKey: false },
-  { shop: "humble", labelKey: "platform_humble", needsApiKey: false },
+  {
+    shop: "humble",
+    labelKey: "platform_humble",
+    storeId: "humble",
+    needsApiKey: false,
+  },
 ];
+
+/* Store types that use browser OAuth (need explicit Login button) */
+const BROWSER_OAUTH_STORES = new Set<StoreId>(["epic", "gog", "xbox"]);
+
+/* Store types that auto-detect local data (no Login button, just Sync) */
+const AUTODETECT_STORES = new Set<StoreId>([
+  "amazon",
+  "humble",
+  "ubisoft",
+  "ea",
+  "battle-net",
+]);
 
 export function SettingsContextPlatformImport() {
   const { t } = useTranslation("settings");
@@ -68,9 +118,30 @@ export function SettingsContextPlatformImport() {
   const [showDiscoveryModal, setShowDiscoveryModal] = useState(false);
   const [showApiKeyFallback, setShowApiKeyFallback] = useState(false);
 
+  /* Store integration state */
+  const [storeStatuses, setStoreStatuses] = useState<StoreStatus[]>([]);
+  const [storeActions, setStoreActions] = useState<Record<string, string>>({});
+
   const steamLogin = useSteamLogin();
 
-  // Load from user preferences
+  /* Load store statuses on mount and listen for updates */
+  useEffect(() => {
+    window.electron
+      .getStoreStatuses()
+      .then(setStoreStatuses)
+      .catch(() => {});
+
+    const unsubscribe = window.electron.onStoreSyncStatusUpdate((statuses) => {
+      setStoreStatuses(statuses);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const getStoreStatus = (storeId: StoreId): StoreStatus | undefined =>
+    storeStatuses.find((s) => s.storeId === storeId);
+
+  /* Load from user preferences */
   useEffect(() => {
     if (!userPreferences) return;
 
@@ -153,6 +224,69 @@ export function SettingsContextPlatformImport() {
   const handleImportPreferenceChange = async (value: "wizard" | "auto") => {
     setImportPreference(value);
     await updateUserPreferences({ importDiscoveryPreference: value });
+  };
+
+  /* Store action handlers */
+  const handleStoreLogin = async (storeId: StoreId) => {
+    if (storeActions[storeId]) return;
+    setStoreActions((prev) => ({ ...prev, [storeId]: "logging-in" }));
+    try {
+      const result = await window.electron.storeLogin(storeId);
+      if (result.success) {
+        await window.electron.storeSync(storeId);
+        const statuses = await window.electron.getStoreStatuses();
+        setStoreStatuses(statuses);
+      }
+    } finally {
+      setStoreActions((prev) => {
+        const next = { ...prev };
+        delete next[storeId];
+        return next;
+      });
+    }
+  };
+
+  const handleStoreSync = async (storeId: StoreId) => {
+    if (storeActions[storeId]) return;
+    setStoreActions((prev) => ({ ...prev, [storeId]: "syncing" }));
+    try {
+      await window.electron.storeSync(storeId);
+      const statuses = await window.electron.getStoreStatuses();
+      setStoreStatuses(statuses);
+    } finally {
+      setStoreActions((prev) => {
+        const next = { ...prev };
+        delete next[storeId];
+        return next;
+      });
+    }
+  };
+
+  const handleStoreLogout = async (storeId: StoreId) => {
+    await window.electron.storeLogout(storeId);
+    const statuses = await window.electron.getStoreStatuses();
+    setStoreStatuses(statuses);
+  };
+
+  /* For auto-detect stores, a "Login/Sync" that triggers detection + sync */
+  const handleAutoDetectSync = async (storeId: StoreId) => {
+    if (storeActions[storeId]) return;
+    setStoreActions((prev) => ({ ...prev, [storeId]: "syncing" }));
+    try {
+      // Auto-detect this store first (storeLogin will auto-detect)
+      await window.electron.storeLogin(storeId);
+      await window.electron.storeSync(storeId);
+      const statuses = await window.electron.getStoreStatuses();
+      setStoreStatuses(statuses);
+    } catch {
+      // Graceful failure
+    } finally {
+      setStoreActions((prev) => {
+        const next = { ...prev };
+        delete next[storeId];
+        return next;
+      });
+    }
   };
 
   const handleScanNow = async () => {
@@ -246,6 +380,130 @@ export function SettingsContextPlatformImport() {
     }
   };
 
+  /** Renders the store status badge and action buttons for a platform card */
+  const renderStoreSection = (platform: PlatformInfo) => {
+    const storeId = platform.storeId;
+    if (!storeId) return null;
+
+    const status = getStoreStatus(storeId);
+    const action = storeActions[storeId] ?? "";
+    const isBrowserOAuth = BROWSER_OAUTH_STORES.has(storeId);
+    const isAutoDetect = AUTODETECT_STORES.has(storeId);
+
+    return (
+      <div className="settings-platform-import__store-row">
+        {status ? (
+          <>
+            <span className="settings-platform-import__store-info">
+              <span
+                className={`settings-platform-import__store-dot ${
+                  status.isExpired
+                    ? "settings-platform-import__store-dot--expired"
+                    : status.isAuthenticated
+                      ? "settings-platform-import__store-dot--connected"
+                      : "settings-platform-import__store-dot--disconnected"
+                }`}
+              />
+              <span className="settings-platform-import__store-status-text">
+                {status.isExpired
+                  ? t("store_expired")
+                  : status.isAuthenticated
+                    ? t("store_connected")
+                    : t("store_disconnected")}
+              </span>
+              {status.gameCount > 0 && (
+                <span className="settings-platform-import__store-count">
+                  {t("store_games_count", { count: status.gameCount })}
+                </span>
+              )}
+              <span className="settings-platform-import__store-last-sync">
+                {status.lastSync
+                  ? t("store_last_synced", {
+                      time: formatTimestamp(status.lastSync),
+                    })
+                  : t("store_never_synced")}
+              </span>
+            </span>
+
+            <span className="settings-platform-import__store-actions">
+              {status.isExpired ? (
+                <button
+                  className="settings-platform-import__store-btn settings-platform-import__store-btn--login"
+                  onClick={() => handleStoreLogin(storeId)}
+                  disabled={action === "logging-in"}
+                >
+                  {action === "logging-in"
+                    ? t("store_logging_in")
+                    : t("store_login")}
+                </button>
+              ) : status.isAuthenticated ? (
+                <>
+                  <button
+                    className="settings-platform-import__store-btn settings-platform-import__store-btn--sync"
+                    onClick={() => handleStoreSync(storeId)}
+                    disabled={action === "syncing"}
+                  >
+                    {action === "syncing"
+                      ? t("store_syncing")
+                      : t("store_sync")}
+                  </button>
+                  <button
+                    className="settings-platform-import__store-btn settings-platform-import__store-btn--logout"
+                    onClick={() => handleStoreLogout(storeId)}
+                  >
+                    {t("store_logout")}
+                  </button>
+                </>
+              ) : isBrowserOAuth ? (
+                <button
+                  className="settings-platform-import__store-btn settings-platform-import__store-btn--login"
+                  onClick={() => handleStoreLogin(storeId)}
+                  disabled={action === "logging-in"}
+                >
+                  {action === "logging-in"
+                    ? t("store_logging_in")
+                    : t("store_login")}
+                </button>
+              ) : isAutoDetect ? (
+                <button
+                  className="settings-platform-import__store-btn settings-platform-import__store-btn--sync"
+                  onClick={() => handleAutoDetectSync(platform.storeId!)}
+                  disabled={action === "syncing"}
+                >
+                  {action === "syncing" ? t("store_syncing") : t("store_sync")}
+                </button>
+              ) : null}
+            </span>
+          </>
+        ) : (
+          <span className="settings-platform-import__store-info">
+            <span className="settings-platform-import__store-dot settings-platform-import__store-dot--disconnected" />
+            <span className="settings-platform-import__store-status-text">
+              {t("store_disconnected")}
+            </span>
+            {(isBrowserOAuth || isAutoDetect) && (
+              <button
+                className="settings-platform-import__store-btn settings-platform-import__store-btn--login"
+                onClick={() =>
+                  isAutoDetect
+                    ? handleAutoDetectSync(storeId)
+                    : handleStoreLogin(storeId)
+                }
+                disabled={!!action}
+              >
+                {action === "logging-in"
+                  ? t("store_logging_in")
+                  : isAutoDetect
+                    ? t("store_sync")
+                    : t("store_login")}
+              </button>
+            )}
+          </span>
+        )}
+      </div>
+    );
+  };
+
   if (!userPreferences) return null;
 
   return (
@@ -278,6 +536,11 @@ export function SettingsContextPlatformImport() {
                     {t(platform.labelKey)}
                   </span>
                 </div>
+
+                {/* Store integration row for platforms with store support */}
+                {platform.storeId &&
+                  platform.shop !== "steam" &&
+                  renderStoreSection(platform)}
 
                 <div className="settings-platform-import__platform-options">
                   <CheckboxField
@@ -568,4 +831,12 @@ function formatRelativeTime(isoTimestamp: string): string {
   if (diffHours < 24) return `${diffHours} hours ago`;
   if (diffDays < 2) return "yesterday";
   return `${diffDays} days ago`;
+}
+
+function formatTimestamp(ts: number): string {
+  const diff = Date.now() - ts;
+  if (diff < 60_000) return "just now";
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
+  return `${Math.floor(diff / 86_400_000)}d ago`;
 }

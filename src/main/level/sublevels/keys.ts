@@ -46,4 +46,10 @@ export const levelKeys = {
   steamAppIdMapping: "steamAppIdMapping",
   steamAppIdMappingKey: (shop: GameShop, objectId: string) =>
     `${shop}:${objectId}`,
+  storeAccounts: "storeAccounts",
+  storeAccountsKey: (storeId: string) => storeId,
+  storeGames: "storeGames",
+  storeGameKey: (storeId: string, gameId: string) => `${storeId}:${gameId}`,
+  syncHistory: "syncHistory",
+  syncHistoryKey: (storeId: string, syncId: string) => `${storeId}:${syncId}`,
 };

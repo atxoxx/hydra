@@ -42,6 +42,10 @@ import type {
   PlaytimeSearchResult,
   PlaytimeGameData,
   PlaytimeMapping,
+  StoreId,
+  StoreStatus,
+  StoreGameWithStore,
+  AuthResult,
 } from "@types";
 import type { AuthPage } from "@shared";
 import type { AxiosProgressEvent } from "axios";
@@ -1490,4 +1494,35 @@ contextBridge.exposeInMainWorld("electron", {
       mapping: PlaytimeMapping | null;
       error?: string;
     }>,
+
+  /* Store Integrations */
+  getStoreStatuses: () =>
+    ipcRenderer.invoke("stores:get-statuses") as Promise<StoreStatus[]>,
+  storeLogin: (storeId: StoreId) =>
+    ipcRenderer.invoke("stores:login", storeId) as Promise<AuthResult>,
+  storeLogout: (storeId: StoreId) =>
+    ipcRenderer.invoke("stores:logout", storeId),
+  storeSync: (storeId: StoreId) => ipcRenderer.invoke("stores:sync", storeId),
+  storeSyncAll: () => ipcRenderer.invoke("stores:sync-all"),
+  storeGetGames: (storeId?: StoreId) =>
+    ipcRenderer.invoke("stores:get-games", storeId) as Promise<
+      StoreGameWithStore[]
+    >,
+  storeInstallGame: (storeId: StoreId, gameId: string) =>
+    ipcRenderer.invoke("stores:install-game", storeId, gameId),
+  storeLaunchGame: (storeId: StoreId, gameId: string) =>
+    ipcRenderer.invoke("stores:launch-game", storeId, gameId),
+  storeCheckOwnership: (title: string) =>
+    ipcRenderer.invoke("stores:check-ownership", title) as Promise<
+      StoreGameWithStore[]
+    >,
+  onStoreSyncStatusUpdate: (cb: (statuses: StoreStatus[]) => void) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      statuses: StoreStatus[]
+    ) => cb(statuses);
+    ipcRenderer.on("stores:sync-status-update", listener);
+    return () =>
+      ipcRenderer.removeListener("stores:sync-status-update", listener);
+  },
 });

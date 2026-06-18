@@ -49,6 +49,122 @@
     padding-left: 4px;
   }
 
+  /* Store integration inline status row */
+  &__store-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 12px;
+    margin-bottom: 2px;
+    border-radius: 6px;
+    background: var(--surface-tertiary, #161616);
+    border: 1px solid var(--border-subtle, #2a2a2a);
+    flex-wrap: wrap;
+  }
+
+  &__store-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  &__store-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+
+    &--connected {
+      background-color: #22c55e;
+      box-shadow: 0 0 5px rgba(34, 197, 94, 0.4);
+    }
+
+    &--disconnected {
+      background-color: #4a4a5a;
+    }
+
+    &--expired {
+      background-color: #f59e0b;
+      box-shadow: 0 0 5px rgba(245, 158, 11, 0.4);
+    }
+  }
+
+  &__store-status-text {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted, #8b8b8b);
+  }
+
+  &__store-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-primary, #e1e1e1);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 1px 7px;
+    border-radius: 999px;
+  }
+
+  &__store-last-sync {
+    font-size: 10px;
+    color: var(--text-muted, #6a6a7a);
+    font-style: italic;
+  }
+
+  &__store-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  &__store-btn {
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+
+    &--login {
+      background: var(--accent, #4a9eff);
+      color: #fff;
+      border-color: var(--accent, #4a9eff);
+
+      &:hover:not(:disabled) {
+        filter: brightness(1.15);
+      }
+    }
+
+    &--sync {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted, #b0b0c0);
+      border-color: rgba(255, 255, 255, 0.1);
+
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.12);
+        color: var(--text-primary, #e1e1e1);
+      }
+    }
+
+    &--logout {
+      background: transparent;
+      color: var(--text-muted, #6a6a7a);
+      border-color: rgba(255, 255, 255, 0.06);
+
+      &:hover:not(:disabled) {
+        color: var(--text-primary, #e1e1e1);
+        border-color: rgba(255, 255, 255, 0.15);
+      }
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
   &__api-key-row {
     display: flex;
     flex-direction: column;

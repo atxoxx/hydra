@@ -8,6 +8,7 @@ export type GameShop =
   | "amazon"
   | "ubisoft"
   | "xbox"
+  | "ea"
   | "rockstar"
   | "itch-io"
   | "humble";
@@ -23,6 +24,7 @@ export const ALL_SHOPS: GameShop[] = [
   "amazon",
   "ubisoft",
   "xbox",
+  "ea",
   "rockstar",
   "itch-io",
   "humble",
@@ -37,6 +39,7 @@ export const MODERN_SHOPS: GameShop[] = [
   "amazon",
   "ubisoft",
   "xbox",
+  "ea",
   "rockstar",
   "itch-io",
   "humble",

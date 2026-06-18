@@ -658,3 +658,4 @@ export * from "./theme.types";
 export * from "./emulator.types";
 export * from "./crackwatch.types";
 export * from "./news.types";
+export * from "./store.types";

@@ -42,4 +42,5 @@ export * from "./steam-game-sync";
 export * from "./steam-install-watcher";
 export * from "./hardware-monitor";
 export * from "./steam-appid-mapping";
+export * from "./store-manager";
 export * as emulators from "./emulators";
