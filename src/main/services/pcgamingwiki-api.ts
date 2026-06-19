@@ -23,6 +23,11 @@ export interface PCGamingWikiTechnicalInfo {
     description: string;
     url: string;
   }>;
+  /**
+   * Game engine name mined from PCGamingWiki's infobox ("Engine" row).
+   * Best-effort — flips to null when the row isn't present in the article.
+   */
+  engine: string | null;
 }
 
 const BASE_URL = "https://www.pcgamingwiki.com/w/api.php";
@@ -126,9 +131,28 @@ export class PCGamingWikiAPI {
       drmInfo: "",
       saveGameLocation: "",
       essentialFixes: [],
+      engine: null,
     };
 
     const text = htmlContent.replace(/<[^>]*>/g, " ");
+
+    // Engine extraction: PCGamingWiki infobox renders the Engine row as
+    // `<th>Engine</th><td>Unity</td>` (with optional links). Look for the
+    // label, then grab the first non-empty, non-link segment that follows.
+    const engineMatch = htmlContent.match(
+      /<th[^>]*>\s*Engine\s*<\/th>\s*<td[^>]*>([\s\S]*?)<\/td>/i
+    );
+    if (engineMatch) {
+      const candidate = engineMatch[1]
+        // Drop nested tags + refs/citations PCGW commonly inserts.
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s*\[(?:note|cite|source)[^\]]*\]/gi, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (candidate.length > 0 && candidate.length < 80) {
+        info.engine = candidate;
+      }
+    }
 
     if (text.includes("ultra-widescreen") || text.includes("21:9")) {
       info.ultraWideSupport = true;

@@ -4,6 +4,7 @@ import { PCGamingWikiAPI } from "./pcgamingwiki-api";
 import { VNDBApi } from "./vndb-api";
 import { IGNMetadataService } from "./ign-metadata";
 import { SteamTagsImporter } from "./steam-tags-importer";
+import { ProtonDbApi } from "./protondb-api";
 import { db } from "@main/level";
 import { levelKeys } from "@main/level/sublevels";
 import { ALL_SHOPS } from "@types";
@@ -47,10 +48,17 @@ export class MetadataFetcher {
         MetadataFetcher.fetchVNDBData(gameTitle),
         MetadataFetcher.fetchIGNReview(gameTitle),
         MetadataFetcher.fetchSteamTags(shop, objectId),
+        MetadataFetcher.fetchProtonDbCompat(shop, objectId),
       ]);
 
-      const [sgdbResult, pcgwResult, vndbResult, ignResult, tagsResult] =
-        results;
+      const [
+        sgdbResult,
+        pcgwResult,
+        vndbResult,
+        ignResult,
+        tagsResult,
+        protonResult,
+      ] = results;
 
       const metadata: GameMetadata = {
         title: existing?.title ?? gameTitle,
@@ -73,6 +81,7 @@ export class MetadataFetcher {
         vndbRating: null,
         technicalInfo: null,
         vndbData: null,
+        protonCompatibility: null,
         sources: {},
       };
 
@@ -97,6 +106,8 @@ export class MetadataFetcher {
           drmInfo: pcgwResult.value.drmInfo,
           saveGameLocation: pcgwResult.value.saveGameLocation,
           essentialFixes: pcgwResult.value.essentialFixes,
+          // New field — PCGamingWiki infobox regex-extracted on best effort.
+          engine: pcgwResult.value.engine ?? null,
         };
         metadata.sources.technicalInfo = "pcgamingwiki";
       }
@@ -126,6 +137,11 @@ export class MetadataFetcher {
           ]),
         ];
         metadata.sources.tags = "steam";
+      }
+
+      if (protonResult.status === "fulfilled" && protonResult.value) {
+        metadata.protonCompatibility = protonResult.value;
+        metadata.sources.protonCompatibility = "protondb";
       }
 
       MetadataFetcher.setWithEviction(cacheKey, {
@@ -295,6 +311,19 @@ export class MetadataFetcher {
 
   private static async fetchSteamTags(shop: string, objectId: string) {
     return SteamTagsImporter.getTags(shop, objectId);
+  }
+
+  /**
+   * ProtonDB only indexes Steam appIds, so we no-op for non-Steam shops.
+   * Returning a never-resolving-ish undefined sequence via Promise.resolve(null)
+   * keeps the surrounding Promise.allSettled shape happy.
+   */
+  private static async fetchProtonDbCompat(
+    shop: string,
+    objectId: string
+  ): Promise<Awaited<ReturnType<typeof ProtonDbApi.getCompatibility>>> {
+    if (shop !== "steam") return null;
+    return ProtonDbApi.getCompatibility(objectId);
   }
 
   static clearCache(): void {

@@ -1,3 +1,36 @@
+/**
+ * ProtonDB community tier plus Steam Deck compatibility. Used by the
+ * MetadataFetcher integration and the optional proton visibility UI.
+ * Mirrors ProtonDB's public API shape (summaries endpoint) but is
+ * structured so the rest of the app can consume a single stable object.
+ */
+export type ProtonDbTier =
+  | "borked"
+  | "bronze"
+  | "silver"
+  | "gold"
+  | "platinum"
+  | "pending"
+  | "unsupported";
+
+export type DeckCompatibilityLevel =
+  | "verified"
+  | "playable"
+  | "unsupported"
+  | "unknown";
+
+export interface ProtonCompatibility {
+  tier: ProtonDbTier | null;
+  confidence: string | null;
+  score: number | null;
+  total: number | null;
+  bestReportedTier: ProtonDbTier | null;
+  trendingTier: ProtonDbTier | null;
+  deckCompatibility: DeckCompatibilityLevel | null;
+  url: string | null;
+  fetchedAt: string | null;
+}
+
 export interface GameMetadata {
   title: string;
   description: string;
@@ -19,6 +52,12 @@ export interface GameMetadata {
   vndbRating: number | null;
   technicalInfo: TechnicalInfo | null;
   vndbData: VNData | null;
+  /**
+   * ProtonDB / Steam Deck compatibility snapshot. Only populated for
+   * Steam shops today (ProtonDB only indexes Steam appIds); null
+   * elsewhere.
+   */
+  protonCompatibility: ProtonCompatibility | null;
   sources: MetadataSources;
 }
 
@@ -50,6 +89,12 @@ export interface TechnicalInfo {
   drmInfo: string;
   saveGameLocation: string;
   essentialFixes: FixGuide[];
+  /**
+   * Game engine name (e.g. "Unity", "Unreal Engine 5", "Source"). Mined
+   * from PCGamingWiki's infobox via the parser; defaults to null when
+   * no engine row is present.
+   */
+  engine: string | null;
 }
 
 export interface FixGuide {
@@ -97,6 +142,7 @@ export interface MetadataSources {
   vndbRating?: string;
   technicalInfo?: string;
   vndbData?: string;
+  protonCompatibility?: string;
 }
 
 export type UserGameStatus =

@@ -1,0 +1,221 @@
+.selective-update-overlay__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.selective-update-overlay {
+  width: 100%;
+  max-width: 880px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(20, 20, 22, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.selective-update-overlay__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.selective-update-overlay__title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  h3 {
+    font-size: 16px;
+    margin: 0;
+    color: #fff;
+  }
+}
+
+.selective-update-overlay__source {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+.selective-update-overlay__close {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+
+  &:hover:not(:disabled) {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.selective-update-overlay__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 12px;
+}
+
+.selective-update-overlay__select-all {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+
+  input {
+    accent-color: #6366f1;
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.selective-update-overlay__count {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.selective-update-overlay__table {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 20px 16px;
+}
+
+.selective-update-overlay__row {
+  display: grid;
+  grid-template-columns: 56px 140px 1fr 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+
+  &--head {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 8px 0;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+}
+
+.selective-update-overlay__cell {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  min-width: 0;
+
+  &--field {
+    font-weight: 600;
+    color: #fff;
+  }
+
+  &--current {
+    color: rgba(255, 255, 255, 0.55);
+
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &--incoming {
+    color: #4ade80;
+    font-weight: 500;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &--check input {
+    accent-color: #6366f1;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.selective-update-overlay__empty {
+  text-align: center;
+  padding: 32px 8px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.selective-update-overlay__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 14px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.selective-update-overlay__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 120ms ease, transform 80ms ease;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled):hover {
+    filter: brightness(1.1);
+  }
+
+  &:not(:disabled):active {
+    transform: translateY(1px);
+  }
+
+  &--ghost {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+
+  &--primary {
+    background: #16a34a;
+    color: #fff;
+  }
+}
+
+.selective-update-overlay__spin {
+  animation: selective-spin 800ms linear infinite;
+}
+
+@keyframes selective-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,90 @@
+.metadata-metrics-banner {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin: 12px 0 20px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+}
+
+.metadata-metrics-banner__cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px;
+  min-width: 0;
+}
+
+.metadata-metrics-banner__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+
+  &--ign {
+    background: #e63946;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+}
+
+.metadata-metrics-banner__content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.metadata-metrics-banner__label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 2px;
+}
+
+.metadata-metrics-banner__value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metadata-metrics-banner__sub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 2px;
+}
+
+// ProtonDB tier colour-coding — lifts the supported bands and dims the
+// problematic ones, so users can read Steam Deck readiness at a glance.
+.metadata-metrics-banner__value--proton-platinum,
+.metadata-metrics-banner__value--proton-gold,
+.metadata-metrics-banner__value--proton-verified {
+  color: #4ade80;
+}
+
+.metadata-metrics-banner__value--proton-silver,
+.metadata-metrics-banner__value--proton-bronze,
+.metadata-metrics-banner__value--proton-playable {
+  color: #facc15;
+}
+
+.metadata-metrics-banner__value--proton-borked,
+.metadata-metrics-banner__value--proton-unsupported {
+  color: #f87171;
+}
+
+.metadata-metrics-banner__value--proton-pending,
+.metadata-metrics-banner__value--proton-unknown {
+  color: rgba(255, 255, 255, 0.65);
+}
