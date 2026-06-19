@@ -50,7 +50,9 @@
     color: globals.$body-color;
     cursor: pointer;
     font-variant-numeric: tabular-nums;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
 
     &:hover:not(:disabled) {
       background: rgba(globals.$brand-teal, 0.12);

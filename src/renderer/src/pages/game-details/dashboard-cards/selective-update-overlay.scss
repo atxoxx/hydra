@@ -184,7 +184,9 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: filter 120ms ease, transform 80ms ease;
+  transition:
+    filter 120ms ease,
+    transform 80ms ease;
 
   &:disabled {
     opacity: 0.45;

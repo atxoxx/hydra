@@ -67,15 +67,13 @@ export function SelectiveUpdateOverlay({
   const [isApplying, setIsApplying] = useState(false);
 
   // Pre-compute the diff values once so the table is stable across re-renders.
-  const diff = useMemo(
-    () => buildDiff(game, incoming),
-    [game, incoming]
-  );
+  const diff = useMemo(() => buildDiff(game, incoming), [game, incoming]);
 
   // Falsy incoming data shouldn't appear as an "incoming" row at all.
   const availableFields = useMemo(() => {
-    return (Object.keys(diff) as (keyof Diff)[]
-      ).filter((key) => diff[key].incoming !== null);
+    return (Object.keys(diff) as (keyof Diff)[]).filter(
+      (key) => diff[key].incoming !== null
+    );
   }, [diff]);
 
   // Keep `selectAll` checkbox in sync with the per-row flags.
@@ -164,17 +162,13 @@ export function SelectiveUpdateOverlay({
         });
       }
 
-      showSuccessToast(
-        t("selective_update_applied", { title: gameTitle })
-      );
+      showSuccessToast(t("selective_update_applied", { title: gameTitle }));
       onApplied?.();
       onClose();
     } catch (error) {
       console.error("Selective update save failed:", error);
       showErrorToast(
-        error instanceof Error
-          ? error.message
-          : t("selective_update_failed")
+        error instanceof Error ? error.message : t("selective_update_failed")
       );
     } finally {
       setIsApplying(false);
@@ -248,9 +242,7 @@ export function SelectiveUpdateOverlay({
                     type="checkbox"
                     checked={flags[key]}
                     onChange={() => toggleField(key)}
-                    aria-label={t(
-                      `selective_update_field_${key}_aria` as any
-                    )}
+                    aria-label={t(`selective_update_field_${key}_aria` as any)}
                   />
                 </span>
                 <span className="selective-update-overlay__cell selective-update-overlay__cell--field">
@@ -294,7 +286,10 @@ export function SelectiveUpdateOverlay({
           >
             {isApplying ? (
               <>
-                <SyncIcon size={16} className="selective-update-overlay__spin" />
+                <SyncIcon
+                  size={16}
+                  className="selective-update-overlay__spin"
+                />
                 <span>{t("selective_update_applying")}</span>
               </>
             ) : (

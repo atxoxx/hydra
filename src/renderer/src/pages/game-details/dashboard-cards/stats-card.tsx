@@ -223,8 +223,7 @@ function InlinePlaytime({
     } catch (error) {
       // Don't leak raw IPC strings — surface a generic localized message
       // unless the IPC handler explicitly provided a user-friendly string.
-      const message =
-        error instanceof Error && error.message ? null : null;
+      const message = error instanceof Error && error.message ? null : null;
       onError(message);
     } finally {
       setIsSaving(false);

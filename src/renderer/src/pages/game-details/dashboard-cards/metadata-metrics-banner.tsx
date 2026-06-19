@@ -151,10 +151,7 @@ function hasAnything(snapshot: BannerSnapshot): boolean {
  * arrive via the existing Promise.allSettled pipeline, and HLTB comes in
  * separately through the playtime provider flow.
  */
-function readMetadata(
-  game: any,
-  shopDetails: any
-): BannerSnapshot {
+function readMetadata(game: any, shopDetails: any): BannerSnapshot {
   const gameMetadata: GameMetadata | undefined = game?.metadata;
   const metadata =
     gameMetadata && typeof gameMetadata === "object" ? gameMetadata : null;
@@ -171,9 +168,7 @@ function readMetadata(
     // orchestrator runs.
     const tier = game?.protondbTier ?? shopDetails?.protondbTier ?? null;
     const deck =
-      game?.deckCompatibility ??
-      shopDetails?.deckCompatibility ??
-      null;
+      game?.deckCompatibility ?? shopDetails?.deckCompatibility ?? null;
     if (tier) {
       proton = { tier, deckCompatibility: deck };
     }
@@ -195,8 +190,7 @@ function readMetadata(
   const hltbMain =
     shopDetails?.hltb?.categories?.find?.(
       (c: any) =>
-        typeof c?.title === "string" &&
-        c.title.toLowerCase().includes("main")
+        typeof c?.title === "string" && c.title.toLowerCase().includes("main")
     )?.duration ?? null;
   const hltbExtra =
     shopDetails?.hltb?.categories?.find?.(

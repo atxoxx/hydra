@@ -64,7 +64,9 @@ export class ProtonDbApi {
    * has no record (404) or the request fails — the callers already degrade
    * gracefully so this never throws.
    */
-  static async getCompatibility(appId: string): Promise<ProtonCompatibility | null> {
+  static async getCompatibility(
+    appId: string
+  ): Promise<ProtonCompatibility | null> {
     if (!appId) return null;
 
     // Normalize so numeric strings all share a cache slot.
