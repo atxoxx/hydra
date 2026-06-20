@@ -148,6 +148,11 @@ export interface GameSession {
   hardwareMetrics?: HardwareMetricsSnapshot;
 }
 
+export interface SessionWithGame extends GameSession {
+  gameTitle: string;
+  gameIconUrl: string | null;
+}
+
 export interface FriendPlaytimeStats {
   userId: string;
   displayName: string;
@@ -169,6 +174,15 @@ export interface PlaytimeSummary {
     iconUrl: string | null;
     totalMilliseconds: number;
   }[];
+  totalSessions: number;
+  longestStreak: number;
+  currentStreak: number;
+  activeDays: number;
+  platformBreakdown: Record<string, number>;
+  genreBreakdown: Record<string, number>;
+  developerBreakdown: Record<string, number>;
+  publisherBreakdown: Record<string, number>;
+  dailyPlaytimes: { date: string; totalMilliseconds: number }[];
 }
 
 declare global {
@@ -540,6 +554,15 @@ declare global {
       shop: GameShop,
       objectId: string
     ) => Promise<{ success: boolean; error?: string }>;
+    deleteGameSession: (
+      shop: GameShop,
+      objectId: string,
+      sessionId: string
+    ) => Promise<{ success: boolean; error?: string }>;
+    getAllSessions: (
+      limit?: number,
+      offset?: number
+    ) => Promise<SessionWithGame[]>;
     getHardwareMonitorConfig: () => Promise<{
       enabled: boolean;
       pollingIntervalMs: number;

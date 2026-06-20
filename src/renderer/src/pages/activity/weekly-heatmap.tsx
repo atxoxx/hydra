@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import cn from "classnames";
 import { Tooltip } from "react-tooltip";
@@ -29,6 +30,23 @@ function formatDateTooltip(dateStr: string, hours: number): string {
 export function WeeklyHeatmap({ days, loading }: WeeklyHeatmapProps) {
   const { t } = useTranslation("activity");
 
+  const paddedDays = useMemo(() => {
+    const list: (HeatmapDay | null)[] = [];
+    if (days.length === 0) return list;
+
+    // Find the day of the week of the first date (0: Sunday, 1: Monday, etc.)
+    const firstDate = new Date(days[0].date + "T00:00:00");
+    const firstDayOfWeek = firstDate.getDay();
+
+    // Pad the start so cells align with correct row index (Sunday is row 0)
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      list.push(null);
+    }
+
+    list.push(...days);
+    return list;
+  }, [days]);
+
   if (loading) {
     return (
       <div className="section-panel">
@@ -45,51 +63,55 @@ export function WeeklyHeatmap({ days, loading }: WeeklyHeatmapProps) {
         <div className="section-panel__empty">{t("no_activity_yet")}</div>
       ) : (
         <>
-          <div className="weekly-heatmap__grid">
-            {days.map((day) => (
-              <div
-                key={day.date}
-                className={cn(
-                  "weekly-heatmap__cell",
-                  getIntensityClass(day.hours)
-                )}
-                data-tooltip-id="heatmap-tooltip"
-                data-tooltip-content={formatDateTooltip(day.date, day.hours)}
-              />
-            ))}
+          <div className="weekly-heatmap__container">
+            {/* Weekday indicators column on the left */}
+            <div className="weekly-heatmap__row-labels">
+              <span></span>
+              <span>{t("Mon") || "Mon"}</span>
+              <span></span>
+              <span>{t("Wed") || "Wed"}</span>
+              <span></span>
+              <span>{t("Fri") || "Fri"}</span>
+              <span></span>
+            </div>
+
+            {/* Aligned contribution cells */}
+            <div className="weekly-heatmap__grid">
+              {paddedDays.map((day, index) => {
+                if (!day) {
+                  return (
+                    <div
+                      key={`pad-${index}`}
+                      className="weekly-heatmap__cell weekly-heatmap__cell--padded"
+                    />
+                  );
+                }
+
+                return (
+                  <div
+                    key={day.date}
+                    className={cn(
+                      "weekly-heatmap__cell",
+                      getIntensityClass(day.hours)
+                    )}
+                    data-tooltip-id="heatmap-tooltip"
+                    data-tooltip-content={formatDateTooltip(
+                      day.date,
+                      day.hours
+                    )}
+                  />
+                );
+              })}
+            </div>
           </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              gap: 4,
-              marginTop: 8,
-              fontSize: 10,
-              color: "rgba(255,255,255,0.4)",
-            }}
-          >
+
+          <div className="weekly-heatmap__footer">
             <span>Less</span>
-            <div
-              className="weekly-heatmap__cell weekly-heatmap__cell--empty"
-              style={{ width: 12, height: 12 }}
-            />
-            <div
-              className="weekly-heatmap__cell weekly-heatmap__cell--low"
-              style={{ width: 12, height: 12 }}
-            />
-            <div
-              className="weekly-heatmap__cell weekly-heatmap__cell--medium"
-              style={{ width: 12, height: 12 }}
-            />
-            <div
-              className="weekly-heatmap__cell weekly-heatmap__cell--high"
-              style={{ width: 12, height: 12 }}
-            />
-            <div
-              className="weekly-heatmap__cell weekly-heatmap__cell--peak"
-              style={{ width: 12, height: 12 }}
-            />
+            <div className="weekly-heatmap__cell weekly-heatmap__cell--empty" />
+            <div className="weekly-heatmap__cell weekly-heatmap__cell--low" />
+            <div className="weekly-heatmap__cell weekly-heatmap__cell--medium" />
+            <div className="weekly-heatmap__cell weekly-heatmap__cell--high" />
+            <div className="weekly-heatmap__cell weekly-heatmap__cell--peak" />
             <span>More</span>
           </div>
           <Tooltip id="heatmap-tooltip" className="weekly-heatmap__tooltip" />

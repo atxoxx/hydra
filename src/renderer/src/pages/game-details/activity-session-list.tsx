@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GameSession } from "../../declaration";
 import { ActivitySessionItem } from "./activity-session-item";
@@ -6,6 +7,7 @@ import "./activity-session-list.scss";
 export interface ActivitySessionListProps {
   sessions: GameSession[];
   loading: boolean;
+  onDelete?: () => void;
 }
 
 const MAX_VISIBLE_SESSIONS = 5;
@@ -13,8 +15,10 @@ const MAX_VISIBLE_SESSIONS = 5;
 export function ActivitySessionList({
   sessions,
   loading,
+  onDelete,
 }: Readonly<ActivitySessionListProps>) {
   const { t } = useTranslation("activity");
+  const [showAll, setShowAll] = useState(false);
 
   if (loading) {
     return (
@@ -36,7 +40,9 @@ export function ActivitySessionList({
     );
   }
 
-  const visibleSessions = sessions.slice(0, MAX_VISIBLE_SESSIONS);
+  const visibleSessions = showAll
+    ? sessions
+    : sessions.slice(0, MAX_VISIBLE_SESSIONS);
   const remaining = sessions.length - MAX_VISIBLE_SESSIONS;
 
   return (
@@ -48,14 +54,24 @@ export function ActivitySessionList({
 
       <div className="activity-session-list__items">
         {visibleSessions.map((session) => (
-          <ActivitySessionItem key={session.id} session={session} />
+          <ActivitySessionItem
+            key={session.id}
+            session={session}
+            onDelete={onDelete}
+          />
         ))}
       </div>
 
       {remaining > 0 && (
-        <p className="activity-session-list__more">
-          +{remaining} {t("more_sessions")}
-        </p>
+        <button
+          type="button"
+          className="activity-session-list__toggle-btn"
+          onClick={() => setShowAll(!showAll)}
+        >
+          {showAll
+            ? t("show_less") || "Show Less"
+            : `+${remaining} ${t("more_sessions")}`}
+        </button>
       )}
     </div>
   );

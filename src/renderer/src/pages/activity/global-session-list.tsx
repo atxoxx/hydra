@@ -1,102 +1,46 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import type { GameShop } from "@types";
-import type { GameSession } from "../../declaration";
-import { ActivityHardwareCard } from "../game-details/activity-hardware-card";
+import type { SessionWithGame } from "../../declaration";
+import { ActivitySessionItem } from "../game-details/activity-session-item";
+import { Search, RotateCcw } from "lucide-react";
+import "./global-session-list.scss";
 
-export interface GlobalSessionListProps {
-  topGames: {
-    objectId: string;
-    shop: string;
-    title: string;
-    iconUrl: string | null;
-  }[];
-  loading: boolean;
-}
-
-interface SessionWithGame extends GameSession {
-  gameTitle: string;
-  gameIconUrl: string | null;
-}
-
-function formatDuration(ms: number): string {
-  const hours = ms / 3_600_000;
-  if (hours < 1) return `${Math.round(hours * 60)}m`;
-  const h = Math.floor(hours);
-  const m = Math.round((hours - h) * 60);
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}m`;
-}
-
-function formatTime(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString([], {
-    month: "short",
-    day: "numeric",
-    weekday: "short",
-  });
-}
-
-const MAX_SESSIONS = 10;
-
-export function GlobalSessionList({
-  topGames,
-  loading,
-}: Readonly<GlobalSessionListProps>) {
+export function GlobalSessionList() {
   const { t } = useTranslation("activity");
-  const [allSessions, setAllSessions] = useState<SessionWithGame[]>([]);
-  const [expandedSessionId, setExpandedSessionId] = useState<string | null>(
-    null
-  );
+  const [sessions, setSessions] = useState<SessionWithGame[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [limit, setLimit] = useState(20);
+
+  const fetchSessions = useCallback(async () => {
+    setLoading(true);
+    try {
+      const all = await window.electron.getAllSessions();
+      setSessions(all);
+    } catch {
+      setSessions([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let cancelled = false;
+    fetchSessions();
+  }, [fetchSessions]);
 
-    const fetchAll = async () => {
-      const results: SessionWithGame[] = [];
+  const filteredSessions = useMemo(() => {
+    if (!searchQuery.trim()) return sessions;
+    const query = searchQuery.toLowerCase();
+    return sessions.filter((s) => s.gameTitle.toLowerCase().includes(query));
+  }, [sessions, searchQuery]);
 
-      for (const game of topGames.slice(0, 5)) {
-        try {
-          const sessions = await window.electron.getGameSessions(
-            game.shop as GameShop,
-            game.objectId,
-            5,
-            0
-          );
-          for (const s of sessions) {
-            results.push({
-              ...s,
-              gameTitle: game.title,
-              gameIconUrl: game.iconUrl,
-            });
-          }
-        } catch {
-          // skip games with no sessions
-        }
-      }
+  const visibleSessions = useMemo(() => {
+    return filteredSessions.slice(0, limit);
+  }, [filteredSessions, limit]);
 
-      if (!cancelled) {
-        results.sort(
-          (a, b) =>
-            new Date(b.endTime).getTime() - new Date(a.endTime).getTime()
-        );
-        setAllSessions(results.slice(0, MAX_SESSIONS));
-      }
-    };
+  const hasMore = filteredSessions.length > limit;
 
-    fetchAll();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [topGames]);
-
-  if (loading) {
+  if (loading && sessions.length === 0) {
     return (
       <div className="section-panel">
         <h3 className="section-panel__title">{t("recent_sessions")}</h3>
@@ -105,67 +49,59 @@ export function GlobalSessionList({
     );
   }
 
-  if (allSessions.length === 0) {
-    return (
-      <div className="section-panel">
-        <h3 className="section-panel__title">{t("recent_sessions")}</h3>
-        <div className="section-panel__empty">{t("no_sessions_yet")}</div>
-      </div>
-    );
-  }
-
   return (
     <div className="section-panel">
-      <h3 className="section-panel__title">{t("recent_sessions")}</h3>
-      <div className="global-session-list">
-        {allSessions.map((session) => {
-          const isExpanded = expandedSessionId === session.id;
-          const hasHardware = !!session.hardwareMetrics;
-
-          return (
-            <div key={session.id} className="global-session-list__item">
-              <button
-                type="button"
-                className="global-session-list__row"
-                onClick={() =>
-                  setExpandedSessionId(isExpanded ? null : session.id)
-                }
-              >
-                {session.gameIconUrl ? (
-                  <img
-                    className="global-session-list__icon"
-                    src={session.gameIconUrl}
-                    alt={session.gameTitle}
-                  />
-                ) : (
-                  <div className="global-session-list__icon" />
-                )}
-
-                <div className="global-session-list__info">
-                  <span className="global-session-list__game">
-                    {session.gameTitle}
-                  </span>
-                  <span className="global-session-list__date">
-                    {formatDate(session.startTime)} ·{" "}
-                    {formatTime(session.startTime)} —{" "}
-                    {formatTime(session.endTime)}
-                  </span>
-                </div>
-
-                <span className="global-session-list__duration">
-                  {formatDuration(session.durationMs)}
-                </span>
-              </button>
-
-              {isExpanded && hasHardware && (
-                <div className="global-session-list__hardware">
-                  <ActivityHardwareCard metrics={session.hardwareMetrics} />
-                </div>
-              )}
-            </div>
-          );
-        })}
+      <div className="global-session-list__header">
+        <h3 className="section-panel__title">{t("recent_sessions")}</h3>
+        <div className="global-session-list__actions">
+          <div className="global-session-list__search">
+            <Search size={14} className="global-session-list__search-icon" />
+            <input
+              type="text"
+              placeholder={t("search_placeholder") || "Search game..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="global-session-list__search-input"
+            />
+          </div>
+          <button
+            type="button"
+            className="global-session-list__refresh-btn"
+            onClick={fetchSessions}
+            title={t("refresh") || "Refresh"}
+          >
+            <RotateCcw size={14} />
+          </button>
+        </div>
       </div>
+
+      {filteredSessions.length === 0 ? (
+        <div className="section-panel__empty">
+          {searchQuery
+            ? t("no_results") || "No sessions found"
+            : t("no_sessions_yet")}
+        </div>
+      ) : (
+        <div className="global-session-list__items">
+          {visibleSessions.map((session) => (
+            <ActivitySessionItem
+              key={session.id}
+              session={session}
+              onDelete={fetchSessions}
+            />
+          ))}
+
+          {hasMore && (
+            <button
+              type="button"
+              className="global-session-list__load-more"
+              onClick={() => setLimit((prev) => prev + 20)}
+            >
+              {t("load_more") || "Load More"}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

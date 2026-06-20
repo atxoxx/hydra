@@ -781,6 +781,10 @@ contextBridge.exposeInMainWorld("electron", {
   ) => ipcRenderer.invoke("getGameSessions", shop, objectId, limit, offset),
   clearActivityData: (shop: GameShop, objectId: string) =>
     ipcRenderer.invoke("clearActivityData", shop, objectId),
+  deleteGameSession: (shop: GameShop, objectId: string, sessionId: string) =>
+    ipcRenderer.invoke("deleteGameSession", shop, objectId, sessionId),
+  getAllSessions: (limit?: number, offset?: number) =>
+    ipcRenderer.invoke("getAllSessions", limit, offset),
   getHardwareMonitorConfig: () =>
     ipcRenderer.invoke("getHardwareMonitorConfig"),
   updateHardwareMonitorConfig: (config: {

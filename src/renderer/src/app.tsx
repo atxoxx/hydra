@@ -290,7 +290,7 @@ export function App() {
       if (gamesRunning.length) {
         const lastGame = gamesRunning[gamesRunning.length - 1];
         const libraryGame = library.find(
-          (library) => library.id === lastGame.id
+          (libGame) => `${libGame.shop}:${libGame.objectId}` === lastGame.id
         );
 
         if (libraryGame) {

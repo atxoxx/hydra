@@ -27,6 +27,8 @@ import "./itad-giveaways";
 import "./news";
 import "./sessions/get-game-sessions";
 import "./sessions/clear-activity-data";
+import "./sessions/delete-game-session";
+import "./sessions/get-all-sessions";
 import "./metadata/fetch-game-metadata";
 import "./library/set-game-user-status";
 import "./library/save-game-metadata";

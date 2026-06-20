@@ -1,23 +1,72 @@
 @use "../../scss/globals.scss";
 
 .activity-session-item {
-  padding: calc(globals.$spacing-unit * 1.5) calc(globals.$spacing-unit * 2);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.015);
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease;
+  margin-bottom: calc(globals.$spacing-unit);
+  transition: all 0.2s ease-in-out;
+  overflow: hidden;
 
   &:hover {
-    border-color: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.025);
+  }
+
+  &--expanded {
+    border-color: rgba(globals.$brand-teal, 0.25);
+    background: rgba(255, 255, 255, 0.03);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   }
 
   &__row {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: calc(globals.$spacing-unit * 1.5) calc(globals.$spacing-unit * 2);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  &__header-left {
+    display: flex;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 1.5);
+  }
+
+  &__chevron {
+    color: rgba(255, 255, 255, 0.35);
+    display: flex;
+    align-items: center;
+    transition: color 0.2s ease;
+
+    .activity-session-item:hover & {
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  &__game-icon-container {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__game-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__game-icon-placeholder {
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.05);
   }
 
   &__info {
@@ -29,12 +78,18 @@
   &__date {
     color: globals.$muted-color;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
   }
 
   &__time {
     color: rgba(255, 255, 255, 0.4);
     font-size: 11px;
+  }
+
+  &__header-right {
+    display: flex;
+    align-items: center;
+    gap: calc(globals.$spacing-unit * 2);
   }
 
   &__duration {
@@ -44,7 +99,105 @@
     font-variant-numeric: tabular-nums;
   }
 
-  &__hardware {
-    margin-top: calc(globals.$spacing-unit * 1);
+  &__delete-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+
+    &:hover {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+  }
+
+  &__collapsible {
+    overflow: hidden;
+  }
+
+  &__hardware-details {
+    padding: 0 calc(globals.$spacing-unit * 2) calc(globals.$spacing-unit * 2);
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: calc(globals.$spacing-unit * 2);
+  }
+
+  &__no-hardware {
+    padding: calc(globals.$spacing-unit * 2);
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+    text-align: center;
+  }
+
+  &__chart-section {
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    padding: calc(globals.$spacing-unit * 1.5);
+  }
+
+  &__chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: calc(globals.$spacing-unit);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__chart-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: globals.$muted-color;
+  }
+
+  &__chart-tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+    padding: 2px;
+  }
+
+  &__chart-tab-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    &--active {
+      background: globals.$brand-teal;
+      color: #fff;
+
+      &:hover {
+        color: #fff;
+      }
+    }
+  }
+
+  &__chart-container {
+    height: 180px;
+    width: 100%;
+    position: relative;
   }
 }

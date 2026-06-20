@@ -55,7 +55,9 @@ export function useGameActions(game: LibraryGame) {
     const unsubscribe = window.electron.onGamesRunning((gamesIds) => {
       const updatedIsGameRunning =
         !!game?.id &&
-        !!gamesIds.find((gameRunning) => gameRunning.id == game.id);
+        !!gamesIds.find(
+          (gameRunning) => gameRunning.id === `${game.shop}:${game.objectId}`
+        );
 
       setIsGameRunning(updatedIsGameRunning);
     });

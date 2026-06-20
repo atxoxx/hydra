@@ -1,10 +1,9 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
-import type { TopPlayedGame } from "./top-played-games";
 
 export interface PlatformBreakdownProps {
-  topGames: TopPlayedGame[];
+  platformBreakdown?: Record<string, number>;
   loading: boolean;
 }
 
@@ -43,27 +42,22 @@ function getPlatformLabel(shop: string): string {
 }
 
 export function PlatformBreakdown({
-  topGames,
+  platformBreakdown,
   loading,
 }: Readonly<PlatformBreakdownProps>) {
   const { t } = useTranslation("activity");
 
   const chartData = useMemo(() => {
-    const platformTotals: Record<string, number> = {};
-    for (const game of topGames) {
-      const shop = game.shop.toLowerCase();
-      platformTotals[shop] =
-        (platformTotals[shop] ?? 0) + game.totalMilliseconds / 3_600_000;
-    }
-
-    return Object.entries(platformTotals)
+    if (!platformBreakdown) return [];
+    return Object.entries(platformBreakdown)
       .map(([shop, hours]) => ({
         name: getPlatformLabel(shop),
         shop,
         hours: Math.round(hours * 10) / 10,
       }))
+      .filter((d) => d.hours > 0)
       .sort((a, b) => b.hours - a.hours);
-  }, [topGames]);
+  }, [platformBreakdown]);
 
   if (loading) {
     return (

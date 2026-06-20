@@ -15,6 +15,7 @@ import { ActivityChart } from "./activity-chart";
 import { ActivityHardwareCard } from "./activity-hardware-card";
 import { ActivitySessionList } from "./activity-session-list";
 import { ActivityStatsGrid, computeStreaks } from "./activity-stats-grid";
+import { WeeklyHeatmap } from "../activity/weekly-heatmap";
 import {
   ActivityTimeframeTabs,
   type Timeframe,
@@ -93,14 +94,15 @@ function getDateRange(days: number) {
 
 export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
   const { t } = useTranslation("activity");
-  const { isGameRunning } = useContext(gameDetailsContext);
+  const { isGameRunning, game, updateGame } = useContext(gameDetailsContext);
   const [timeframe, setTimeframe] = useState<Timeframe>("30d");
   const [dailyEntries, setDailyEntries] = useState<DailyPlaytimeEntry[]>([]);
   const [sessions, setSessions] = useState<GameSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [sessionsLoading, setSessionsLoading] = useState(true);
 
-  const isInitialMount = useRef(true);
+  const prevIsGameRunning = useRef(isGameRunning);
+  const isFirstTimeframeRender = useRef(true);
 
   const fetchDailyPlaytime = useCallback(async () => {
     const days = getTimeframeDays(timeframe);
@@ -136,13 +138,35 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
     }
   }, [shop, objectId]);
 
+  // 1. Initial load on mount or game change (shop/objectId)
   useEffect(() => {
     let cancelled = false;
 
     const fetchAll = async () => {
       setLoading(true);
-      await Promise.all([fetchDailyPlaytime(), fetchSessions()]);
-      if (!cancelled) setLoading(false);
+      const days = getTimeframeDays("30d");
+      const { startDate, endDate } = getDateRange(days);
+
+      try {
+        const [entries, result] = await Promise.all([
+          window.electron.getDailyPlaytime(shop, objectId, startDate, endDate),
+          window.electron.getGameSessions(shop, objectId, 50, 0),
+        ]);
+        if (!cancelled) {
+          setDailyEntries(entries);
+          setSessions(result);
+        }
+      } catch {
+        if (!cancelled) {
+          setDailyEntries([]);
+          setSessions([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+          setSessionsLoading(false);
+        }
+      }
     };
 
     fetchAll();
@@ -150,32 +174,34 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
     return () => {
       cancelled = true;
     };
-  }, [fetchDailyPlaytime, fetchSessions]);
+  }, [shop, objectId]); // Only runs when shop or objectId changes
 
+  // 2. Fetch daily playtime when timeframe changes
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
+    if (isFirstTimeframeRender.current) {
+      isFirstTimeframeRender.current = false;
       return;
     }
-    if (!isGameRunning) {
+    fetchDailyPlaytime();
+  }, [timeframe, fetchDailyPlaytime]);
+
+  // 3. Fetch all data when game stops running
+  useEffect(() => {
+    if (prevIsGameRunning.current && !isGameRunning) {
       fetchDailyPlaytime();
       fetchSessions();
     }
+    prevIsGameRunning.current = isGameRunning;
   }, [isGameRunning, fetchDailyPlaytime, fetchSessions]);
 
   const chartData = useMemo(() => {
     return dailyEntries
       .map((entry) => ({
-        date: entry.date.slice(5),
+        date: entry.date,
         hours: entry.totalMilliseconds / 3_600_000,
       }))
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [dailyEntries]);
-
-  const totalMs = useMemo(
-    () => dailyEntries.reduce((sum, e) => sum + e.totalMilliseconds, 0),
-    [dailyEntries]
-  );
 
   const sessionCount = useMemo(() => sessions.length, [sessions]);
 
@@ -205,6 +231,35 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
     () => sessions.find((s) => s.hardwareMetrics)?.hardwareMetrics ?? null,
     [sessions]
   );
+
+  const heatmapDays = useMemo(() => {
+    const dayMap = new Map<string, number>();
+    for (const entry of dailyEntries) {
+      dayMap.set(
+        entry.date,
+        (dayMap.get(entry.date) ?? 0) + entry.totalMilliseconds
+      );
+    }
+
+    const daysList: { date: string; hours: number }[] = [];
+    const days = getTimeframeDays(timeframe);
+    const { startDate, endDate } = getDateRange(days);
+
+    const end = new Date(endDate + "T00:00:00");
+    const start = new Date(startDate + "T00:00:00");
+    const cursor = new Date(start);
+
+    while (cursor <= end) {
+      const dateStr = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
+      daysList.push({
+        date: dateStr,
+        hours: (dayMap.get(dateStr) ?? 0) / 3_600_000,
+      });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    return daysList;
+  }, [dailyEntries, timeframe]);
 
   if (loading) {
     return (
@@ -255,7 +310,7 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
       </div>
 
       <ActivityStatsGrid
-        totalPlaytimeMs={totalMs}
+        totalPlaytimeMs={game?.playTimeInMilliseconds ?? 0}
         sessionCount={sessionCount}
         avgSessionMs={avgSessionMs}
         longestSessionMs={longestSessionMs}
@@ -267,8 +322,20 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
         dayCount={dailyEntries.filter((e) => e.totalMilliseconds > 0).length}
       />
 
+      <div className="game-activity-panel__heatmap-section">
+        <WeeklyHeatmap days={heatmapDays} loading={loading} />
+      </div>
+
       <div className="game-activity-panel__sessions">
-        <ActivitySessionList sessions={sessions} loading={sessionsLoading} />
+        <ActivitySessionList
+          sessions={sessions}
+          loading={sessionsLoading}
+          onDelete={() => {
+            fetchDailyPlaytime();
+            fetchSessions();
+            updateGame();
+          }}
+        />
       </div>
     </div>
   );
