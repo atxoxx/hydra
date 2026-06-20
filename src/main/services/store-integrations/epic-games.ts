@@ -15,7 +15,8 @@ const EPIC_AUTH_HEADER = Buffer.from(
 
 // Epic API requires the official launcher User-Agent to return data.
 // Generic UAs cause empty responses. (Lutris/Playnite pattern)
-const EPIC_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) EpicGamesLauncher";
+const EPIC_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) EpicGamesLauncher";
 
 /** Shared headers used on all Epic API calls */
 function epicApiHeaders(extra: Record<string, string> = {}) {
@@ -47,10 +48,16 @@ function isNonGameItem(metadata: any): boolean {
 
   // Skip digital extras, plugins, engines, assets
   if (
-    catPaths.some((path) =>
-      ["digitalextras", "plugins", "plugins/engine", "type/format-item"].includes(path) ||
-      path.startsWith("engines") ||
-      path.startsWith("asset-format")
+    catPaths.some(
+      (path) =>
+        [
+          "digitalextras",
+          "plugins",
+          "plugins/engine",
+          "type/format-item",
+        ].includes(path) ||
+        path.startsWith("engines") ||
+        path.startsWith("asset-format")
     )
   ) {
     return true;
@@ -134,7 +141,9 @@ export class EpicGamesStore extends BaseStore {
             // Immediately unsubscribe to prevent further events/crashes
             loginWindow.webContents.removeAllListeners("will-navigate");
             loginWindow.webContents.removeAllListeners("did-navigate");
-            loginWindow.webContents.removeAllListeners("did-redirect-navigation");
+            loginWindow.webContents.removeAllListeners(
+              "did-redirect-navigation"
+            );
             loginWindow.webContents.removeAllListeners("will-redirect");
             loginWindow.webContents.removeAllListeners("did-finish-load");
 
@@ -185,21 +194,33 @@ export class EpicGamesStore extends BaseStore {
         }
       };
 
-      loginWindow.webContents.on("will-navigate", (_event: Electron.Event, url: string) => {
-        handleRedirect(url);
-      });
+      loginWindow.webContents.on(
+        "will-navigate",
+        (_event: Electron.Event, url: string) => {
+          handleRedirect(url);
+        }
+      );
 
-      loginWindow.webContents.on("did-navigate", (_event: Electron.Event, url: string) => {
-        handleRedirect(url);
-      });
+      loginWindow.webContents.on(
+        "did-navigate",
+        (_event: Electron.Event, url: string) => {
+          handleRedirect(url);
+        }
+      );
 
-      loginWindow.webContents.on("did-redirect-navigation", (_event: Electron.Event, url: string) => {
-        handleRedirect(url);
-      });
+      loginWindow.webContents.on(
+        "did-redirect-navigation",
+        (_event: Electron.Event, url: string) => {
+          handleRedirect(url);
+        }
+      );
 
-      loginWindow.webContents.on("will-redirect", (_event: Electron.Event, url: string) => {
-        handleRedirect(url);
-      });
+      loginWindow.webContents.on(
+        "will-redirect",
+        (_event: Electron.Event, url: string) => {
+          handleRedirect(url);
+        }
+      );
 
       const timeout = setTimeout(() => {
         if (resolved) return;

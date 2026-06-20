@@ -518,7 +518,10 @@ const onCloseGame = async (game: Game) => {
 
     const sessionId = activeSession.id;
     try {
-      await sessionsSublevel.put(levelKeys.session(game.shop, game.objectId, sessionId), session);
+      await sessionsSublevel.put(
+        levelKeys.session(game.shop, game.objectId, sessionId),
+        session
+      );
       activeSessions.delete(gameKey);
     } catch (error) {
       logger.error("Failed to persist game session", error);

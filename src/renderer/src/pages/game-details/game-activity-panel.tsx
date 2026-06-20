@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState, useContext, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useContext,
+  useRef,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { GraphIcon } from "@primer/octicons-react";
 import type { GameShop } from "@types";

@@ -116,7 +116,9 @@ export class XboxGamePassStore extends BaseStore {
           const userHash = xblResponse.data.DisplayClaims?.xui?.[0]?.uhs;
 
           if (!xblToken || !userHash) {
-            throw new Error("Missing Token or User Hash (uhs) in Xbox authenticate response.");
+            throw new Error(
+              "Missing Token or User Hash (uhs) in Xbox authenticate response."
+            );
           }
 
           // Step 3: Get XSTS token
@@ -137,7 +139,9 @@ export class XboxGamePassStore extends BaseStore {
           const xuid = xstsResponse.data.DisplayClaims?.xui?.[0]?.xid;
 
           if (!xstsToken || !gamertag || !xuid) {
-            throw new Error("Missing Gamertag (gtg) or XUID in Xbox authorize response. Please create an Xbox Live profile.");
+            throw new Error(
+              "Missing Gamertag (gtg) or XUID in Xbox authorize response. Please create an Xbox Live profile."
+            );
           }
 
           const account = {
@@ -158,21 +162,33 @@ export class XboxGamePassStore extends BaseStore {
         }
       };
 
-      loginWindow.webContents.on("did-navigate", (_event: Electron.Event, url: string) => {
-        handleRedirect(url);
-      });
+      loginWindow.webContents.on(
+        "did-navigate",
+        (_event: Electron.Event, url: string) => {
+          handleRedirect(url);
+        }
+      );
 
-      loginWindow.webContents.on("did-redirect-navigation", (_event: Electron.Event, url: string) => {
-        handleRedirect(url);
-      });
+      loginWindow.webContents.on(
+        "did-redirect-navigation",
+        (_event: Electron.Event, url: string) => {
+          handleRedirect(url);
+        }
+      );
 
-      loginWindow.webContents.on("will-navigate", (_event: Electron.Event, url: string) => {
-        handleRedirect(url);
-      });
+      loginWindow.webContents.on(
+        "will-navigate",
+        (_event: Electron.Event, url: string) => {
+          handleRedirect(url);
+        }
+      );
 
-      loginWindow.webContents.on("will-redirect", (_event: Electron.Event, url: string) => {
-        handleRedirect(url);
-      });
+      loginWindow.webContents.on(
+        "will-redirect",
+        (_event: Electron.Event, url: string) => {
+          handleRedirect(url);
+        }
+      );
 
       loginWindow.loadURL(authUrl);
 
