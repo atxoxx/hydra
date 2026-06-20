@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   CheckIcon,
@@ -185,11 +185,15 @@ function InlinePlaytime({
   const [isEditing, setIsEditing] = useState(false);
   const [hoursInput, setHoursInput] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Reset the buffered input if the persisted value changes (e.g. after
   // the user finishes a session) and we're not mid-edit.
   useEffect(() => {
-    if (isEditing) return;
+    if (isEditing) {
+      inputRef.current?.focus();
+      return;
+    }
     setHoursInput(String(Math.floor((ms ?? 0) / 3_600_000)));
   }, [ms, isEditing]);
 
@@ -246,6 +250,7 @@ function InlinePlaytime({
       {isEditing ? (
         <span className="stats-card__playtime-edit">
           <input
+            ref={inputRef}
             className="stats-card__playtime-input"
             type="number"
             min={0}
@@ -253,7 +258,6 @@ function InlinePlaytime({
             onChange={(e) => setHoursInput(e.target.value)}
             onKeyDown={onKeyDown}
             disabled={isSaving}
-            autoFocus
           />
           <span className="stats-card__playtime-suffix">h</span>
           <button
