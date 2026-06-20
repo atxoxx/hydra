@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { ResponsiveLine } from "@nivo/line";
 import type { GameSession } from "../../declaration";
@@ -86,7 +86,7 @@ export function ActivitySessionItem({
     !!session.hardwareMetrics && session.hardwareMetrics.samples.length > 1;
 
   // Prepare line chart data
-  const chartData = (() => {
+  const chartData = useMemo(() => {
     if (!hasHardware) return [];
     const samples = session.hardwareMetrics!.samples;
     // Downsample for performance (max 80 points)
@@ -181,7 +181,25 @@ export function ActivitySessionItem({
     }
 
     return [];
-  })();
+  }, [hasHardware, session.hardwareMetrics, chartMetric, session.durationMs]);
+
+  // Compute sparse tick values to prevent overlapping labels on the x-axis
+  const tickValues = useMemo(() => {
+    if (chartData.length === 0) return [];
+    const dataPoints = chartData[0].data;
+    if (dataPoints.length <= 6) return dataPoints.map((d) => d.x);
+
+    const step = Math.floor(dataPoints.length / 5);
+    const values: string[] = [];
+    for (let i = 0; i < dataPoints.length; i += step) {
+      values.push(dataPoints[i].x);
+    }
+    const lastX = dataPoints[dataPoints.length - 1].x;
+    if (!values.includes(lastX)) {
+      values.push(lastX);
+    }
+    return values;
+  }, [chartData]);
 
   const metricColors = (() => {
     if (chartMetric === "fps") return ["#16b195"];
@@ -309,6 +327,7 @@ export function ActivitySessionItem({
                         tickSize: 0,
                         tickPadding: 8,
                         tickRotation: 0,
+                        tickValues: tickValues,
                         // Show raw session time string
                         format: (val: string) => val,
                       }}

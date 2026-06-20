@@ -2,14 +2,19 @@
 
 .activity-stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: calc(globals.$spacing-unit * 1.5);
+  margin-bottom: calc(globals.$spacing-unit * 3);
 
-  @media (min-width: 900px) {
+  @media (min-width: 560px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (min-width: 800px) {
     grid-template-columns: repeat(4, 1fr);
   }
 
-  @media (min-width: 1200px) {
+  @media (min-width: 1100px) {
     grid-template-columns: repeat(5, 1fr);
   }
 
