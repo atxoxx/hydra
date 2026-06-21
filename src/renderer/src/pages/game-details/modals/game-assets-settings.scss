@@ -152,7 +152,10 @@
 
   &__drop-zone--active {
     border-color: var(--color-primary, #4a9eff) !important;
-    background-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.08) !important;
+    background-color: rgba(
+      var(--color-primary-rgb, 74, 158, 255),
+      0.08
+    ) !important;
     transform: scale(1.02);
   }
 

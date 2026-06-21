@@ -28,7 +28,11 @@
     color: #fff;
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-primary, #4a9eff) 85%, white);
+      background-color: color-mix(
+        in srgb,
+        var(--color-primary, #4a9eff) 85%,
+        white
+      );
     }
 
     &:disabled {

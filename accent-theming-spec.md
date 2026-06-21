@@ -14,24 +14,24 @@ As a Hydra user, I want to personalize the app's accent color so that the interf
 
 ## Key Design Decisions (from interview)
 
-| Decision | Choice |
-|---|---|
-| **Placement** | Inside the Appearance section on Settings > General (alongside theme management) |
-| **Scope** | All usages of `--accent` and `--color-primary` CSS custom properties throughout the app |
-| **Big Picture** | Same accent color applies in both main renderer and Big Picture mode |
-| **Persistence** | Local only, stored in `UserPreferences` in LevelDB (not synced via Hydra Cloud) |
-| **Color picker UI** | Custom built-in picker (no external npm dependencies) |
-| **Presets** | Yes — 10–14 predefined preset colors shown as a grid |
-| **Theme relationship** | Custom theme wins — if an active custom theme defines `--accent`/`--color-primary`, those take priority. User accent is a fallback when no theme is active or the theme doesn't override accent variables |
-| **Default accent** | Current Hydra blue (`#4a9eff`) — no change for existing users |
-| **Application technique** | CSS custom property on `:root` (`--accent`, `--color-primary`, `--color-primary-rgb`) |
-| **Input format** | Both hex (`#ff0000`) and RGB (`rgb(255, 0, 0)`) |
-| **Shade variants** | Auto-generate `--accent-100` through `--accent-900` CSS variables |
-| **Sidebar** | Add subtle background accent tint to sidebar |
-| **Game launcher** | Dynamic per-game accent extraction wins — don't override |
-| **Transition** | Smooth CSS transition (0.3s) when accent changes |
-| **Title bar (Windows)** | Apply subtle accent tint to the title bar background |
-| **Preset count** | 10–14 presets |
+| Decision                  | Choice                                                                                                                                                                                                    |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Placement**             | Inside the Appearance section on Settings > General (alongside theme management)                                                                                                                          |
+| **Scope**                 | All usages of `--accent` and `--color-primary` CSS custom properties throughout the app                                                                                                                   |
+| **Big Picture**           | Same accent color applies in both main renderer and Big Picture mode                                                                                                                                      |
+| **Persistence**           | Local only, stored in `UserPreferences` in LevelDB (not synced via Hydra Cloud)                                                                                                                           |
+| **Color picker UI**       | Custom built-in picker (no external npm dependencies)                                                                                                                                                     |
+| **Presets**               | Yes — 10–14 predefined preset colors shown as a grid                                                                                                                                                      |
+| **Theme relationship**    | Custom theme wins — if an active custom theme defines `--accent`/`--color-primary`, those take priority. User accent is a fallback when no theme is active or the theme doesn't override accent variables |
+| **Default accent**        | Current Hydra blue (`#4a9eff`) — no change for existing users                                                                                                                                             |
+| **Application technique** | CSS custom property on `:root` (`--accent`, `--color-primary`, `--color-primary-rgb`)                                                                                                                     |
+| **Input format**          | Both hex (`#ff0000`) and RGB (`rgb(255, 0, 0)`)                                                                                                                                                           |
+| **Shade variants**        | Auto-generate `--accent-100` through `--accent-900` CSS variables                                                                                                                                         |
+| **Sidebar**               | Add subtle background accent tint to sidebar                                                                                                                                                              |
+| **Game launcher**         | Dynamic per-game accent extraction wins — don't override                                                                                                                                                  |
+| **Transition**            | Smooth CSS transition (0.3s) when accent changes                                                                                                                                                          |
+| **Title bar (Windows)**   | Apply subtle accent tint to the title bar background                                                                                                                                                      |
+| **Preset count**          | 10–14 presets                                                                                                                                                                                             |
 
 ---
 
@@ -87,13 +87,16 @@ const DEFAULT_ACCENT_COLOR = "#4a9eff";
 export function injectAccentColor(hexColor: string | null | undefined) {
   const color = hexColor || DEFAULT_ACCENT_COLOR;
   const parsed = new Color(color);
-  
+
   // Set core accent custom properties on :root
   const root = document.documentElement;
   root.style.setProperty("--accent", parsed.hex());
   root.style.setProperty("--color-primary", parsed.hex());
-  root.style.setProperty("--color-primary-rgb", `${parsed.red()}, ${parsed.green()}, ${parsed.blue()}`);
-  
+  root.style.setProperty(
+    "--color-primary-rgb",
+    `${parsed.red()}, ${parsed.green()}, ${parsed.blue()}`
+  );
+
   // Auto-generate shade variants (100–900)
   const hsl = parsed.hsl();
   for (let i = 1; i <= 9; i++) {
@@ -140,7 +143,8 @@ Implementation approach: Apply user accent color FIRST (on `:root`), then inject
 
 New component: `src/renderer/src/components/accent-color-picker/accent-color-picker.tsx`
 
-**Layout**: 
+**Layout**:
+
 - Row/grid of 12 preset color circles (clickable)
 - One "Custom" circle that opens a hex/RGB input
 - Hex text input field below the presets
@@ -148,6 +152,7 @@ New component: `src/renderer/src/components/accent-color-picker/accent-color-pic
 - Preview area showing how the accent looks on a sample button/link
 
 **Preset Colors** (12 colors):
+
 ```
 #4a9eff — Hydra Blue (default)
 #ef4444 — Crimson Red
@@ -164,6 +169,7 @@ New component: `src/renderer/src/components/accent-color-picker/accent-color-pic
 ```
 
 **Behavior**:
+
 - Clicking a preset circle immediately applies it
 - The custom input field shows the currently selected color
 - Typing a hex code (with `#` prefix) and pressing Enter/blur applies it
@@ -183,6 +189,7 @@ Modify `src/renderer/src/pages/settings/settings-context-general.tsx`:
 - Wire up `onChange` to call `updateUserPreferences({ accentColor })` and `injectAccentColor(color)`
 
 **Placement** in the settings UI:
+
 ```
 Settings > General tab
   ├── App Basics (downloads path, language)
@@ -212,8 +219,10 @@ In `src/renderer/src/app.scss`:
 
 ```scss
 // Smooth accent transitions
-*, *::before, *::after {
-  transition: 
+*,
+*::before,
+*::after {
+  transition:
     background-color 0.3s ease,
     border-color 0.3s ease,
     color 0.3s ease,
@@ -299,18 +308,18 @@ Add to `src/locales/en/translation.json` under `settings`:
 
 ### 10. Edge Cases
 
-| Scenario | Behavior |
-|---|---|
-| No accent preference set | Use default `#4a9eff` |
-| User clears custom input | Reset to default `#4a9eff` |
-| Invalid hex/RGB entered | Show validation error, don't apply |
-| Custom theme active with `--accent` override | Theme wins, user accent doesn't apply |
-| Custom theme active WITHOUT `--accent` override | User accent applies |
-| User switches themes | Accent re-evaluates based on new theme |
-| Accessibility: low contrast accent | Accept any color user provides (no forced contrast enforcement) |
-| Big Picture and main app open simultaneously | Both use same accent from preferences |
-| Accent preference is `null` vs `"#4a9eff"` | Both render identically, but `null` is stored to indicate "using default" |
-| Color.js parsing fails | Fall back to default accent color silently |
+| Scenario                                        | Behavior                                                                  |
+| ----------------------------------------------- | ------------------------------------------------------------------------- |
+| No accent preference set                        | Use default `#4a9eff`                                                     |
+| User clears custom input                        | Reset to default `#4a9eff`                                                |
+| Invalid hex/RGB entered                         | Show validation error, don't apply                                        |
+| Custom theme active with `--accent` override    | Theme wins, user accent doesn't apply                                     |
+| Custom theme active WITHOUT `--accent` override | User accent applies                                                       |
+| User switches themes                            | Accent re-evaluates based on new theme                                    |
+| Accessibility: low contrast accent              | Accept any color user provides (no forced contrast enforcement)           |
+| Big Picture and main app open simultaneously    | Both use same accent from preferences                                     |
+| Accent preference is `null` vs `"#4a9eff"`      | Both render identically, but `null` is stored to indicate "using default" |
+| Color.js parsing fails                          | Fall back to default accent color silently                                |
 
 ---
 
