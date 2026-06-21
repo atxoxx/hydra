@@ -559,7 +559,9 @@ export function GeneralSettingsSection({
                 type="button"
                 theme="outline"
                 onClick={onAutoDetectSize}
-                disabled={isDetectingSize || (!game.executablePath && !game.installPath)}
+                disabled={
+                  isDetectingSize || (!game.executablePath && !game.installPath)
+                }
               >
                 {isDetectingSize
                   ? t("detecting", "Detecting...")
@@ -599,7 +601,10 @@ export function GeneralSettingsSection({
                   type="button"
                   theme="outline"
                   onClick={onAutoDetectSize}
-                  disabled={isDetectingSize || (!game.executablePath && !game.installPath)}
+                  disabled={
+                    isDetectingSize ||
+                    (!game.executablePath && !game.installPath)
+                  }
                   title={
                     !game.executablePath && !game.installPath
                       ? t(

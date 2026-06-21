@@ -610,8 +610,7 @@ contextBridge.exposeInMainWorld("electron", {
     shop: GameShop,
     objectId: string,
     installPath: string | null
-  ) =>
-    ipcRenderer.invoke("updateInstallPath", shop, objectId, installPath),
+  ) => ipcRenderer.invoke("updateInstallPath", shop, objectId, installPath),
   addGameToFavorites: (shop: GameShop, objectId: string) =>
     ipcRenderer.invoke("addGameToFavorites", shop, objectId),
   removeGameFromFavorites: (shop: GameShop, objectId: string) =>
