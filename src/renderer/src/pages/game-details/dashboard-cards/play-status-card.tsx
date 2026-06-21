@@ -444,7 +444,8 @@ export function PlayStatusCard() {
               {watchlisted
                 ? t("in_watchlist", { defaultValue: "In watchlist" })
                 : t("add_to_watchlist", { defaultValue: "Add to watchlist" })}
-            </Button>              {game && (
+            </Button>{" "}
+            {game && (
               <>
                 {/* Download options — shown when game is playable so user has quick access */}
                 {(game?.executablePath ||
