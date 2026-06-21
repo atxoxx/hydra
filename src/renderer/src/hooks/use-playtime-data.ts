@@ -136,10 +136,13 @@ export function usePlaytimeData({
 
       if (controller.signal.aborted) return;
 
-      const isManual = "source" in activeMapping ? activeMapping.source === "manual" : true;
-      const score = "matchedSimilarityScore" in activeMapping && typeof activeMapping.matchedSimilarityScore === "number"
-        ? activeMapping.matchedSimilarityScore
-        : AUTO_MATCH_DEFAULT_SCORE;
+      const isManual =
+        "source" in activeMapping ? activeMapping.source === "manual" : true;
+      const score =
+        "matchedSimilarityScore" in activeMapping &&
+        typeof activeMapping.matchedSimilarityScore === "number"
+          ? activeMapping.matchedSimilarityScore
+          : AUTO_MATCH_DEFAULT_SCORE;
 
       if (data && data.categories.length > 0) {
         setState({
