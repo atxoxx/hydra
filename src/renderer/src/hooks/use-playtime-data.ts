@@ -86,38 +86,43 @@ export function usePlaytimeData({
 
     setState({ status: "loading" });
 
-    // Step 1: cloud-side fetch — authoritatively returns categories.
-    try {
-      const remoteShot = await window.electron.hydraApi.get<
-        HowLongToBeatCategory[] | null
-      >(`/games/${game.shop}/${game.objectId}/how-long-to-beat`);
+    const activeMapping = game.playtimeMapping || forcedMapping;
 
-      if (controller.signal.aborted) return;
-      if (remoteShot && remoteShot.length > 0) {
-        const mapping = game.playtimeMapping;
-        setState({
-          status: "loaded",
-          provider: mapping?.provider ?? "howlongtobeat",
-          categories: remoteShot,
-          platforms: [],
-          title: game.title,
-          imageUrl: null,
-          similarityScore:
-            mapping?.matchedSimilarityScore ?? AUTO_MATCH_DEFAULT_SCORE,
-          manual: mapping?.source === "manual",
-        });
-        return;
+    // Step 1: cloud-side fetch — authoritatively returns categories.
+    // Skip if there is already a saved mapping or a forced mapping.
+    if (!activeMapping) {
+      try {
+        const remoteShot = await window.electron.hydraApi.get<
+          HowLongToBeatCategory[] | null
+        >(`/games/${game.shop}/${game.objectId}/how-long-to-beat`);
+
+        if (controller.signal.aborted) return;
+        if (remoteShot && remoteShot.length > 0) {
+          const mapping = game.playtimeMapping;
+          setState({
+            status: "loaded",
+            provider: mapping?.provider ?? "howlongtobeat",
+            categories: remoteShot,
+            platforms: [],
+            title: game.title,
+            imageUrl: null,
+            similarityScore:
+              mapping?.matchedSimilarityScore ?? AUTO_MATCH_DEFAULT_SCORE,
+            manual: mapping?.source === "manual",
+          });
+          return;
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("[usePlaytimeData] cloud fetch failed:", err);
       }
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.warn("[usePlaytimeData] cloud fetch failed:", err);
     }
 
-    // Step 1.5: if a forced mapping was provided (e.g. after a manual
-    // save via the Edit modal), skip auto-match and go directly to
-    // fetchPlaytimeData with that mapping.
-    if (forcedMapping) {
-      const { provider: fp, externalId: fe } = forcedMapping;
+    // Step 1.5: if a mapping is already saved in the game object or a forced mapping
+    // was provided (e.g. after a manual save via the Edit modal), skip auto-match
+    // and go directly to fetchPlaytimeData with that mapping.
+    if (activeMapping) {
+      const { provider: fp, externalId: fe } = activeMapping;
       let data: PlaytimeGameData | null = null;
       try {
         data = await window.electron.fetchPlaytimeData({
@@ -126,10 +131,15 @@ export function usePlaytimeData({
         });
       } catch (e) {
         // eslint-disable-next-line no-console
-        console.warn("[usePlaytimeData] forced fetch failed:", e);
+        console.warn("[usePlaytimeData] mapping fetch failed:", e);
       }
 
       if (controller.signal.aborted) return;
+
+      const isManual = "source" in activeMapping ? activeMapping.source === "manual" : true;
+      const score = "matchedSimilarityScore" in activeMapping && typeof activeMapping.matchedSimilarityScore === "number"
+        ? activeMapping.matchedSimilarityScore
+        : AUTO_MATCH_DEFAULT_SCORE;
 
       if (data && data.categories.length > 0) {
         setState({
@@ -139,14 +149,22 @@ export function usePlaytimeData({
           platforms: data.platforms,
           imageUrl: data.imageUrl,
           categories: data.categories,
-          similarityScore: 0.95,
-          manual: true,
+          similarityScore: score,
+          manual: isManual,
         });
         return;
       }
 
-      // Forced mapping had no data in cache. Fall through to auto-match
-      // so we don't leave the user with a blank card.
+      // If the mapped entry exists but had no detailed data, set status to matched-no-data
+      // so the card displays the provider but indicates no data is available.
+      setState({
+        status: "matched-no-data",
+        provider: fp,
+        providerTitle: data?.title || game.title,
+        similarityScore: score,
+        manual: isManual,
+      });
+      return;
     }
 
     // Step 2: cross-provider auto-match fallback.

@@ -27,11 +27,30 @@ const scanFolderForExes = async (
           entry.isFile() &&
           entry.name.toLowerCase().endsWith(".exe")
         ) {
-          results.push({
-            filePath: fullPath,
-            fileName: entry.name,
-            folderName: path.basename(dir),
-          });
+          const nameLower = entry.name.toLowerCase();
+          const shouldExclude = [
+            "7zip",
+            "7za",
+            "crash",
+            "redist",
+            "sfv",
+            "uninstall",
+            "unin",
+            "helper",
+            "setup",
+            "runtime",
+            "error",
+            "handler",
+            "usvfs",
+          ].some((term) => nameLower.includes(term));
+
+          if (!shouldExclude) {
+            results.push({
+              filePath: fullPath,
+              fileName: entry.name,
+              folderName: path.basename(dir),
+            });
+          }
         }
       }
     } catch {

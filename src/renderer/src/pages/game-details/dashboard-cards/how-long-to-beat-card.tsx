@@ -60,7 +60,7 @@ export function HowLongToBeatCard({
   compact,
 }: Readonly<HowLongToBeatCardProps>) {
   const { t } = useTranslation("game_details");
-  const { game } = useContext(gameDetailsContext);
+  const { game, updateGame } = useContext(gameDetailsContext);
   const { showSuccessToast, showErrorToast } = useToast();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isExtended, setIsExtended] = useState(false);
@@ -69,6 +69,10 @@ export function HowLongToBeatCard({
     provider: PlaytimeProviderId;
     externalId: string;
   } | null>(null);
+
+  useEffect(() => {
+    setSavedMapping(null);
+  }, [game?.shop, game?.objectId]);
 
   const { state, refetch } = usePlaytimeData({
     game,
@@ -204,9 +208,10 @@ export function HowLongToBeatCard({
             visible={isEditOpen}
             game={game}
             onClose={() => setIsEditOpen(false)}
-            onSaved={(provider, externalId) =>
-              setSavedMapping({ provider, externalId })
-            }
+            onSaved={(provider, externalId) => {
+              setSavedMapping({ provider, externalId });
+              updateGame();
+            }}
           />
         )}
       </SkeletonTheme>
@@ -286,9 +291,10 @@ export function HowLongToBeatCard({
             game={game}
             initialProvider={state.provider}
             onClose={() => setIsEditOpen(false)}
-            onSaved={(provider, externalId) =>
-              setSavedMapping({ provider, externalId })
-            }
+            onSaved={(provider, externalId) => {
+              setSavedMapping({ provider, externalId });
+              updateGame();
+            }}
           />
         )}
       </SkeletonTheme>
@@ -380,9 +386,10 @@ export function HowLongToBeatCard({
             undefined
           }
           onClose={() => setIsEditOpen(false)}
-          onSaved={(provider, externalId) =>
-            setSavedMapping({ provider, externalId })
-          }
+          onSaved={(provider, externalId) => {
+            setSavedMapping({ provider, externalId });
+            updateGame();
+          }}
         />
       )}
     </SkeletonTheme>
