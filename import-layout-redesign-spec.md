@@ -31,6 +31,7 @@ Redesign the platform import settings page (`settings-context-platform-import.ts
 All platform/store cards should follow the same visual pattern:
 
 **Layout per platform card:**
+
 ```
 ┌──────────────────────────────────────────────────────┐
 │  [Icon] Platform Name                                │
@@ -50,6 +51,7 @@ All platform/store cards should follow the same visual pattern:
 ```
 
 **Key design principles:**
+
 - Consistent card shape, padding, spacing for all platforms
 - Prominent header with store icon + platform name
 - Unified inner store row (same info fields, same button layout)
@@ -80,13 +82,14 @@ All platform/store cards should follow the same visual pattern:
 
 **Button labels by store state:**
 
-| Store Type | Not authenticated | Authenticated | Session expired | Action in progress |
-|---|---|---|---|---|
-| OAuth (Epic, GOG, Xbox) | **Login** | **Sync** + Logout | **Re-login** | "Logging in..." / "Syncing..." |
-| Auto-detect (Amazon, Humble, Ubisoft, EA, Battle.net) | **Scan for games** | **Sync** + Logout | N/A (no auth) | "Scanning..." / "Syncing..." |
-| Steam | **Login** | **Sync** + Logout | **Re-login** | "Logging in..." / "Syncing..." |
+| Store Type                                            | Not authenticated  | Authenticated     | Session expired | Action in progress             |
+| ----------------------------------------------------- | ------------------ | ----------------- | --------------- | ------------------------------ |
+| OAuth (Epic, GOG, Xbox)                               | **Login**          | **Sync** + Logout | **Re-login**    | "Logging in..." / "Syncing..." |
+| Auto-detect (Amazon, Humble, Ubisoft, EA, Battle.net) | **Scan for games** | **Sync** + Logout | N/A (no auth)   | "Scanning..." / "Syncing..."   |
+| Steam                                                 | **Login**          | **Sync** + Logout | **Re-login**    | "Logging in..." / "Syncing..." |
 
 **Rules:**
+
 - Steam now follows the same unified row pattern as other OAuth stores
 - Auto-detect stores show "Scan for games" instead of "Login" when never detected
 - When authenticated, all stores show "Sync" + "Logout"
@@ -98,11 +101,13 @@ All platform/store cards should follow the same visual pattern:
 Steam should use the same unified store row layout instead of its custom login panel.
 
 **What changes:**
+
 - Remove the separate `__steam-login` panel block
 - Steam gets the same unified store row as other OAuth stores
 - Steam's login/sync/logout buttons use the same pattern
 
 **What stays (in collapsible section):**
+
 - API key fallback input (visible when logged out)
 - Family sharing IDs input (visible when logged in)
 - These are in a toggle-able collapsible section below the unified row
@@ -111,6 +116,7 @@ Steam should use the same unified store row layout instead of its custom login p
 ### 5. Status Information Display
 
 Every unified store row should consistently show:
+
 - **Status dot** with color:
   - Green (#22c55e) = Connected/Authenticated
   - Gray (#4a4a5a) = Disconnected
@@ -121,6 +127,7 @@ Every unified store row should consistently show:
 - **Action buttons**: Login/Sync/Logout as appropriate
 
 **When no status is available (first load / no data):**
+
 - Show gray dot + "Not connected" with the appropriate primary action button
 
 ### 6. Visual Polish
@@ -173,6 +180,7 @@ Every unified store row should consistently show:
 ## Design Tokens Reference
 
 From the existing SCSS:
+
 - Card background: `var(--surface-secondary, #1e1e1e)`
 - Store row background: `var(--surface-tertiary, #161616)`
 - Border: `var(--border-subtle, #2a2a2a)`

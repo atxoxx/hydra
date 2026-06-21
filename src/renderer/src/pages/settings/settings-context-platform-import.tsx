@@ -508,8 +508,10 @@ export function SettingsContextPlatformImport() {
                   className="settings-platform-import__store-btn settings-platform-import__store-btn--sync"
                   onClick={handleSteamSync}
                   disabled={isSyncing || syncStatus !== null}
-                >                    {syncStatus ??
-                      (isSyncing ? t("store_syncing") : t("store_sync"))}
+                >
+                  {" "}
+                  {syncStatus ??
+                    (isSyncing ? t("store_syncing") : t("store_sync"))}
                 </button>
                 <button
                   className="settings-platform-import__store-btn settings-platform-import__store-btn--logout"
@@ -768,9 +770,7 @@ export function SettingsContextPlatformImport() {
                           {!steamLogin.hasCredentials && (
                             <>
                               <TextField
-                                label={t(
-                                  platform.apiKeyLabel ?? "api_key"
-                                )}
+                                label={t(platform.apiKeyLabel ?? "api_key")}
                                 value={steamApiKey}
                                 placeholder={t(
                                   platform.apiKeyPlaceholder ??
