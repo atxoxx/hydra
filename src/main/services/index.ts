@@ -44,4 +44,6 @@ export * from "./steam-install-watcher";
 export * from "./hardware-monitor";
 export * from "./steam-appid-mapping";
 export * from "./store-manager";
+export * from "./metadata-search-aggregator";
 export * as emulators from "./emulators";
+

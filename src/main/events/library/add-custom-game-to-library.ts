@@ -3,6 +3,8 @@ import { gamesSublevel, gamesShopAssetsSublevel, levelKeys } from "@main/level";
 import { randomUUID } from "node:crypto";
 import type { GameShop } from "@types";
 import { seedSteamAppIdMapping } from "@main/services/steam-appid-mapping";
+import { autoMatchGame } from "@main/services";
+import { getGameAssets } from "../catalogue/get-game-assets";
 
 const addCustomGameToLibrary = async (
   _event: Electron.IpcMainInvokeEvent,
@@ -31,26 +33,55 @@ const addCustomGameToLibrary = async (
     );
   }
 
+  let finalLinkedShop = linkedShop;
+  let finalLinkedObjectId = linkedObjectId;
+  let finalIconUrl = iconUrl;
+  let finalLogoImageUrl = logoImageUrl;
+  let finalLibraryHeroImageUrl = libraryHeroImageUrl;
+  let finalLibraryImageUrl = libraryImageUrl;
+  let finalCoverImageUrl = coverImageUrl;
+
+  if (!finalLinkedShop || !finalLinkedObjectId) {
+    const match = await autoMatchGame(title);
+    if (match) {
+      finalLinkedShop = match.shop;
+      finalLinkedObjectId = match.objectId;
+
+      try {
+        const assets = await getGameAssets(finalLinkedObjectId, finalLinkedShop);
+        if (assets) {
+          finalIconUrl = finalIconUrl || assets.iconUrl || undefined;
+          finalLibraryHeroImageUrl = finalLibraryHeroImageUrl || assets.libraryHeroImageUrl || undefined;
+          finalLibraryImageUrl = finalLibraryImageUrl || assets.libraryImageUrl || undefined;
+          finalLogoImageUrl = finalLogoImageUrl || assets.logoImageUrl || undefined;
+          finalCoverImageUrl = finalCoverImageUrl || assets.coverImageUrl || undefined;
+        }
+      } catch (err) {
+        // Ignore prefetch error
+      }
+    }
+  }
+
   const assets = {
     updatedAt: Date.now(),
     objectId,
     shop,
     title,
-    iconUrl: iconUrl || null,
-    libraryHeroImageUrl: libraryHeroImageUrl || "",
-    libraryImageUrl: libraryImageUrl || iconUrl || "",
-    logoImageUrl: logoImageUrl || "",
+    iconUrl: finalIconUrl || null,
+    libraryHeroImageUrl: finalLibraryHeroImageUrl || "",
+    libraryImageUrl: finalLibraryImageUrl || finalIconUrl || "",
+    logoImageUrl: finalLogoImageUrl || "",
     logoPosition: null,
-    coverImageUrl: coverImageUrl || iconUrl || "",
+    coverImageUrl: finalCoverImageUrl || finalIconUrl || "",
     downloadSources: [],
   };
   await gamesShopAssetsSublevel.put(gameKey, assets);
 
   const game = {
     title,
-    iconUrl: iconUrl || null,
-    logoImageUrl: logoImageUrl || null,
-    libraryHeroImageUrl: libraryHeroImageUrl || null,
+    iconUrl: finalIconUrl || null,
+    logoImageUrl: finalLogoImageUrl || null,
+    libraryHeroImageUrl: finalLibraryHeroImageUrl || null,
     objectId,
     shop,
     remoteId: null,
@@ -61,8 +92,8 @@ const addCustomGameToLibrary = async (
     executablePath,
     executablePathUpdatedAt: new Date(),
     launchOptions: null,
-    linkedShop: linkedShop ?? null,
-    linkedObjectId: linkedObjectId ?? null,
+    linkedShop: finalLinkedShop ?? null,
+    linkedObjectId: finalLinkedObjectId ?? null,
     favorite: false,
     automaticCloudSync: false,
     hasManuallyUpdatedPlaytime: false,
@@ -80,3 +111,4 @@ const addCustomGameToLibrary = async (
 };
 
 registerEvent("addCustomGameToLibrary", addCustomGameToLibrary);
+

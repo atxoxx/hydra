@@ -36,6 +36,9 @@ export function useGameDetails(objectId: string, shop: GameShop) {
   const [achievements, setAchievements] = useState<UserAchievement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const effectiveShop = game?.linkedShop || shop;
+  const effectiveObjectId = game?.linkedObjectId || objectId;
+
   const updateGame = useCallback(async () => {
     if (!IS_DESKTOP) return;
     const result = await globalThis.window.electron.getGameByObjectId(
@@ -54,18 +57,18 @@ export function useGameDetails(objectId: string, shop: GameShop) {
       globalThis.window.electron
         .getUserPreferences()
         .catch(() => ({ language: "en" })),
-      shop === "custom"
+      effectiveShop === "custom"
         ? Promise.resolve(null)
-        : globalThis.window.electron.getGameStats(objectId, shop),
-      globalThis.window.electron.getGameAssets(objectId, shop),
+        : globalThis.window.electron.getGameStats(effectiveObjectId, effectiveShop),
+      globalThis.window.electron.getGameAssets(effectiveObjectId, effectiveShop),
     ]);
 
     const shopDetailsResult =
-      shop === "custom"
+      effectiveShop === "custom"
         ? null
         : await globalThis.window.electron.getGameShopDetails(
-            objectId,
-            shop,
+            effectiveObjectId,
+            effectiveShop,
             getSteamLanguage(userPreferences?.language ?? "en")
           );
 
@@ -76,30 +79,30 @@ export function useGameDetails(objectId: string, shop: GameShop) {
     setShopDetails(shopDetailsResult);
     setStats(statsResult);
     setIsLoading(false);
-  }, [objectId, shop]);
+  }, [effectiveObjectId, effectiveShop]);
 
   useEffect(() => {
     fetchGameDetails();
     updateGame();
 
-    if (IS_DESKTOP && shop !== "custom") {
+    if (IS_DESKTOP && effectiveShop !== "custom") {
       globalThis.window.electron.hydraApi
         .get<HowLongToBeatCategory[] | null>(
-          `/games/${shop}/${objectId}/how-long-to-beat`,
+          `/games/${effectiveShop}/${effectiveObjectId}/how-long-to-beat`,
           { needsAuth: false }
         )
         .then(setHowLongToBeat)
         .catch(() => setHowLongToBeat(null));
 
       globalThis.window.electron.hydraApi
-        .get<ProtonDBData | null>(`/games/${shop}/${objectId}/protondb`, {
+        .get<ProtonDBData | null>(`/games/${effectiveShop}/${effectiveObjectId}/protondb`, {
           needsAuth: false,
         })
         .then(setProtonDBData)
         .catch(() => setProtonDBData(null));
 
       globalThis.window.electron
-        .getUnlockedAchievements(objectId, shop)
+        .getUnlockedAchievements(effectiveObjectId, effectiveShop)
         .then((result) => {
           if (result) {
             setAchievements(result);
@@ -111,7 +114,7 @@ export function useGameDetails(objectId: string, shop: GameShop) {
       setProtonDBData(null);
       setAchievements([]);
     }
-  }, [fetchGameDetails, updateGame, objectId, shop]);
+  }, [fetchGameDetails, updateGame, effectiveObjectId, effectiveShop]);
 
   const openGame = useCallback(
     async (discPath?: string, force?: boolean) => {

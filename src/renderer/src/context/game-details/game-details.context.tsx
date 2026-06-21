@@ -253,6 +253,8 @@ export function GameDetailsContextProvider({
     dispatch,
     objectId,
     shop,
+    effectiveShop,
+    effectiveObjectId,
     i18n.language,
     userDetails,
     userPreferences,
@@ -389,10 +391,9 @@ export function GameDetailsContextProvider({
     };
   }, [effectiveObjectId, effectiveShop, userDetails]);
 
-  // Don't fetch download sources for custom games (even with linked source —
-  // the linked game may have different download options)
+  // Fetch download sources using the effective shop/objectId (so custom linked games can show sources)
   useEffect(() => {
-    if (shop === "custom") return;
+    if (effectiveShop === "custom") return;
 
     const fetchDownloadSources = async () => {
       try {
@@ -408,7 +409,7 @@ export function GameDetailsContextProvider({
         };
 
         const downloads = await window.electron.hydraApi.get<GameRepack[]>(
-          `/games/${shop}/${objectId}/download-sources`,
+          `/games/${effectiveShop}/${effectiveObjectId}/download-sources`,
           {
             params,
             needsAuth: false,
@@ -422,7 +423,7 @@ export function GameDetailsContextProvider({
     };
 
     fetchDownloadSources();
-  }, [shop, objectId]);
+  }, [effectiveShop, effectiveObjectId]);
 
   const getDownloadsPath = async () => {
     if (userPreferences?.downloadsPath) return userPreferences.downloadsPath;

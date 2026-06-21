@@ -1,4 +1,6 @@
-import { getSteamAppDetails, HydraApi, logger } from "@main/services";
+import { getSteamAppDetails, HydraApi, logger, autoMatchGame, WindowManager } from "@main/services";
+import { getGameAssets } from "./get-game-assets";
+
 
 import type {
   ShopDetails,
@@ -101,7 +103,7 @@ const mapLaunchboxToShopDetails = (
   };
 };
 
-const getLaunchboxShopDetails = async (
+const getGenericShopDetails = async (
   objectId: string,
   shop: GameShop,
   language: string
@@ -123,7 +125,7 @@ const getLaunchboxShopDetails = async (
     HydraApi.get<LaunchboxBasic | null>(`/games/${shop}/${objectId}`, null, {
       needsAuth: false,
     }).catch((err) => {
-      logger.error("Failed to fetch launchbox basic game info", err);
+      logger.error(`Failed to fetch basic game info for ${shop}`, err);
       return null;
     }),
     HydraApi.post<LaunchboxShopDetailsEntry[]>(
@@ -131,7 +133,7 @@ const getLaunchboxShopDetails = async (
       { shop, objectIds: [objectId] },
       { needsAuth: false }
     ).catch((err) => {
-      logger.error("Failed to fetch launchbox shop details", err);
+      logger.error(`Failed to fetch shop details for ${shop}`, err);
       return [] as LaunchboxShopDetailsEntry[];
     }),
   ]);
@@ -148,7 +150,7 @@ const getLaunchboxShopDetails = async (
   gamesShopCacheSublevel
     .put(levelKeys.gameShopCacheItem(shop, objectId, language), mapped)
     .catch((err) => {
-      logger.error("Could not cache launchbox game details", err);
+      logger.error(`Could not cache game details for ${shop}`, err);
     });
 
   const assets: ShopAssets | null =
@@ -179,7 +181,7 @@ const getLaunchboxShopDetails = async (
         updatedAt: Date.now(),
       })
       .catch((err) => {
-        logger.error("Could not cache launchbox assets", err);
+        logger.error(`Could not cache assets for ${shop}`, err);
       });
   }
 
@@ -203,7 +205,6 @@ const getGameShopDetails = async (
   shop: GameShop,
   language: string
 ): Promise<ShopDetailsWithAssets | null> => {
-  // For custom games, check if they're linked to a catalogue source
   if (shop === "custom") {
     const gameKey = levelKeys.game(shop, objectId);
     const game = await gamesSublevel.get(gameKey).catch(() => null);
@@ -218,11 +219,51 @@ const getGameShopDetails = async (
       );
     }
 
-    return null;
-  }
+    if (game && (!game.linkedShop || !game.linkedObjectId)) {
+      const match = await autoMatchGame(game.title);
+      if (match) {
+        const updatedGame = {
+          ...game,
+          linkedShop: match.shop,
+          linkedObjectId: match.objectId,
+        };
+        await gamesSublevel.put(gameKey, updatedGame);
 
-  if (shop === "launchbox") {
-    return getLaunchboxShopDetails(objectId, shop, language);
+        try {
+          const assets = await getGameAssets(match.objectId, match.shop);
+          if (assets) {
+            const existingAssets = await gamesShopAssetsSublevel.get(gameKey).catch(() => null);
+            const updatedAssets = {
+              updatedAt: Date.now(),
+              objectId,
+              shop,
+              title: game.title,
+              iconUrl: existingAssets?.iconUrl || assets.iconUrl || null,
+              libraryHeroImageUrl: existingAssets?.libraryHeroImageUrl || assets.libraryHeroImageUrl || "",
+              libraryImageUrl: existingAssets?.libraryImageUrl || assets.libraryImageUrl || "",
+              logoImageUrl: existingAssets?.logoImageUrl || assets.logoImageUrl || "",
+              logoPosition: existingAssets?.logoPosition || null,
+              coverImageUrl: existingAssets?.coverImageUrl || assets.coverImageUrl || "",
+              downloadSources: existingAssets?.downloadSources || [],
+            };
+            await gamesShopAssetsSublevel.put(gameKey, updatedAssets);
+          }
+        } catch (err) {
+          logger.error("Failed to prefetch assets for newly auto-linked game:", err);
+        }
+
+        WindowManager.sendToAppWindows("on-library-batch-complete");
+
+        return getGameShopDetails(
+          _event,
+          match.objectId,
+          match.shop,
+          language
+        );
+      }
+    }
+
+    return null;
   }
 
   if (shop === "steam") {
@@ -264,7 +305,7 @@ const getGameShopDetails = async (
     return appDetails;
   }
 
-  throw new Error("Not implemented");
+  return getGenericShopDetails(objectId, shop, language);
 };
 
 registerEvent("getGameShopDetails", getGameShopDetails);

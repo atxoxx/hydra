@@ -2,7 +2,7 @@ import axios from "axios";
 import { HydraApi } from "./hydra-api";
 import { getSteamAppDetails } from "./steam";
 import { networkLogger as logger } from "./logger";
-import type { MetadataSearchResult } from "@types";
+import type { MetadataSearchResult, GameShop } from "@types";
 import type { SteamAppDetails } from "@types";
 
 /**
@@ -374,4 +374,37 @@ export async function searchSteamFirst(
     3
   );
   return enriched.filter((r) => r.title);
+}
+
+/**
+ * Searches the Hydra catalogue for a match on the title and returns the best shop/objectId pair.
+ */
+export async function autoMatchGame(
+  title: string
+): Promise<{ shop: GameShop; objectId: string; title: string } | null> {
+  const query = title.trim();
+  if (query.length < 2) return null;
+
+  try {
+    // 1. Search steam first
+    let results = await searchCatalogue(query, 5, "steam");
+    if (results.length === 0) {
+      // 2. Fall back to searching all shops
+      results = await searchCatalogue(query, 5);
+    }
+
+    if (results.length > 0) {
+      const best = results[0];
+      if (best.shop && best.objectId) {
+        return {
+          shop: best.shop as GameShop,
+          objectId: best.objectId,
+          title: best.title,
+        };
+      }
+    }
+  } catch (err) {
+    logger.error("autoMatchGame failed:", err);
+  }
+  return null;
 }

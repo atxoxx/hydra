@@ -3,6 +3,8 @@ import { gamesSublevel, gamesShopAssetsSublevel, levelKeys } from "@main/level";
 import { randomUUID } from "node:crypto";
 import type { Game, GameShop } from "@types";
 import { seedSteamAppIdMapping } from "@main/services/steam-appid-mapping";
+import { autoMatchGame } from "@main/services";
+import { getGameAssets } from "../catalogue/get-game-assets";
 
 const SEED_DELAY_MS = 1100;
 
@@ -67,18 +69,47 @@ const bulkAddCustomGamesToLibrary = async (
         continue;
       }
 
+      let linkedShop = entry.linkedShop;
+      let linkedObjectId = entry.linkedObjectId;
+      let iconUrl = entry.iconUrl;
+      let libraryHeroImageUrl = entry.libraryHeroImageUrl;
+      let libraryImageUrl = entry.libraryImageUrl;
+      let logoImageUrl = entry.logoImageUrl;
+      let coverImageUrl = entry.coverImageUrl;
+
+      if (!linkedShop || !linkedObjectId) {
+        const match = await autoMatchGame(entry.title);
+        if (match) {
+          linkedShop = match.shop;
+          linkedObjectId = match.objectId;
+
+          try {
+            const assets = await getGameAssets(linkedObjectId, linkedShop);
+            if (assets) {
+              iconUrl = iconUrl || assets.iconUrl || undefined;
+              libraryHeroImageUrl = libraryHeroImageUrl || assets.libraryHeroImageUrl || undefined;
+              libraryImageUrl = libraryImageUrl || assets.libraryImageUrl || undefined;
+              logoImageUrl = logoImageUrl || assets.logoImageUrl || undefined;
+              coverImageUrl = coverImageUrl || assets.coverImageUrl || undefined;
+            }
+          } catch (err) {
+            // Ignore prefetch error
+          }
+        }
+      }
+
       // Save shop assets
       const assets = {
         updatedAt: Date.now(),
         objectId,
         shop,
         title: entry.title,
-        iconUrl: entry.iconUrl || null,
-        libraryHeroImageUrl: entry.libraryHeroImageUrl || "",
-        libraryImageUrl: entry.libraryImageUrl || entry.iconUrl || "",
-        logoImageUrl: entry.logoImageUrl || "",
+        iconUrl: iconUrl || null,
+        libraryHeroImageUrl: libraryHeroImageUrl || "",
+        libraryImageUrl: libraryImageUrl || iconUrl || "",
+        logoImageUrl: logoImageUrl || "",
         logoPosition: null,
-        coverImageUrl: entry.coverImageUrl || entry.iconUrl || "",
+        coverImageUrl: coverImageUrl || iconUrl || "",
         downloadSources: [],
       };
       await gamesShopAssetsSublevel.put(gameKey, assets);
@@ -86,9 +117,9 @@ const bulkAddCustomGamesToLibrary = async (
       // Save game record
       const game: Game = {
         title: entry.title,
-        iconUrl: entry.iconUrl || null,
-        logoImageUrl: entry.logoImageUrl || null,
-        libraryHeroImageUrl: entry.libraryHeroImageUrl || null,
+        iconUrl: iconUrl || null,
+        logoImageUrl: logoImageUrl || null,
+        libraryHeroImageUrl: libraryHeroImageUrl || null,
         objectId,
         shop,
         remoteId: null,
@@ -99,8 +130,8 @@ const bulkAddCustomGamesToLibrary = async (
         executablePath: entry.executablePath,
         executablePathUpdatedAt: new Date(),
         launchOptions: null,
-        linkedShop: entry.linkedShop ?? null,
-        linkedObjectId: entry.linkedObjectId ?? null,
+        linkedShop: linkedShop ?? null,
+        linkedObjectId: linkedObjectId ?? null,
         favorite: false,
         automaticCloudSync: false,
         hasManuallyUpdatedPlaytime: false,
@@ -126,3 +157,4 @@ const bulkAddCustomGamesToLibrary = async (
 };
 
 registerEvent("bulkAddCustomGamesToLibrary", bulkAddCustomGamesToLibrary);
+

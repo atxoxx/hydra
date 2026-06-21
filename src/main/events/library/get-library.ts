@@ -9,6 +9,7 @@ import {
   gamesShopAssetsSublevel,
   gamesShopCacheSublevel,
   gamesSublevel,
+  levelKeys,
 } from "@main/level";
 
 const lookupCachedPlatform = async (
@@ -44,7 +45,22 @@ const getLibrary = async (): Promise<LibraryGame[]> => {
           .filter(([_key, game]) => game.isDeleted === false)
           .map(async ([key, game]) => {
             const download = await downloadsSublevel.get(key);
-            const gameAssets = await gamesShopAssetsSublevel.get(key);
+            let gameAssets = await gamesShopAssetsSublevel.get(key);
+            if (game.shop === "custom" && game.linkedShop && game.linkedObjectId) {
+              const linkedKey = levelKeys.game(game.linkedShop, game.linkedObjectId);
+              const linkedAssets = await gamesShopAssetsSublevel.get(linkedKey).catch(() => null);
+              if (linkedAssets) {
+                gameAssets = {
+                  ...linkedAssets,
+                  ...gameAssets,
+                  iconUrl: gameAssets?.iconUrl || linkedAssets.iconUrl,
+                  libraryHeroImageUrl: gameAssets?.libraryHeroImageUrl || linkedAssets.libraryHeroImageUrl,
+                  libraryImageUrl: gameAssets?.libraryImageUrl || linkedAssets.libraryImageUrl,
+                  logoImageUrl: gameAssets?.logoImageUrl || linkedAssets.logoImageUrl,
+                  coverImageUrl: gameAssets?.coverImageUrl || linkedAssets.coverImageUrl,
+                };
+              }
+            }
             const achievements = await gameAchievementsSublevel
               .get(key)
               .catch(() => null);
