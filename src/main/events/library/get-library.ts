@@ -46,10 +46,7 @@ const getLibrary = async (): Promise<LibraryGame[]> => {
           .map(async ([key, game]) => {
             const download = await downloadsSublevel.get(key);
             let gameAssets = await gamesShopAssetsSublevel.get(key);
-            if (
-              game.linkedShop &&
-              game.linkedObjectId
-            ) {
+            if (game.linkedShop && game.linkedObjectId) {
               const linkedKey = levelKeys.game(
                 game.linkedShop,
                 game.linkedObjectId

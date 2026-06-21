@@ -10,7 +10,12 @@ import { scanXboxGames } from "./platform-scanners/xbox-scanner";
 import { scanRockstarGames } from "./platform-scanners/rockstar-scanner";
 import { scanItchIoGames } from "./platform-scanners/itchio-scanner";
 import { scanHumbleGames } from "./platform-scanners/humble-scanner";
-import type { Game, PlatformGame, AllPlatformsScanResult, GameShop } from "@types";
+import type {
+  Game,
+  PlatformGame,
+  AllPlatformsScanResult,
+  GameShop,
+} from "@types";
 import { logger } from "./logger";
 import { autoMatchGame } from "./metadata-search-aggregator";
 import { getGameAssets } from "@main/events/catalogue/get-game-assets";
