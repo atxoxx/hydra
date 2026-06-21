@@ -25,6 +25,13 @@ export function PerformanceInsights() {
   const [sessions, setSessions] = useState<SessionWithGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [metric, setMetric] = useState<CompareMetric>("fps");
+  const [totalRam, setTotalRam] = useState<number>(16);
+
+  useEffect(() => {
+    window.electron.getSystemRam().then((ram) => {
+      if (ram > 0) setTotalRam(ram);
+    });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -201,7 +208,7 @@ export function PerformanceInsights() {
     return (
       <div className="section-panel">
         <h3 className="section-panel__title">
-          {t("performance_insights") || "Performance Insights"}
+          {t("performance_insights", "Performance Insights")}
         </h3>
         <div className="section-panel__empty">{t("loading")}</div>
       </div>
@@ -212,12 +219,12 @@ export function PerformanceInsights() {
     return (
       <div className="section-panel">
         <h3 className="section-panel__title">
-          {t("performance_insights") || "Performance Insights"}
+          {t("performance_insights", "Performance Insights")}
         </h3>
         <div className="section-panel__empty">
           <Info size={24} style={{ marginBottom: 8, opacity: 0.5 }} />
           <div>
-            {t("no_hardware_data") || "No performance insights available yet."}
+            {t("no_hardware_data", "No performance insights available yet.")}
           </div>
           <small
             style={{
@@ -240,7 +247,7 @@ export function PerformanceInsights() {
         <div className="performance-insights__chart-header">
           <h3 className="section-panel__title">
             <BarChart3 size={14} style={{ marginRight: 6 }} />
-            {t("game_comparisons") || "Game Comparisons"}
+            {t("game_comparisons", "Game Comparisons")}
           </h3>
           <div className="performance-insights__tabs">
             {(["fps", "temps", "ram"] as const).map((m) => (
@@ -273,7 +280,10 @@ export function PerformanceInsights() {
             margin={{ top: 10, right: 30, bottom: 30, left: 130 }}
             padding={0.3}
             layout="horizontal"
-            valueScale={{ type: "linear" }}
+            valueScale={{
+              type: "linear",
+              max: metric === "ram" ? totalRam : "auto"
+            }}
             colors={colors}
             groupMode="grouped"
             axisTop={null}
@@ -328,14 +338,14 @@ export function PerformanceInsights() {
       {/* Tabular List Section */}
       <div className="section-panel performance-insights__table-panel">
         <h3 className="section-panel__title">
-          {t("all_performance_records") || "Detailed Performance Board"}
+          {t("all_performance_records", "Detailed Performance Board")}
         </h3>
         <div className="performance-insights__table-wrapper">
           <table className="performance-insights__table">
             <thead>
               <tr>
-                <th>{t("game") || "Game"}</th>
-                <th>{t("sessions") || "Sessions"}</th>
+                <th>{t("game", "Game")}</th>
+                <th>{t("sessions", "Sessions")}</th>
                 <th>Avg FPS</th>
                 <th>Avg CPU Temp</th>
                 <th>Avg GPU Temp</th>

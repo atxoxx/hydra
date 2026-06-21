@@ -42,7 +42,7 @@ type HydraNativeModule = {
     preserveAnimation: boolean
   ) => Promise<NativeProcessFriendImageResponse>;
   listProcesses: () => ProcessPayload[];
-  readHardwareMetrics: () => HardwareMetricsPayload;
+  readHardwareMetrics: (selectedGpuIndex?: number) => HardwareMetricsPayload;
 };
 
 export type SystemProcessMap = {
@@ -302,13 +302,13 @@ export class NativeAddon {
     });
   }
 
-  public static readHardwareMetrics(): HardwareMetricsPayload | null {
+  public static readHardwareMetrics(selectedGpuIndex?: number): HardwareMetricsPayload | null {
     try {
       const mod = this.load();
       if (typeof mod.readHardwareMetrics !== "function") {
         return null;
       }
-      const metrics = mod.readHardwareMetrics();
+      const metrics = mod.readHardwareMetrics(selectedGpuIndex);
       return metrics;
     } catch (error) {
       logger.error("Failed to read hardware metrics via native addon", error);

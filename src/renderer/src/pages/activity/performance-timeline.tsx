@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Activity, BarChart3, Info } from "lucide-react";
 import type { SessionWithGame, HardwareSample } from "../../declaration";
@@ -80,6 +80,13 @@ export function PerformanceTimeline({
   const [isolatedSessionIndex, setIsolatedSessionIndex] = useState<
     number | null
   >(null);
+  const [totalRam, setTotalRam] = useState<number>(16);
+
+  useEffect(() => {
+    window.electron.getSystemRam().then((ram) => {
+      if (ram > 0) setTotalRam(ram);
+    });
+  }, []);
 
   // Filter sessions by selected game
   const filteredSessions = useMemo(() => {
@@ -126,7 +133,7 @@ export function PerformanceTimeline({
       for (const [gameTitle, sessions] of gameSessionsMap.entries()) {
         const avg = getAverageTimeline(
           sessions,
-          `${gameTitle} (${t("average") || "Avg"})`
+          `${gameTitle} (${t("average", "Avg")})`
         );
         if (avg) averagedSessions.push(avg);
       }
@@ -143,7 +150,7 @@ export function PerformanceTimeline({
         // Show a single average line of all sessions for this game
         const avg = getAverageTimeline(
           filteredSessions,
-          t("average_sessions") || "Average Sessions"
+          t("average_sessions", "Average Sessions")
         );
         if (avg) {
           return {
@@ -180,12 +187,12 @@ export function PerformanceTimeline({
       <div className="section-panel">
         <h3 className="section-panel__title">
           <Activity size={14} style={{ marginRight: 6 }} />
-          {t("session_performance_timeline") || "Session Performance Timeline"}
+          {t("session_performance_timeline", "Session Performance Timeline")}
         </h3>
         <div className="performance-timeline__empty">
           <Info size={24} style={{ marginBottom: 8, opacity: 0.3 }} />
           <div>
-            {t("no_performance_data") || "No performance data available yet."}
+            {t("no_performance_data", "No performance data available yet.")}
           </div>
         </div>
       </div>
@@ -199,15 +206,14 @@ export function PerformanceTimeline({
         <div className="performance-timeline__header">
           <h3 className="performance-timeline__title">
             <Activity size={14} />
-            {t("session_performance_timeline") ||
-              "Session Performance Timeline"}
+            {t("session_performance_timeline", "Session Performance Timeline")}
           </h3>
 
           <div className="performance-timeline__controls">
             {/* Game selector */}
             <div className="performance-timeline__game-selector">
               <span className="performance-timeline__game-selector-label">
-                {t("filter_by_game") || "GAME"}
+                {t("filter_by_game", "GAME")}
               </span>
               <select
                 className="performance-timeline__game-select"
@@ -217,7 +223,7 @@ export function PerformanceTimeline({
                   setIsolatedSessionIndex(null);
                 }}
               >
-                <option value="all">{t("all_games") || "All Games"}</option>
+                <option value="all">{t("all_games", "All Games")}</option>
                 {gameList.map((g) => (
                   <option key={g.title} value={g.title}>
                     {g.title}
@@ -245,7 +251,7 @@ export function PerformanceTimeline({
                   }}
                 >
                   <option value="all">
-                    {t("all_sessions_average") || "All Sessions (Average)"}
+                    {t("all_sessions_average", "All Sessions (Average)")}
                   </option>
                   {filteredSessions.map((s, i) => (
                     <option key={s.id} value={String(i)}>
@@ -266,7 +272,7 @@ export function PerformanceTimeline({
           <div className="performance-timeline__chart-card">
             <div className="performance-timeline__chart-title">
               <BarChart3 size={13} />
-              {t("cpu_gpu_usage") || "CPU & GPU Usage"}
+              {t("cpu_gpu_usage", "CPU & GPU Usage")}
             </div>
             <CombinedLineChart
               samples={chartDataProps.samples}
@@ -284,7 +290,7 @@ export function PerformanceTimeline({
           <div className="performance-timeline__chart-card">
             <div className="performance-timeline__chart-title">
               <BarChart3 size={13} />
-              {t("cpu_gpu_temps") || "CPU & GPU Temperatures"}
+              {t("cpu_gpu_temps", "CPU & GPU Temperatures")}
             </div>
             <CombinedLineChart
               samples={chartDataProps.samples}
@@ -300,7 +306,7 @@ export function PerformanceTimeline({
           <div className="performance-timeline__chart-card">
             <div className="performance-timeline__chart-title">
               <BarChart3 size={13} />
-              {t("ram_usage") || "RAM Usage"}
+              {t("ram_usage", "RAM Usage")}
             </div>
             <CombinedLineChart
               samples={chartDataProps.samples}
@@ -309,6 +315,8 @@ export function PerformanceTimeline({
               series={RAM_SERIES}
               height={220}
               isolatedSessionIndex={chartDataProps.isolatedSessionIndex}
+              yMin={0}
+              yMax={totalRam}
               yAxisLabel="GB"
             />
           </div>
@@ -316,7 +324,7 @@ export function PerformanceTimeline({
           <div className="performance-timeline__chart-card">
             <div className="performance-timeline__chart-title">
               <BarChart3 size={13} />
-              {t("fps") || "Frame Rate (FPS)"}
+              {t("fps", "Frame Rate (FPS)")}
             </div>
             <CombinedLineChart
               samples={chartDataProps.samples}

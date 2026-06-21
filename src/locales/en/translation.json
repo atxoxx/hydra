@@ -2120,7 +2120,10 @@
     "gpu_usage": "GPU Usage",
     "cpu_temp": "CPU Temp",
     "gpu_temp": "GPU Temp",
-    "ram_usage": "RAM Usage"
+    "ram_usage": "RAM Usage",
+    "first_played": "First Played",
+    "last_played": "Last Played",
+    "all_sessions_average": "All Sessions (Average)"
   },
   "news": {
     "news": "News",

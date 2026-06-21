@@ -67,11 +67,11 @@ export function WeeklyHeatmap({ days, loading }: WeeklyHeatmapProps) {
             {/* Weekday indicators column on the left */}
             <div className="weekly-heatmap__row-labels">
               <span></span>
-              <span>{t("Mon") || "Mon"}</span>
+              <span>{t("Mon", "Mon")}</span>
               <span></span>
-              <span>{t("Wed") || "Wed"}</span>
+              <span>{t("Wed", "Wed")}</span>
               <span></span>
-              <span>{t("Fri") || "Fri"}</span>
+              <span>{t("Fri", "Fri")}</span>
               <span></span>
             </div>
 

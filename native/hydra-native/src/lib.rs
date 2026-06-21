@@ -481,6 +481,17 @@ mod hardware {
         osd_flags: u32,
     }
 
+    #[repr(C)]
+    struct RtssAppEntry {
+        process_id: u32,
+        name: [u8; 260],
+        flags: u32,
+        time0: u32,
+        time1: u32,
+        frames: u32,
+        frame_time: u32,
+    }
+
     fn wide_from_str(s: &str) -> Vec<u16> {
         s.encode_utf16().chain(std::iter::once(0)).collect()
     }
@@ -515,7 +526,7 @@ mod hardware {
         let _ = CloseHandle(handle);
     }
 
-    pub fn read_mahm_metrics() -> Option<(f32, f32, f32)> {
+    pub fn read_mahm_metrics(selected_gpu_index: u32) -> Option<(f32, f32, f32)> {
         unsafe {
             let (handle, view, _) = open_shared_memory("MAHMSharedMemory")?;
 
@@ -553,9 +564,13 @@ mod hardware {
                 }
 
                 if name_lower.contains("gpu") && name_lower.contains("temperature") {
-                    gpu_temp = entry.data;
+                    if entry.gpu == selected_gpu_index {
+                        gpu_temp = entry.data;
+                    }
                 } else if name_lower.contains("gpu") && name_lower.contains("usage") {
-                    gpu_usage = entry.data;
+                    if entry.gpu == selected_gpu_index {
+                        gpu_usage = entry.data;
+                    }
                 } else if name_lower.contains("cpu") && name_lower.contains("temperature") {
                     cpu_temp = entry.data;
                 }
@@ -586,6 +601,27 @@ mod hardware {
                     continue;
                 }
 
+                // Try reading from app entries first
+                if header.app_entry_size as usize >= std::mem::size_of::<RtssAppEntry>() {
+                    let app_arr = view.add(header.app_arr_offset as usize);
+                    let num_apps = header.app_arr_size / header.app_entry_size;
+                    for i in 0..num_apps as usize {
+                        let entry_ptr =
+                            app_arr.add(i * header.app_entry_size as usize) as *const RtssAppEntry;
+                        let entry = &*entry_ptr;
+                        if entry.process_id != 0 {
+                            let duration = entry.time1.saturating_sub(entry.time0);
+                            if duration > 0 && entry.frames > 0 {
+                                let fps = (entry.frames as f32 * 1000.0) / duration as f32;
+                                if fps > 0.0 && fps < 1000.0 {
+                                    close_shared_memory(handle, view);
+                                    return Some(fps);
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Guard against division by zero
                 if header.osd_entry_size == 0 {
                     close_shared_memory(handle, view);
@@ -602,10 +638,11 @@ mod hardware {
                     let entry = &*entry_ptr;
 
                     let osd_text = read_utf8(&entry.osd_text);
+                    let osd_text_lower = osd_text.to_lowercase();
                     let osd_data0 = entry.osd_data[0];
 
                     // Framerate is typically stored in osd_data[0] for the framerate OSD slot
-                    if osd_text.contains("Framerate") || osd_text.contains("fps") || osd_text.is_empty() {
+                    if osd_text_lower.contains("framerate") || osd_text_lower.contains("fps") || osd_text_lower.is_empty() {
                         if osd_data0 > 0.0 {
                             close_shared_memory(handle, view);
                             return Some(osd_data0);
@@ -622,11 +659,11 @@ mod hardware {
 }
 
 #[napi]
-pub fn read_hardware_metrics() -> HardwareMetrics {
+pub fn read_hardware_metrics(selected_gpu_index: Option<u32>) -> HardwareMetrics {
     #[cfg(windows)]
     {
         let (gpu_temp, gpu_usage, cpu_temp) =
-            hardware::read_mahm_metrics().unwrap_or((0.0, 0.0, 0.0));
+            hardware::read_mahm_metrics(selected_gpu_index.unwrap_or(0)).unwrap_or((0.0, 0.0, 0.0));
 
         let fps = hardware::read_rtss_fps().unwrap_or(0.0);
 
@@ -655,6 +692,7 @@ pub fn read_hardware_metrics() -> HardwareMetrics {
 
     #[cfg(not(windows))]
     {
+        let _ = selected_gpu_index; // silence unused warning
         let mut system = System::new_all();
         system.refresh_cpu_all();
         system.refresh_memory();

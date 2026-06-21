@@ -602,6 +602,7 @@ declare global {
         vram: number;
       }[]
     >;
+    getSystemRam: () => Promise<number>;
     getPlaytimeSummary: (
       startDate: string,
       endDate: string

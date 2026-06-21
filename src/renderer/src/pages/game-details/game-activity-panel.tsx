@@ -481,12 +481,12 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
     },
     {
       icon: <Calendar size={14} />,
-      label: t("first_played") || "First Played",
+      label: t("first_played", "First Played"),
       value: firstPlayed ? formatDate(firstPlayed) : "—",
     },
     {
       icon: <Calendar size={14} />,
-      label: t("last_played") || "Last Played",
+      label: t("last_played", "Last Played"),
       value: lastPlayed ? formatDate(lastPlayed) : "—",
     },
   ];
@@ -508,7 +508,7 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
               onClick={() => setViewMode("playtime")}
             >
               <BarChart2 size={12} />
-              {t("playtime_view") || "Playtime"}
+              {t("playtime_view", "Playtime")}
             </button>
             <button
               type="button"
@@ -516,7 +516,7 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
               onClick={() => setViewMode("performance")}
             >
               <Cpu size={12} />
-              {t("performance_view") || "Performance"}
+              {t("performance_view", "Performance")}
             </button>
           </div>
           {viewMode === "playtime" && (

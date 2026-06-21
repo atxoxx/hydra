@@ -89,23 +89,23 @@ export function ActivityStatsBar({
       return [
         {
           icon: <Clock size={13} />,
-          label: t("total_playtime") || "Playtime",
+          label: t("total_playtime", "Playtime"),
           value: formatPlaytime(totalMs),
           highlight: true,
         },
         {
           icon: <Calendar size={13} />,
-          label: t("active_days") || "Days",
+          label: t("active_days", "Days"),
           value: String(activeDays),
         },
         {
           icon: <TrendingUp size={13} />,
-          label: t("avg_per_day") || "Avg/Day",
+          label: t("avg_per_day", "Avg/Day"),
           value: formatPlaytime(avgPerDay),
         },
         {
           icon: <Zap size={13} />,
-          label: t("most_active_day") || "Best Day",
+          label: t("most_active_day", "Best Day"),
           value: mostActive ?? "—",
         },
       ];
@@ -121,28 +121,28 @@ export function ActivityStatsBar({
     return [
       {
         icon: <Clock size={13} />,
-        label: t("total_hours") || "Hours",
+        label: t("total_hours", "Hours"),
         value: formatHours(totalHours),
         highlight: true,
       },
       {
         icon: <Gamepad2 size={13} />,
-        label: t("games_played") || "Games",
+        label: t("games_played", "Games"),
         value: String(gamesPlayed),
       },
       {
         icon: <BarChart3 size={13} />,
-        label: t("avg_per_day") || "Avg/Day",
+        label: t("avg_per_day", "Avg/Day"),
         value: formatHours(avgPerDay),
       },
       {
         icon: <Calendar size={13} />,
-        label: t("total_sessions") || "Sessions",
+        label: t("total_sessions", "Sessions"),
         value: String(totalSessions),
       },
       {
         icon: <Zap size={13} />,
-        label: t("longest_streak") || "Streak",
+        label: t("longest_streak", "Streak"),
         value: longestStreak > 0 ? `${longestStreak}d` : "—",
       },
     ];

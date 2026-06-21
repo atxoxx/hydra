@@ -106,7 +106,7 @@ export function PerformanceStatCards({
     return (
       <div className="performance-stat-cards">
         <div className="performance-stat-cards__empty">
-          {t("no_performance_data") || "No performance data available yet."}
+          {t("no_performance_data", "No performance data available yet.")}
         </div>
       </div>
     );
@@ -117,7 +117,7 @@ export function PerformanceStatCards({
       {stats.map((stat) => (
         <div key={stat.label} className="performance-stat-cards__card">
           <span className="performance-stat-cards__label">
-            {t(stat.label.toLowerCase().replace(" ", "_")) || stat.label}
+            {t(stat.label.toLowerCase().replace(" ", "_"), stat.label)}
           </span>
           <div className="performance-stat-cards__sparkline">
             <ActivitySparkline

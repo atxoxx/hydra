@@ -28,7 +28,10 @@ export const gamesPlaytime = new Map<
   { lastTick: number; firstTick: number; lastSyncTick: number }
 >();
 
-const activeSessions = new Map<string, { id: string; startTime: number }>();
+const activeSessions = new Map<
+  string,
+  { id: string; startTime: number; performanceStartTime: number }
+>();
 
 const generateSessionId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -324,7 +327,11 @@ function onOpenGame(game: Game) {
 
   // Create new session record
   const sessionId = generateSessionId();
-  activeSessions.set(gameKey, { id: sessionId, startTime: now });
+  activeSessions.set(gameKey, {
+    id: sessionId,
+    startTime: Date.now(),
+    performanceStartTime: now,
+  });
 
   // Start hardware monitoring if enabled
   HardwareMonitor.start(gameKey);
@@ -505,13 +512,15 @@ const onCloseGame = async (game: Game) => {
   // Finalize and persist session
   const activeSession = activeSessions.get(gameKey);
   if (activeSession) {
-    const sessionDurationMs = now - activeSession.startTime;
+    const sessionDurationMs = now - activeSession.performanceStartTime;
     const session: GameSession = {
       id: activeSession.id,
       shop: game.shop,
       objectId: game.objectId,
       startTime: new Date(activeSession.startTime).toISOString(),
-      endTime: new Date(now).toISOString(),
+      endTime: new Date(
+        activeSession.startTime + sessionDurationMs
+      ).toISOString(),
       durationMs: sessionDurationMs,
       hardwareMetrics,
     };

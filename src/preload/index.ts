@@ -817,6 +817,7 @@ contextBridge.exposeInMainWorld("electron", {
     ramUsageAlertThresholdMB?: number;
   }) => ipcRenderer.invoke("updateHardwareMonitorConfig", config),
   getSystemGpus: () => ipcRenderer.invoke("getSystemGpus"),
+  getSystemRam: () => ipcRenderer.invoke("getSystemRam"),
   getPlaytimeSummary: (startDate: string, endDate: string) =>
     ipcRenderer.invoke("getPlaytimeSummary", startDate, endDate),
   getFriendsStats: () => ipcRenderer.invoke("getFriendsStats"),

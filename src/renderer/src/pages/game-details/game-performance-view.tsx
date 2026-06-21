@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BarChart3, Activity, Info } from "lucide-react";
 import type { GameSession } from "../../declaration";
@@ -81,6 +81,13 @@ export function GamePerformanceView({
   const [isolatedSessionIndex, setIsolatedSessionIndex] = useState<
     number | null
   >(null);
+  const [totalRam, setTotalRam] = useState<number>(16);
+
+  useEffect(() => {
+    window.electron.getSystemRam().then((ram) => {
+      if (ram > 0) setTotalRam(ram);
+    });
+  }, []);
 
   // Compute processed average data for plotting to avoid visual clutter
   const chartDataProps = useMemo(() => {
@@ -88,7 +95,7 @@ export function GamePerformanceView({
       // Show average of all sessions for this game
       const avg = getAverageTimeline(
         hwSessions,
-        t("average_sessions") || "Average Sessions"
+        t("average_sessions", "Average Sessions")
       );
       if (avg) {
         return {
@@ -125,11 +132,10 @@ export function GamePerformanceView({
         <div className="game-performance-view__empty">
           <Info size={28} style={{ opacity: 0.4 }} />
           <span>
-            {t("no_performance_data") || "No performance data available yet."}
+            {t("no_performance_data", "No performance data available yet.")}
           </span>
           <small>
-            {t("hw_monitoring_disabled") ||
-              "Hardware monitoring is not enabled."}
+            {t("hw_monitoring_disabled", "Hardware monitoring is not enabled.")}
           </small>
         </div>
       </div>
@@ -148,8 +154,7 @@ export function GamePerformanceView({
           <div className="game-performance-view__chart-header">
             <span className="game-performance-view__chart-title">
               <Activity size={14} />
-              {t("session_performance_timeline") ||
-                "Session Performance Timeline"}
+              {t("session_performance_timeline", "Session Performance Timeline")}
             </span>
             <div className="game-performance-view__session-selector">
               <BarChart3 size={12} />
@@ -166,7 +171,7 @@ export function GamePerformanceView({
                 }}
               >
                 <option value="all">
-                  {t("all_sessions_average") || "All Sessions (Average)"}
+                  {t("all_sessions_average", "All Sessions (Average)")}
                 </option>
                 {hwSessions.map((s, i) => (
                   <option key={s.id} value={String(i)}>
@@ -184,7 +189,7 @@ export function GamePerformanceView({
             <div className="game-performance-view__chart-header">
               <span className="game-performance-view__chart-title">
                 <BarChart3 size={14} />
-                {t("cpu_gpu_usage") || "CPU & GPU Usage"}
+                {t("cpu_gpu_usage", "CPU & GPU Usage")}
               </span>
             </div>
           )}
@@ -207,7 +212,7 @@ export function GamePerformanceView({
             <div className="game-performance-view__chart-header">
               <span className="game-performance-view__chart-title">
                 <BarChart3 size={14} />
-                {t("cpu_gpu_temps") || "CPU & GPU Temperatures"}
+                {t("cpu_gpu_temps", "CPU & GPU Temperatures")}
               </span>
             </div>
           )}
@@ -228,7 +233,7 @@ export function GamePerformanceView({
             <div className="game-performance-view__chart-header">
               <span className="game-performance-view__chart-title">
                 <BarChart3 size={14} />
-                {t("ram_usage") || "RAM Usage"}
+                {t("ram_usage", "RAM Usage")}
               </span>
             </div>
           )}
@@ -239,6 +244,8 @@ export function GamePerformanceView({
             series={RAM_SERIES}
             height={220}
             isolatedSessionIndex={chartDataProps.isolatedSessionIndex}
+            yMin={0}
+            yMax={totalRam}
             yAxisLabel="GB"
           />
         </div>
@@ -249,7 +256,7 @@ export function GamePerformanceView({
             <div className="game-performance-view__chart-header">
               <span className="game-performance-view__chart-title">
                 <BarChart3 size={14} />
-                {t("fps") || "Frame Rate (FPS)"}
+                {t("fps", "Frame Rate (FPS)")}
               </span>
             </div>
           )}
