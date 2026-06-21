@@ -8,6 +8,7 @@ import {
   type MetricSeries,
 } from "../../components/performance-charts/combined-line-chart";
 import { PerformanceStatCards } from "../../components/performance-charts/performance-stat-cards";
+import { getAverageTimeline } from "../../components/performance-charts/performance-averager";
 import "./game-performance-view.scss";
 
 export interface GamePerformanceViewProps {
@@ -24,8 +25,11 @@ const TEMPS_SERIES: MetricSeries[] = [
   { id: "GPU Temp", color: "#f39c12", field: "gpuTemp" },
 ];
 
-const RAM_FPS_SERIES: MetricSeries[] = [
+const RAM_SERIES: MetricSeries[] = [
   { id: "RAM", color: "#2ecc71", field: "ramUsageMB" },
+];
+
+const FPS_SERIES: MetricSeries[] = [
   { id: "FPS", color: "#16b195", field: "fps" },
 ];
 
@@ -73,20 +77,47 @@ export function GamePerformanceView({
     [hwSessions]
   );
 
-  const sessionSamples = useMemo(
-    () => hwSessions.map((s) => s.hardwareMetrics?.samples ?? []),
-    [hwSessions]
-  );
-
-  const sessionDurations = useMemo(
-    () => hwSessions.map((s) => s.durationMs),
-    [hwSessions]
-  );
-
-  // Session isolation state - shared across all three charts
+  // Session isolation state - shared across all charts
   const [isolatedSessionIndex, setIsolatedSessionIndex] = useState<
     number | null
   >(null);
+
+  // Compute processed average data for plotting to avoid visual clutter
+  const chartDataProps = useMemo(() => {
+    if (isolatedSessionIndex === null) {
+      // Show average of all sessions for this game
+      const avg = getAverageTimeline(
+        hwSessions,
+        t("average_sessions") || "Average Sessions"
+      );
+      if (avg) {
+        return {
+          samples: [avg.samples],
+          sessionLabels: [avg.label],
+          sessionDurations: [avg.durationMs],
+          isolatedSessionIndex: null,
+        };
+      }
+    } else {
+      // Show a single specific session
+      const session = hwSessions[isolatedSessionIndex];
+      if (session) {
+        return {
+          samples: [session.hardwareMetrics?.samples ?? []],
+          sessionLabels: [formatSessionDate(session.startTime)],
+          sessionDurations: [session.durationMs],
+          isolatedSessionIndex: null,
+        };
+      }
+    }
+
+    return {
+      samples: [],
+      sessionLabels: [],
+      sessionDurations: [],
+      isolatedSessionIndex: null,
+    };
+  }, [hwSessions, isolatedSessionIndex, t]);
 
   if (hwSessions.length === 0) {
     return (
@@ -135,7 +166,7 @@ export function GamePerformanceView({
                 }}
               >
                 <option value="all">
-                  {t("all_sessions") || "All Sessions"}
+                  {t("all_sessions_average") || "All Sessions (Average)"}
                 </option>
                 {hwSessions.map((s, i) => (
                   <option key={s.id} value={String(i)}>
@@ -158,12 +189,12 @@ export function GamePerformanceView({
             </div>
           )}
           <CombinedLineChart
-            samples={sessionSamples}
-            sessionLabels={sessionLabels}
-            sessionDurations={sessionDurations}
+            samples={chartDataProps.samples}
+            sessionLabels={chartDataProps.sessionLabels}
+            sessionDurations={chartDataProps.sessionDurations}
             series={CPU_GPU_USAGE_SERIES}
             height={220}
-            isolatedSessionIndex={isolatedSessionIndex}
+            isolatedSessionIndex={chartDataProps.isolatedSessionIndex}
             yMin={0}
             yMax={100}
             yAxisLabel="%"
@@ -181,35 +212,55 @@ export function GamePerformanceView({
             </div>
           )}
           <CombinedLineChart
-            samples={sessionSamples}
-            sessionLabels={sessionLabels}
-            sessionDurations={sessionDurations}
+            samples={chartDataProps.samples}
+            sessionLabels={chartDataProps.sessionLabels}
+            sessionDurations={chartDataProps.sessionDurations}
             series={TEMPS_SERIES}
             height={220}
-            isolatedSessionIndex={isolatedSessionIndex}
+            isolatedSessionIndex={chartDataProps.isolatedSessionIndex}
             yAxisLabel="°C"
           />
         </div>
 
-        {/* Chart 3: RAM + FPS */}
+        {/* Chart 3: RAM Usage */}
         <div className="game-performance-view__chart-card">
           {hwSessions.length <= 1 && (
             <div className="game-performance-view__chart-header">
               <span className="game-performance-view__chart-title">
                 <BarChart3 size={14} />
-                {t("ram_fps") || "RAM & FPS"}
+                {t("ram_usage") || "RAM Usage"}
               </span>
             </div>
           )}
           <CombinedLineChart
-            samples={sessionSamples}
-            sessionLabels={sessionLabels}
-            sessionDurations={sessionDurations}
-            series={RAM_FPS_SERIES}
+            samples={chartDataProps.samples}
+            sessionLabels={chartDataProps.sessionLabels}
+            sessionDurations={chartDataProps.sessionDurations}
+            series={RAM_SERIES}
             height={220}
-            isolatedSessionIndex={isolatedSessionIndex}
-            yAxisLabel="MB"
-            rightAxisSeries={["FPS"]}
+            isolatedSessionIndex={chartDataProps.isolatedSessionIndex}
+            yAxisLabel="GB"
+          />
+        </div>
+
+        {/* Chart 4: FPS */}
+        <div className="game-performance-view__chart-card">
+          {hwSessions.length <= 1 && (
+            <div className="game-performance-view__chart-header">
+              <span className="game-performance-view__chart-title">
+                <BarChart3 size={14} />
+                {t("fps") || "Frame Rate (FPS)"}
+              </span>
+            </div>
+          )}
+          <CombinedLineChart
+            samples={chartDataProps.samples}
+            sessionLabels={chartDataProps.sessionLabels}
+            sessionDurations={chartDataProps.sessionDurations}
+            series={FPS_SERIES}
+            height={220}
+            isolatedSessionIndex={chartDataProps.isolatedSessionIndex}
+            yAxisLabel=" FPS"
           />
         </div>
       </div>

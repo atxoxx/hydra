@@ -1,5 +1,13 @@
 import { useMemo } from "react";
-import { ResponsiveLine } from "@nivo/line";
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from "recharts";
 import type { HardwareSample } from "../../declaration";
 import { useTranslation } from "react-i18next";
 import "./combined-line-chart.scss";
@@ -27,24 +35,18 @@ export interface CombinedLineChartProps {
   /** Y-axis min/max override */
   yMin?: number;
   yMax?: number;
-  /** Left Y-axis label */
+  /** Y-axis label/unit suffix */
   yAxisLabel?: string;
-  /** Right Y-axis label (for dual-axis charts) */
-  yAxisRightLabel?: string;
-  /** Series that should use the right Y-axis */
-  rightAxisSeries?: string[];
 }
 
-function formatSessionTime(
-  sampleIndex: number,
-  totalSamples: number,
-  durationMs: number
-): string {
-  const elapsedMs = (sampleIndex / Math.max(1, totalSamples - 1)) * durationMs;
-  const totalSeconds = Math.round(elapsedMs / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+function formatTimeTick(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 const MAX_POINTS = 80;
@@ -59,20 +61,23 @@ export function CombinedLineChart({
   yMin,
   yMax,
   yAxisLabel,
-  rightAxisSeries = [],
 }: Readonly<CombinedLineChartProps>) {
   const { t } = useTranslation("activity");
 
-  const chartData = useMemo(() => {
-    const sessionIndices =
-      isolatedSessionIndex !== undefined && isolatedSessionIndex !== null
-        ? [isolatedSessionIndex]
-        : samples.map((_, i) => i);
+  // Determine active session indices to plot
+  const activeSessionIndices = useMemo(() => {
+    if (isolatedSessionIndex !== undefined && isolatedSessionIndex !== null) {
+      return [isolatedSessionIndex];
+    }
+    return samples.map((_, i) => i);
+  }, [samples, isolatedSessionIndex]);
 
-    const result: { id: string; data: { x: string; y: number }[] }[] = [];
+  // Construct unified data array sorted by elapsedSeconds
+  const chartData = useMemo(() => {
+    const dataMap = new Map<number, Record<string, number>>();
 
     for (const s of series) {
-      for (const sessionIdx of sessionIndices) {
+      for (const sessionIdx of activeSessionIndices) {
         const sessionSamples = samples[sessionIdx];
         if (!sessionSamples || sessionSamples.length < 2) continue;
 
@@ -80,72 +85,81 @@ export function CombinedLineChart({
           1,
           Math.floor(sessionSamples.length / MAX_POINTS)
         );
-        const downsampled = sessionSamples.filter((_, i) => i % step === 0);
         const duration = sessionDurations[sessionIdx] ?? 0;
 
-        const data = downsampled.map((sample, idx) => ({
-          x: formatSessionTime(idx * step, sessionSamples.length, duration),
-          y: (sample[s.field] as number) || 0,
-        }));
+        sessionSamples.forEach((sample, sampleIdx) => {
+          if (sampleIdx % step !== 0) return;
 
-        const label =
-          sessionIndices.length > 1 && samples.length > 1
-            ? `${s.id} — ${sessionLabels[sessionIdx]}`
-            : s.id;
+          const elapsedMs =
+            (sampleIdx / Math.max(1, sessionSamples.length - 1)) * duration;
+          const elapsedSeconds = Math.round(elapsedMs / 1000);
 
-        result.push({ id: label, data });
+          let val = (sample[s.field] as number) || 0;
+          // RAM metrics in raw MB are converted to GB for better readability
+          if (s.field === "ramUsageMB") {
+            val = Math.round((val / 1024) * 10) / 10;
+          }
+
+          if (!dataMap.has(elapsedSeconds)) {
+            dataMap.set(elapsedSeconds, { elapsedSeconds });
+          }
+
+          const lineKey = `${s.id}_${sessionIdx}`;
+          dataMap.get(elapsedSeconds)![lineKey] = val;
+        });
       }
     }
 
-    return result;
-  }, [samples, sessionLabels, sessionDurations, series, isolatedSessionIndex]);
+    return Array.from(dataMap.values()).sort(
+      (a, b) => a.elapsedSeconds - b.elapsedSeconds
+    );
+  }, [samples, sessionDurations, series, activeSessionIndices]);
 
-  const tickValues = useMemo(() => {
-    if (chartData.length === 0) return [];
-    const dataPoints = chartData[0].data;
-    if (!dataPoints || dataPoints.length === 0) return [];
-    if (dataPoints.length <= 6) return dataPoints.map((d) => d.x);
-
-    const step = Math.max(1, Math.floor(dataPoints.length / 5));
-    const values: string[] = [];
-    for (let i = 0; i < dataPoints.length; i += step) {
-      values.push(dataPoints[i].x);
-    }
-    const lastX = dataPoints[dataPoints.length - 1].x;
-    if (!values.includes(lastX)) {
-      values.push(lastX);
-    }
-    return values;
-  }, [chartData]);
-
-  const colors = useMemo(() => {
+  // Helper to determine line color based on session order
+  const getLineColor = (s: MetricSeries, sessionIdx: number) => {
     if (isolatedSessionIndex !== undefined && isolatedSessionIndex !== null) {
-      return series.map((s) => s.color);
+      return s.color;
     }
-    // Flat array matching chartData order: for each series, for each session
-    // First session gets full opacity, others get ~45% opacity
-    const result: string[] = [];
-    for (const s of series) {
-      if (samples.length <= 1) {
-        result.push(s.color);
-      } else {
-        for (let si = 0; si < samples.length; si++) {
-          // Only push colors for sessions that exist in chartData
-          result.push(si === 0 ? s.color : s.color + "73");
-        }
-      }
+    if (samples.length <= 1 || sessionIdx === 0) {
+      return s.color;
     }
-    return result;
-  }, [series, samples, isolatedSessionIndex]);
+    return s.color + "73"; // Appends ~45% opacity to trailing session lines
+  };
 
-  const rightAxis = useMemo(() => {
-    if (rightAxisSeries.length === 0) return undefined;
-    return {
-      tickSize: 0,
-      tickPadding: 8,
-      tickRotation: 0,
-    };
-  }, [rightAxisSeries]);
+  // Custom tooltips
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload || !payload.length) return null;
+
+    return (
+      <div className="combined-line-chart__tooltip">
+        <div className="combined-line-chart__tooltip-time">
+          {t("elapsed_time") || "Elapsed Time"}: {formatTimeTick(label)}
+        </div>
+        <div className="combined-line-chart__tooltip-items">
+          {payload.map((item: any) => {
+            return (
+              <div
+                key={item.name}
+                className="combined-line-chart__tooltip-item"
+              >
+                <span
+                  className="combined-line-chart__tooltip-color-indicator"
+                  style={{ backgroundColor: item.stroke }}
+                />
+                <span className="combined-line-chart__tooltip-item-name">
+                  {item.name}:
+                </span>
+                <span className="combined-line-chart__tooltip-item-value">
+                  {item.value}
+                  {yAxisLabel ?? ""}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="combined-line-chart">
@@ -155,79 +169,71 @@ export function CombinedLineChart({
             {t("no_performance_data") || "No performance data available yet."}
           </div>
         ) : (
-          <ResponsiveLine
-            data={chartData}
-            margin={{
-              top: 12,
-              right: rightAxis ? 40 : 20,
-              bottom: 30,
-              left: 50,
-            }}
-            xScale={{ type: "point" }}
-            yScale={{
-              type: "linear",
-              min: yMin ?? "auto",
-              max: yMax ?? "auto",
-            }}
-            colors={colors}
-            lineWidth={2}
-            enableArea={false}
-            enablePoints={false}
-            enableGridX={false}
-            enableGridY={true}
-            gridYValues={4}
-            axisTop={null}
-            axisRight={rightAxis}
-            axisBottom={{
-              tickSize: 0,
-              tickPadding: 8,
-              tickRotation: 0,
-              tickValues,
-              format: (val: string) => val,
-            }}
-            axisLeft={{
-              tickSize: 0,
-              tickPadding: 8,
-              tickRotation: 0,
-              legend: yAxisLabel,
-              legendPosition: "middle",
-              legendOffset: -40,
-            }}
-            theme={{
-              background: "transparent",
-              text: {
-                fontSize: 10,
-                fill: "rgba(255,255,255,0.4)",
-                fontFamily: "inherit",
-              },
-              grid: {
-                line: {
-                  stroke: "rgba(255,255,255,0.05)",
-                  strokeWidth: 1,
-                },
-              },
-              tooltip: {
-                container: {
-                  background: "#0d0d0d",
-                  color: "#fff",
-                  fontSize: 11,
-                  borderRadius: 6,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-                },
-              },
-              crosshair: {
-                line: {
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={chartData}
+              margin={{
+                top: 12,
+                right: 20,
+                bottom: 5,
+                left: -10,
+              }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="rgba(255,255,255,0.05)"
+              />
+              <XAxis
+                type="number"
+                dataKey="elapsedSeconds"
+                tickFormatter={formatTimeTick}
+                tick={{ fontSize: 10, fill: "rgba(255,255,255,0.4)" }}
+                tickLine={false}
+                axisLine={false}
+                domain={[0, "auto"]}
+              />
+              <YAxis
+                domain={[yMin ?? "auto", yMax ?? "auto"]}
+                tick={{ fontSize: 10, fill: "rgba(255,255,255,0.4)" }}
+                tickLine={false}
+                axisLine={false}
+                width={45}
+                tickFormatter={(v) => `${v}${yAxisLabel ?? ""}`}
+              />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{
                   stroke: "rgba(255,255,255,0.15)",
                   strokeWidth: 1,
                   strokeDasharray: "4 4",
-                },
-              },
-            }}
-            useMesh={true}
-            animate={true}
-            motionConfig="gentle"
-          />
+                }}
+              />
+              {series.flatMap((s) =>
+                activeSessionIndices.map((sessionIdx) => {
+                  const lineKey = `${s.id}_${sessionIdx}`;
+                  const label =
+                    activeSessionIndices.length > 1 && samples.length > 1
+                      ? `${s.id} (${sessionLabels[sessionIdx]})`
+                      : s.id;
+
+                  return (
+                    <Line
+                      key={lineKey}
+                      type="monotone"
+                      dataKey={lineKey}
+                      name={label}
+                      stroke={getLineColor(s, sessionIdx)}
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 4, strokeWidth: 0 }}
+                      connectNulls={true}
+                    />
+                  );
+                })
+              )}
+            </LineChart>
+          </ResponsiveContainer>
         )}
       </div>
     </div>

@@ -7,6 +7,7 @@ import {
   type MetricSeries,
 } from "../../components/performance-charts/combined-line-chart";
 import { PerformanceStatCards } from "../../components/performance-charts/performance-stat-cards";
+import { getAverageTimeline } from "../../components/performance-charts/performance-averager";
 import "./performance-timeline.scss";
 
 export interface PerformanceTimelineProps {
@@ -23,8 +24,11 @@ const TEMPS_SERIES: MetricSeries[] = [
   { id: "GPU Temp", color: "#f39c12", field: "gpuTemp" },
 ];
 
-const RAM_FPS_SERIES: MetricSeries[] = [
+const RAM_SERIES: MetricSeries[] = [
   { id: "RAM", color: "#2ecc71", field: "ramUsageMB" },
+];
+
+const FPS_SERIES: MetricSeries[] = [
   { id: "FPS", color: "#16b195", field: "fps" },
 ];
 
@@ -102,15 +106,74 @@ export function PerformanceTimeline({
     [filteredSessions]
   );
 
-  const sessionSamples = useMemo(
-    () => filteredSessions.map((s) => s.hardwareMetrics?.samples ?? []),
-    [filteredSessions]
-  );
+  // Compute processed average data for plotting to avoid visual clutter
+  const chartDataProps = useMemo(() => {
+    if (selectedGame === "all") {
+      // Group sessions by game title and calculate averages for each game
+      const gameSessionsMap = new Map<string, SessionWithGame[]>();
+      for (const s of hwSessions) {
+        if (!gameSessionsMap.has(s.gameTitle)) {
+          gameSessionsMap.set(s.gameTitle, []);
+        }
+        gameSessionsMap.get(s.gameTitle)!.push(s);
+      }
 
-  const sessionDurations = useMemo(
-    () => filteredSessions.map((s) => s.durationMs),
-    [filteredSessions]
-  );
+      const averagedSessions: {
+        samples: HardwareSample[];
+        durationMs: number;
+        label: string;
+      }[] = [];
+      for (const [gameTitle, sessions] of gameSessionsMap.entries()) {
+        const avg = getAverageTimeline(
+          sessions,
+          `${gameTitle} (${t("average") || "Avg"})`
+        );
+        if (avg) averagedSessions.push(avg);
+      }
+
+      return {
+        samples: averagedSessions.map((s) => s.samples),
+        sessionLabels: averagedSessions.map((s) => s.label),
+        sessionDurations: averagedSessions.map((s) => s.durationMs),
+        isolatedSessionIndex: null,
+      };
+    } else {
+      // Specific game selected
+      if (isolatedSessionIndex === null) {
+        // Show a single average line of all sessions for this game
+        const avg = getAverageTimeline(
+          filteredSessions,
+          t("average_sessions") || "Average Sessions"
+        );
+        if (avg) {
+          return {
+            samples: [avg.samples],
+            sessionLabels: [avg.label],
+            sessionDurations: [avg.durationMs],
+            isolatedSessionIndex: null,
+          };
+        }
+      } else {
+        // Show a single specific session
+        const session = filteredSessions[isolatedSessionIndex];
+        if (session) {
+          return {
+            samples: [session.hardwareMetrics?.samples ?? []],
+            sessionLabels: [formatSessionDate(session.startTime)],
+            sessionDurations: [session.durationMs],
+            isolatedSessionIndex: null,
+          };
+        }
+      }
+
+      return {
+        samples: [],
+        sessionLabels: [],
+        sessionDurations: [],
+        isolatedSessionIndex: null,
+      };
+    }
+  }, [selectedGame, hwSessions, filteredSessions, isolatedSessionIndex, t]);
 
   if (hwSessions.length === 0) {
     return (
@@ -163,8 +226,8 @@ export function PerformanceTimeline({
               </select>
             </div>
 
-            {/* Session selector for isolation */}
-            {filteredSessions.length > 1 && (
+            {/* Session selector for isolation (only shown if a specific game is selected) */}
+            {selectedGame !== "all" && filteredSessions.length > 1 && (
               <div className="performance-timeline__session-selector">
                 <span className="performance-timeline__session-selector-label">
                   SESSION
@@ -182,7 +245,7 @@ export function PerformanceTimeline({
                   }}
                 >
                   <option value="all">
-                    {t("all_sessions") || "All Sessions"}
+                    {t("all_sessions_average") || "All Sessions (Average)"}
                   </option>
                   {filteredSessions.map((s, i) => (
                     <option key={s.id} value={String(i)}>
@@ -206,12 +269,12 @@ export function PerformanceTimeline({
               {t("cpu_gpu_usage") || "CPU & GPU Usage"}
             </div>
             <CombinedLineChart
-              samples={sessionSamples}
-              sessionLabels={sessionLabels}
-              sessionDurations={sessionDurations}
+              samples={chartDataProps.samples}
+              sessionLabels={chartDataProps.sessionLabels}
+              sessionDurations={chartDataProps.sessionDurations}
               series={CPU_GPU_USAGE_SERIES}
               height={220}
-              isolatedSessionIndex={isolatedSessionIndex}
+              isolatedSessionIndex={chartDataProps.isolatedSessionIndex}
               yMin={0}
               yMax={100}
               yAxisLabel="%"
@@ -224,12 +287,12 @@ export function PerformanceTimeline({
               {t("cpu_gpu_temps") || "CPU & GPU Temperatures"}
             </div>
             <CombinedLineChart
-              samples={sessionSamples}
-              sessionLabels={sessionLabels}
-              sessionDurations={sessionDurations}
+              samples={chartDataProps.samples}
+              sessionLabels={chartDataProps.sessionLabels}
+              sessionDurations={chartDataProps.sessionDurations}
               series={TEMPS_SERIES}
               height={220}
-              isolatedSessionIndex={isolatedSessionIndex}
+              isolatedSessionIndex={chartDataProps.isolatedSessionIndex}
               yAxisLabel="°C"
             />
           </div>
@@ -237,16 +300,32 @@ export function PerformanceTimeline({
           <div className="performance-timeline__chart-card">
             <div className="performance-timeline__chart-title">
               <BarChart3 size={13} />
-              {t("ram_fps") || "RAM & FPS"}
+              {t("ram_usage") || "RAM Usage"}
             </div>
             <CombinedLineChart
-              samples={sessionSamples}
-              sessionLabels={sessionLabels}
-              sessionDurations={sessionDurations}
-              series={RAM_FPS_SERIES}
+              samples={chartDataProps.samples}
+              sessionLabels={chartDataProps.sessionLabels}
+              sessionDurations={chartDataProps.sessionDurations}
+              series={RAM_SERIES}
               height={220}
-              isolatedSessionIndex={isolatedSessionIndex}
-              rightAxisSeries={["FPS"]}
+              isolatedSessionIndex={chartDataProps.isolatedSessionIndex}
+              yAxisLabel="GB"
+            />
+          </div>
+
+          <div className="performance-timeline__chart-card">
+            <div className="performance-timeline__chart-title">
+              <BarChart3 size={13} />
+              {t("fps") || "Frame Rate (FPS)"}
+            </div>
+            <CombinedLineChart
+              samples={chartDataProps.samples}
+              sessionLabels={chartDataProps.sessionLabels}
+              sessionDurations={chartDataProps.sessionDurations}
+              series={FPS_SERIES}
+              height={220}
+              isolatedSessionIndex={chartDataProps.isolatedSessionIndex}
+              yAxisLabel=" FPS"
             />
           </div>
         </div>
