@@ -1,6 +1,11 @@
-import { getSteamAppDetails, HydraApi, logger, autoMatchGame, WindowManager } from "@main/services";
+import {
+  getSteamAppDetails,
+  HydraApi,
+  logger,
+  autoMatchGame,
+  WindowManager,
+} from "@main/services";
 import { getGameAssets } from "./get-game-assets";
-
 
 import type {
   ShopDetails,
@@ -232,34 +237,40 @@ const getGameShopDetails = async (
         try {
           const assets = await getGameAssets(match.objectId, match.shop);
           if (assets) {
-            const existingAssets = await gamesShopAssetsSublevel.get(gameKey).catch(() => null);
+            const existingAssets = await gamesShopAssetsSublevel
+              .get(gameKey)
+              .catch(() => null);
             const updatedAssets = {
               updatedAt: Date.now(),
               objectId,
               shop,
               title: game.title,
               iconUrl: existingAssets?.iconUrl || assets.iconUrl || null,
-              libraryHeroImageUrl: existingAssets?.libraryHeroImageUrl || assets.libraryHeroImageUrl || "",
-              libraryImageUrl: existingAssets?.libraryImageUrl || assets.libraryImageUrl || "",
-              logoImageUrl: existingAssets?.logoImageUrl || assets.logoImageUrl || "",
+              libraryHeroImageUrl:
+                existingAssets?.libraryHeroImageUrl ||
+                assets.libraryHeroImageUrl ||
+                "",
+              libraryImageUrl:
+                existingAssets?.libraryImageUrl || assets.libraryImageUrl || "",
+              logoImageUrl:
+                existingAssets?.logoImageUrl || assets.logoImageUrl || "",
               logoPosition: existingAssets?.logoPosition || null,
-              coverImageUrl: existingAssets?.coverImageUrl || assets.coverImageUrl || "",
+              coverImageUrl:
+                existingAssets?.coverImageUrl || assets.coverImageUrl || "",
               downloadSources: existingAssets?.downloadSources || [],
             };
             await gamesShopAssetsSublevel.put(gameKey, updatedAssets);
           }
         } catch (err) {
-          logger.error("Failed to prefetch assets for newly auto-linked game:", err);
+          logger.error(
+            "Failed to prefetch assets for newly auto-linked game:",
+            err
+          );
         }
 
         WindowManager.sendToAppWindows("on-library-batch-complete");
 
-        return getGameShopDetails(
-          _event,
-          match.objectId,
-          match.shop,
-          language
-        );
+        return getGameShopDetails(_event, match.objectId, match.shop, language);
       }
     }
 

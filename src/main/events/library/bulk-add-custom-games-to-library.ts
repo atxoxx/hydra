@@ -87,10 +87,13 @@ const bulkAddCustomGamesToLibrary = async (
             const assets = await getGameAssets(linkedObjectId, linkedShop);
             if (assets) {
               iconUrl = iconUrl || assets.iconUrl || undefined;
-              libraryHeroImageUrl = libraryHeroImageUrl || assets.libraryHeroImageUrl || undefined;
-              libraryImageUrl = libraryImageUrl || assets.libraryImageUrl || undefined;
+              libraryHeroImageUrl =
+                libraryHeroImageUrl || assets.libraryHeroImageUrl || undefined;
+              libraryImageUrl =
+                libraryImageUrl || assets.libraryImageUrl || undefined;
               logoImageUrl = logoImageUrl || assets.logoImageUrl || undefined;
-              coverImageUrl = coverImageUrl || assets.coverImageUrl || undefined;
+              coverImageUrl =
+                coverImageUrl || assets.coverImageUrl || undefined;
             }
           } catch (err) {
             // Ignore prefetch error
@@ -157,4 +160,3 @@ const bulkAddCustomGamesToLibrary = async (
 };
 
 registerEvent("bulkAddCustomGamesToLibrary", bulkAddCustomGamesToLibrary);
-

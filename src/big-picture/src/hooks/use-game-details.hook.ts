@@ -59,8 +59,14 @@ export function useGameDetails(objectId: string, shop: GameShop) {
         .catch(() => ({ language: "en" })),
       effectiveShop === "custom"
         ? Promise.resolve(null)
-        : globalThis.window.electron.getGameStats(effectiveObjectId, effectiveShop),
-      globalThis.window.electron.getGameAssets(effectiveObjectId, effectiveShop),
+        : globalThis.window.electron.getGameStats(
+            effectiveObjectId,
+            effectiveShop
+          ),
+      globalThis.window.electron.getGameAssets(
+        effectiveObjectId,
+        effectiveShop
+      ),
     ]);
 
     const shopDetailsResult =
@@ -95,9 +101,12 @@ export function useGameDetails(objectId: string, shop: GameShop) {
         .catch(() => setHowLongToBeat(null));
 
       globalThis.window.electron.hydraApi
-        .get<ProtonDBData | null>(`/games/${effectiveShop}/${effectiveObjectId}/protondb`, {
-          needsAuth: false,
-        })
+        .get<ProtonDBData | null>(
+          `/games/${effectiveShop}/${effectiveObjectId}/protondb`,
+          {
+            needsAuth: false,
+          }
+        )
         .then(setProtonDBData)
         .catch(() => setProtonDBData(null));
 

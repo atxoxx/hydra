@@ -48,13 +48,20 @@ const addCustomGameToLibrary = async (
       finalLinkedObjectId = match.objectId;
 
       try {
-        const assets = await getGameAssets(finalLinkedObjectId, finalLinkedShop);
+        const assets = await getGameAssets(
+          finalLinkedObjectId,
+          finalLinkedShop
+        );
         if (assets) {
           finalIconUrl = finalIconUrl || assets.iconUrl || undefined;
-          finalLibraryHeroImageUrl = finalLibraryHeroImageUrl || assets.libraryHeroImageUrl || undefined;
-          finalLibraryImageUrl = finalLibraryImageUrl || assets.libraryImageUrl || undefined;
-          finalLogoImageUrl = finalLogoImageUrl || assets.logoImageUrl || undefined;
-          finalCoverImageUrl = finalCoverImageUrl || assets.coverImageUrl || undefined;
+          finalLibraryHeroImageUrl =
+            finalLibraryHeroImageUrl || assets.libraryHeroImageUrl || undefined;
+          finalLibraryImageUrl =
+            finalLibraryImageUrl || assets.libraryImageUrl || undefined;
+          finalLogoImageUrl =
+            finalLogoImageUrl || assets.logoImageUrl || undefined;
+          finalCoverImageUrl =
+            finalCoverImageUrl || assets.coverImageUrl || undefined;
         }
       } catch (err) {
         // Ignore prefetch error
@@ -111,4 +118,3 @@ const addCustomGameToLibrary = async (
 };
 
 registerEvent("addCustomGameToLibrary", addCustomGameToLibrary);
-
