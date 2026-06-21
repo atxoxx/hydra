@@ -25,6 +25,7 @@ import {
   WindowManager,
   logger,
   SteamGameSync,
+  PlatformScanner,
 } from "@main/services";
 import { migrateDownloadSources } from "./helpers/migrate-download-sources";
 import { getDirSize } from "./services/download/helpers";
@@ -103,6 +104,9 @@ export const loadState = async () => {
 
     // Auto-sync Steam library if user is logged in
     void SteamGameSync.autoSyncIfLoggedIn();
+
+    // Auto-match non-Steam store games that lack Hydra catalog metadata/assets
+    void PlatformScanner.autoMatchLibraryGames();
 
     WSClient.connect();
   });

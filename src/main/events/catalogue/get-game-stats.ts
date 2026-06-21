@@ -10,17 +10,18 @@ const getGameStats = async (
   objectId: string,
   shop: GameShop
 ) => {
-  // Redirect custom games with linked catalogue source
+  // Redirect games with linked catalogue source (e.g. custom or store games linked to Hydra api)
+  const gameKey = levelKeys.game(shop, objectId);
+  const game = await gamesSublevel.get(gameKey).catch(() => null);
+  if (game?.linkedShop && game?.linkedObjectId) {
+    return getGameStats(
+      _event,
+      game.linkedObjectId,
+      game.linkedShop as GameShop
+    );
+  }
+
   if (shop === "custom") {
-    const gameKey = levelKeys.game(shop, objectId);
-    const game = await gamesSublevel.get(gameKey).catch(() => null);
-    if (game?.linkedShop && game?.linkedObjectId) {
-      return getGameStats(
-        _event,
-        game.linkedObjectId,
-        game.linkedShop as GameShop
-      );
-    }
     return null;
   }
 

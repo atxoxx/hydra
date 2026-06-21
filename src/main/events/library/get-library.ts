@@ -47,7 +47,6 @@ const getLibrary = async (): Promise<LibraryGame[]> => {
             const download = await downloadsSublevel.get(key);
             let gameAssets = await gamesShopAssetsSublevel.get(key);
             if (
-              game.shop === "custom" &&
               game.linkedShop &&
               game.linkedObjectId
             ) {

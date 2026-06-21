@@ -85,21 +85,19 @@ const getUnlockedAchievementsEvent = async (
   objectId: string,
   shop: GameShop
 ): Promise<UserAchievement[]> => {
-  // Redirect custom games with linked catalogue source
-  if (shop === "custom") {
-    const gameKey = levelKeys.game(shop, objectId);
-    const game = await gamesSublevel.get(gameKey).catch(() => null);
-    if (game?.linkedShop && game?.linkedObjectId) {
-      await AchievementWatcherManager.firstSyncWithRemoteIfNeeded(
-        game.linkedShop as GameShop,
-        game.linkedObjectId
-      );
-      return getUnlockedAchievements(
-        game.linkedObjectId,
-        game.linkedShop as GameShop,
-        false
-      );
-    }
+  // Redirect games with linked catalogue source (e.g. custom or store games linked to Hydra api)
+  const gameKey = levelKeys.game(shop, objectId);
+  const game = await gamesSublevel.get(gameKey).catch(() => null);
+  if (game?.linkedShop && game?.linkedObjectId) {
+    await AchievementWatcherManager.firstSyncWithRemoteIfNeeded(
+      game.linkedShop as GameShop,
+      game.linkedObjectId
+    );
+    return getUnlockedAchievements(
+      game.linkedObjectId,
+      game.linkedShop as GameShop,
+      false
+    );
   }
 
   await AchievementWatcherManager.firstSyncWithRemoteIfNeeded(shop, objectId);

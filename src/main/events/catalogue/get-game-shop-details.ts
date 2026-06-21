@@ -210,70 +210,70 @@ const getGameShopDetails = async (
   shop: GameShop,
   language: string
 ): Promise<ShopDetailsWithAssets | null> => {
-  if (shop === "custom") {
-    const gameKey = levelKeys.game(shop, objectId);
-    const game = await gamesSublevel.get(gameKey).catch(() => null);
+  const gameKey = levelKeys.game(shop, objectId);
+  const game = await gamesSublevel.get(gameKey).catch(() => null);
 
-    if (game?.linkedShop && game?.linkedObjectId) {
-      // Redirect to the linked source to fetch full details
-      return getGameShopDetails(
-        _event,
-        game.linkedObjectId,
-        game.linkedShop as GameShop,
-        language
-      );
-    }
+  if (game?.linkedShop && game?.linkedObjectId) {
+    // Redirect to the linked source to fetch full details
+    return getGameShopDetails(
+      _event,
+      game.linkedObjectId,
+      game.linkedShop as GameShop,
+      language
+    );
+  }
 
-    if (game && (!game.linkedShop || !game.linkedObjectId)) {
-      const match = await autoMatchGame(game.title);
-      if (match) {
-        const updatedGame = {
-          ...game,
-          linkedShop: match.shop,
-          linkedObjectId: match.objectId,
-        };
-        await gamesSublevel.put(gameKey, updatedGame);
+  if (shop !== "steam" && game && (!game.linkedShop || !game.linkedObjectId)) {
+    const match = await autoMatchGame(game.title);
+    if (match) {
+      const updatedGame = {
+        ...game,
+        linkedShop: match.shop,
+        linkedObjectId: match.objectId,
+      };
+      await gamesSublevel.put(gameKey, updatedGame);
 
-        try {
-          const assets = await getGameAssets(match.objectId, match.shop);
-          if (assets) {
-            const existingAssets = await gamesShopAssetsSublevel
-              .get(gameKey)
-              .catch(() => null);
-            const updatedAssets = {
-              updatedAt: Date.now(),
-              objectId,
-              shop,
-              title: game.title,
-              iconUrl: existingAssets?.iconUrl || assets.iconUrl || null,
-              libraryHeroImageUrl:
-                existingAssets?.libraryHeroImageUrl ||
-                assets.libraryHeroImageUrl ||
-                "",
-              libraryImageUrl:
-                existingAssets?.libraryImageUrl || assets.libraryImageUrl || "",
-              logoImageUrl:
-                existingAssets?.logoImageUrl || assets.logoImageUrl || "",
-              logoPosition: existingAssets?.logoPosition || null,
-              coverImageUrl:
-                existingAssets?.coverImageUrl || assets.coverImageUrl || "",
-              downloadSources: existingAssets?.downloadSources || [],
-            };
-            await gamesShopAssetsSublevel.put(gameKey, updatedAssets);
-          }
-        } catch (err) {
-          logger.error(
-            "Failed to prefetch assets for newly auto-linked game:",
-            err
-          );
+      try {
+        const assets = await getGameAssets(match.objectId, match.shop);
+        if (assets) {
+          const existingAssets = await gamesShopAssetsSublevel
+            .get(gameKey)
+            .catch(() => null);
+          const updatedAssets = {
+            updatedAt: Date.now(),
+            objectId,
+            shop,
+            title: game.title,
+            iconUrl: existingAssets?.iconUrl || assets.iconUrl || null,
+            libraryHeroImageUrl:
+              existingAssets?.libraryHeroImageUrl ||
+              assets.libraryHeroImageUrl ||
+              "",
+            libraryImageUrl:
+              existingAssets?.libraryImageUrl || assets.libraryImageUrl || "",
+            logoImageUrl:
+              existingAssets?.logoImageUrl || assets.logoImageUrl || "",
+            logoPosition: existingAssets?.logoPosition || null,
+            coverImageUrl:
+              existingAssets?.coverImageUrl || assets.coverImageUrl || "",
+            downloadSources: existingAssets?.downloadSources || [],
+          };
+          await gamesShopAssetsSublevel.put(gameKey, updatedAssets);
         }
-
-        WindowManager.sendToAppWindows("on-library-batch-complete");
-
-        return getGameShopDetails(_event, match.objectId, match.shop, language);
+      } catch (err) {
+        logger.error(
+          "Failed to prefetch assets for newly auto-linked game:",
+          err
+        );
       }
-    }
 
+      WindowManager.sendToAppWindows("on-library-batch-complete");
+
+      return getGameShopDetails(_event, match.objectId, match.shop, language);
+    }
+  }
+
+  if (shop === "custom") {
     return null;
   }
 

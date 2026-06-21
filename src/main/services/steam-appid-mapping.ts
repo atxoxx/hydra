@@ -59,22 +59,20 @@ export const getResolvedSteamAppId = async (
    */
   signal?: AbortSignal
 ): Promise<number | null> => {
-  // Step 1 — custom games may redirect to a linked catalogue source.
+  // Step 1 — games may redirect to a linked catalogue source (e.g. custom or store games linked to Hydra api).
   // Matches the inline-catch style of `getGameAssets`/`getGameStats`/
   // `getGameShopDetails`/`getUnlockedAchievements`. Recursion trusts that
   // `linkedShop` is itself non-`"custom"` per the existing data model.
-  if (shop === "custom") {
-    const game = await gamesSublevel
-      .get(levelKeys.game(shop, objectId))
-      .catch(() => null);
-    if (game?.linkedShop && game?.linkedObjectId) {
-      return getResolvedSteamAppId(
-        game.linkedShop as GameShop,
-        game.linkedObjectId,
-        gameTitle,
-        signal
-      );
-    }
+  const game = await gamesSublevel
+    .get(levelKeys.game(shop, objectId))
+    .catch(() => null);
+  if (game?.linkedShop && game?.linkedObjectId) {
+    return getResolvedSteamAppId(
+      game.linkedShop as GameShop,
+      game.linkedObjectId,
+      gameTitle,
+      signal
+    );
   }
 
   if (shop === "steam") {
