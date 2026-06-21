@@ -94,10 +94,7 @@ function aggregateByMode(
       let label = key;
       if (mode === "week") {
         const parts = key.split("-");
-        label =
-          parts.length === 3
-            ? `${parts[1]}/${parts[2]}`
-            : key;
+        label = parts.length === 3 ? `${parts[1]}/${parts[2]}` : key;
       } else if (mode === "month") {
         try {
           const date = parseISO(key + "-01");
@@ -149,7 +146,7 @@ export function ActivityMainChart({
       {
         id: selectedGame
           ? selectedGame.title
-          : (t("total_playtime") || "Playtime"),
+          : t("total_playtime") || "Playtime",
         data: groupedData.map((d) => ({ x: d.label, y: d.hours })),
       },
     ],
@@ -225,9 +222,7 @@ export function ActivityMainChart({
       <div className="activity-main-chart__header">
         <div className="activity-main-chart__header-left">
           <h3 className="activity-main-chart__title">
-            {selectedGame
-              ? selectedGame.title
-              : (t("overview") || "Overview")}
+            {selectedGame ? selectedGame.title : t("overview") || "Overview"}
           </h3>
           {selectedGame && (
             <span className="activity-main-chart__subtitle">

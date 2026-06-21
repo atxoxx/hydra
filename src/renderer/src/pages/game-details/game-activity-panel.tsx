@@ -461,8 +461,7 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
     {
       icon: <TrendIcon size={14} />,
       label: t("play_trend"),
-      value:
-        trend.direction === "flat" ? "—" : `${trend.percent}%`,
+      value: trend.direction === "flat" ? "—" : `${trend.percent}%`,
       color: trendColor,
     },
     {
@@ -515,10 +514,7 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
           {/* Stats Grid */}
           <div className="game-activity-panel__stats-grid">
             {statsItems.map((item) => (
-              <div
-                className="game-activity-panel__stat-card"
-                key={item.label}
-              >
+              <div className="game-activity-panel__stat-card" key={item.label}>
                 <span className="game-activity-panel__stat-icon">
                   {item.icon}
                 </span>

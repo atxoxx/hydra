@@ -46,7 +46,9 @@ export function ActivityGameSidebar({
     return games.filter((g) => g.title.toLowerCase().includes(q));
   }, [games, query]);
 
-  const maxMs = filteredGames.reduce((max, g) => Math.max(max, g.totalMilliseconds), 0) || 1;
+  const maxMs =
+    filteredGames.reduce((max, g) => Math.max(max, g.totalMilliseconds), 0) ||
+    1;
 
   const totalPlaytime = useMemo(() => formatTotalPlaytime(games), [games]);
 
@@ -96,7 +98,9 @@ export function ActivityGameSidebar({
           <button
             type="button"
             className={`activity-game-sidebar__item activity-game-sidebar__item--all ${
-              selectedGameId === null ? "activity-game-sidebar__item--selected" : ""
+              selectedGameId === null
+                ? "activity-game-sidebar__item--selected"
+                : ""
             }`}
             onClick={() => onGameSelect("", "", "")}
           >
@@ -108,9 +112,7 @@ export function ActivityGameSidebar({
                 {t("all_games") || "All Games"}
               </span>
             </div>
-            <span className="activity-game-sidebar__time">
-              {games.length}
-            </span>
+            <span className="activity-game-sidebar__time">{games.length}</span>
           </button>
         )}
 
@@ -181,11 +183,14 @@ export function ActivityGameSidebar({
           })}
 
         {/* No results for search */}
-        {!loading && query && filteredGames.length === 0 && games.length > 0 && (
-          <div className="activity-game-sidebar__empty">
-            {t("no_results") || "No games found"}
-          </div>
-        )}
+        {!loading &&
+          query &&
+          filteredGames.length === 0 &&
+          games.length > 0 && (
+            <div className="activity-game-sidebar__empty">
+              {t("no_results") || "No games found"}
+            </div>
+          )}
       </div>
     </aside>
   );

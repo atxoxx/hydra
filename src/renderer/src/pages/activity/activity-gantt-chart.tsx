@@ -78,7 +78,10 @@ export function ActivityGanttChart({
 
   const { rows, uniqueGames } = useMemo(() => {
     // Build color map for games
-    const gameSet = new Map<string, { title: string; iconUrl: string | null }>();
+    const gameSet = new Map<
+      string,
+      { title: string; iconUrl: string | null }
+    >();
     for (const s of sessions) {
       if (!gameSet.has(s.gameTitle)) {
         gameSet.set(s.gameTitle, {
@@ -237,9 +240,18 @@ export function ActivityGanttChart({
             </div>
             <div className="activity-gantt__bar-area">
               {/* Grid lines */}
-              <div className="activity-gantt__grid-line" style={{ left: "25%" }} />
-              <div className="activity-gantt__grid-line" style={{ left: "50%" }} />
-              <div className="activity-gantt__grid-line" style={{ left: "75%" }} />
+              <div
+                className="activity-gantt__grid-line"
+                style={{ left: "25%" }}
+              />
+              <div
+                className="activity-gantt__grid-line"
+                style={{ left: "50%" }}
+              />
+              <div
+                className="activity-gantt__grid-line"
+                style={{ left: "75%" }}
+              />
 
               {row.bars.map((bar) => (
                 <div

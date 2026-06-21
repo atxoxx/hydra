@@ -316,7 +316,9 @@ export default function Activity() {
                   value={sourceFilter}
                   onChange={(e) => setSourceFilter(e.target.value)}
                 >
-                  <option value="all">{t("all_sources") || "All Sources"}</option>
+                  <option value="all">
+                    {t("all_sources") || "All Sources"}
+                  </option>
                   {availableSources.map((src) => (
                     <option key={src} value={src}>
                       {src.charAt(0).toUpperCase() + src.slice(1)}

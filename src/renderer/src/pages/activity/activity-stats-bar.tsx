@@ -1,6 +1,13 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Clock, Gamepad2, Calendar, Zap, TrendingUp, BarChart3 } from "lucide-react";
+import {
+  Clock,
+  Gamepad2,
+  Calendar,
+  Zap,
+  TrendingUp,
+  BarChart3,
+} from "lucide-react";
 import type { PlaytimeSummary, DailyPlaytimeEntry } from "../../declaration";
 
 export interface ActivityStatsBarProps {
