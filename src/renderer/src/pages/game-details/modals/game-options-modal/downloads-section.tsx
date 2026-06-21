@@ -86,14 +86,6 @@ export function DownloadsSettingsSection({
     }
   };
 
-  if (game.shop === "custom") {
-    return (
-      <p className="game-options-modal__category-note">
-        {t("settings_not_available_for_custom_games")}
-      </p>
-    );
-  }
-
   const storeLabel = ownedEntry
     ? (STORE_LABELS[ownedEntry.store] ?? null)
     : null;

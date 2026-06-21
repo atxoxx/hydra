@@ -315,6 +315,15 @@ export function PlayStatusCard() {
     return null;
   };
 
+  const handleOpenDownloadOptions = () => {
+    if (game) {
+      setGameOptionsInitialCategory("downloads");
+      setShowGameOptionsModal(true);
+    } else {
+      setShowRepacksModal(true);
+    }
+  };
+
   const getActionButton = () => {
     if (isTransferring) {
       return (
@@ -367,7 +376,7 @@ export function PlayStatusCard() {
     // button opens the modal which then shows the "no source" empty state.
     return (
       <Button
-        onClick={() => setShowRepacksModal(true)}
+        onClick={handleOpenDownloadOptions}
         theme="outline"
         className="play-status-card__action"
       >
@@ -435,10 +444,23 @@ export function PlayStatusCard() {
               {watchlisted
                 ? t("in_watchlist", { defaultValue: "In watchlist" })
                 : t("add_to_watchlist", { defaultValue: "Add to watchlist" })}
-            </Button>
-
-            {game && (
+            </Button>              {game && (
               <>
+                {/* Download options — shown when game is playable so user has quick access */}
+                {(game?.executablePath ||
+                  (game?.shop === "launchbox" &&
+                    (game?.discs?.length ?? 0) > 0)) && (
+                  <Button
+                    onClick={handleOpenDownloadOptions}
+                    theme="outline"
+                    disabled={deleting}
+                    className="play-status-card__action play-status-card__action--icon"
+                    title={t("open_download_options")}
+                  >
+                    <DownloadIcon />
+                  </Button>
+                )}
+
                 <Button
                   onClick={toggleGameFavorite}
                   theme="outline"
