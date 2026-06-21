@@ -143,7 +143,10 @@ export class HardwareMonitor {
         timestamp: Date.now(),
         fps: Math.round(nativeMetrics.fps),
         cpuUsage: Math.max(0, Math.min(100, cpuUsage)),
-        gpuUsage: Math.max(0, Math.min(100, Math.round(nativeMetrics.gpuUsage))),
+        gpuUsage: Math.max(
+          0,
+          Math.min(100, Math.round(nativeMetrics.gpuUsage))
+        ),
         cpuTemp: Math.round(nativeMetrics.cpuTemp),
         gpuTemp: Math.round(nativeMetrics.gpuTemp),
         ramUsageMB,
@@ -159,7 +162,8 @@ export class HardwareMonitor {
     ]);
 
     const gpuIndex = this.config.selectedGpuIndex ?? 0;
-    const gpuController = graphics.controllers?.[gpuIndex] ?? graphics.controllers?.[0];
+    const gpuController =
+      graphics.controllers?.[gpuIndex] ?? graphics.controllers?.[0];
 
     return {
       timestamp: Date.now(),

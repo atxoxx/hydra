@@ -3,6 +3,7 @@
 ## Overview
 
 Add working hardware performance graphs/charts (CPU, RAM, temps, GPU, FPS) to:
+
 1. The **Activity page** (main app) — enhance the existing "Performance" tab
 2. The **Game page** — add a toggleable "Performance" sub-view within the existing Activity tab
 
@@ -15,6 +16,7 @@ The feature should match the existing layout, styling conventions, and design la
 ### 1.1 Toggle Sub-View
 
 The existing `GameActivityPanel` (in `game-activity-panel.tsx`) currently shows:
+
 - Playtime stats grid (11 stat cards)
 - Session list
 - Playtime bar/line chart (`ActivityChart`)
@@ -41,14 +43,14 @@ When Performance view is active, add a **new row** of performance stat cards **a
 
 Layout: A horizontal row of 6 sparkline+number cards, matching the existing `ActivitySparkline` component style.
 
-| Card | Metric | Unit | Sparkline Data | Color / Thresholds |
-|------|--------|------|----------------|---------------------|
-| Avg FPS | Average FPS across all sessions | — | FPS samples from all sessions | warn: 60, danger: 30 (inverted) |
-| CPU Usage | Average CPU % | % | cpuUsage samples | warn: 70, danger: 90 |
-| GPU Usage | Average GPU % | % | gpuUsage samples | warn: 70, danger: 90 |
-| CPU Temp | Average CPU temp | °C | cpuTemp samples | warn: 75, danger: 85 |
-| GPU Temp | Average GPU temp | °C | gpuTemp samples | warn: 75, danger: 85 |
-| RAM Usage | Average RAM | MB → GB | ramUsageMB samples | none |
+| Card      | Metric                          | Unit    | Sparkline Data                | Color / Thresholds              |
+| --------- | ------------------------------- | ------- | ----------------------------- | ------------------------------- |
+| Avg FPS   | Average FPS across all sessions | —       | FPS samples from all sessions | warn: 60, danger: 30 (inverted) |
+| CPU Usage | Average CPU %                   | %       | cpuUsage samples              | warn: 70, danger: 90            |
+| GPU Usage | Average GPU %                   | %       | gpuUsage samples              | warn: 70, danger: 90            |
+| CPU Temp  | Average CPU temp                | °C      | cpuTemp samples               | warn: 75, danger: 85            |
+| GPU Temp  | Average GPU temp                | °C      | gpuTemp samples               | warn: 75, danger: 85            |
+| RAM Usage | Average RAM                     | MB → GB | ramUsageMB samples            | none                            |
 
 Implementation: Reuse the existing `ActivitySparkline` component and `samplesToSparklineData` helper from `activity-sparkline.tsx`. The card row should use `activity-hardware-card` styling.
 
@@ -57,23 +59,27 @@ Implementation: Reuse the existing `ActivitySparkline` component and `samplesToS
 Three separate line charts using `@nivo/line` (`ResponsiveLine`), vertically stacked. Each chart shows combined related metrics.
 
 #### Chart 1: CPU + GPU Usage (%)
+
 - **Metrics**: CPU Usage (blue `#3e62c0`), GPU Usage (purple `#9b59b6`)
 - **Y-axis**: 0–100%
 - **X-axis**: Session time (`mm:ss` format, elapsed from session start)
 - **Data**: All sessions overlaid. Each session = one pair of lines (CPU + GPU)
 
 #### Chart 2: CPU + GPU Temperature (°C)
+
 - **Metrics**: CPU Temp (red `#e74c3c`), GPU Temp (orange `#f39c12`)
 - **Y-axis**: Auto-scaled (typically 30–95°C)
 - **X-axis**: Session time (`mm:ss` format)
 
 #### Chart 3: RAM (MB) + FPS
+
 - **Metrics**: RAM (green `#2ecc71`), FPS (teal `#16b195`)
 - **Y-axis (left)**: RAM in MB
 - **Y-axis (right)**: FPS value
 - Dual-axis chart (RAM on left axis, FPS on right axis)
 
 #### Chart Behavior
+
 - **Downsampling**: Max 80 points per session (same as existing `activity-session-item.tsx`)
 - **Session overlay**: All sessions displayed on the same chart. Each session gets a slightly different opacity/line style (first session = solid, others = semi-transparent)
 - **Session isolation toggle**: Each chart section has a small dropdown or pill selector listing sessions by date. Default = "All Sessions". Selecting a specific session isolates that session's data.
@@ -111,6 +117,7 @@ Add screenshot (PNG) and CSV export buttons for the Performance view (same as ex
 ### 2.1 Keep Existing Content
 
 The existing `PerformanceInsights` component with:
+
 - Bar chart comparisons (FPS, Temps, RAM) using `@nivo/bar`
 - Detailed performance board table
 
@@ -121,6 +128,7 @@ The existing `PerformanceInsights` component with:
 Below the existing content, add a new section with:
 
 #### Section Header
+
 ```
 ┌────────────────────────────────────────────┐
 │  📈 Session Performance Timeline           │
@@ -150,24 +158,26 @@ Add a row of sparkline summary cards (same as §1.2) at the top of the new secti
 ### 3.1 Layout Components
 
 Use existing class naming conventions:
+
 - `section-panel` for card containers
 - `section-panel__title` for section headers
 - `section-panel__empty` for empty states
 
 ### 3.2 Color Scheme (Fixed Semantic Colors)
 
-| Metric | Color | Hex |
-|--------|-------|-----|
-| FPS | Teal (brand primary) | `#16b195` |
-| CPU Usage | Blue | `#3e62c0` |
-| GPU Usage | Purple | `#9b59b6` |
-| CPU Temp | Red | `#e74c3c` |
-| GPU Temp | Orange | `#f39c12` |
-| RAM Usage | Green | `#2ecc71` |
+| Metric    | Color                | Hex       |
+| --------- | -------------------- | --------- |
+| FPS       | Teal (brand primary) | `#16b195` |
+| CPU Usage | Blue                 | `#3e62c0` |
+| GPU Usage | Purple               | `#9b59b6` |
+| CPU Temp  | Red                  | `#e74c3c` |
+| GPU Temp  | Orange               | `#f39c12` |
+| RAM Usage | Green                | `#2ecc71` |
 
 ### 3.3 Chart Theme (Dark)
 
 All charts use the existing dark theme from `activity-session-item.tsx`:
+
 ```typescript
 theme={{
   background: "transparent",
@@ -192,6 +202,7 @@ theme={{
 ### 3.5 Chart Config
 
 From `@nivo/line` — `ResponsiveLine`:
+
 - `lineWidth`: 2
 - `enableArea`: true, `areaOpacity`: 0.06
 - `enablePoints`: false
@@ -205,13 +216,21 @@ From `@nivo/line` — `ResponsiveLine`:
 ### 3.6 Toggle Sub-View Buttons
 
 Style matches `performance-insights__tab-btn`:
+
 ```scss
 &__tab-btn {
-  background: none; border: none; color: rgba(255,255,255,0.45);
-  font-size: 11px; font-weight: 600; padding: 6px 12px;
-  border-radius: 6px; cursor: pointer; transition: all 0.15s;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
   &--active {
-    background: $brand-teal; color: #fff;
+    background: $brand-teal;
+    color: #fff;
   }
 }
 ```
@@ -223,6 +242,7 @@ Style matches `performance-insights__tab-btn`:
 ### 4.1 Data Source
 
 Hardware data is already stored in LevelDB with each game session:
+
 ```
 GameSession {
   ...
@@ -240,6 +260,7 @@ GameSession {
 ### 4.2 IPC
 
 Use existing IPC methods:
+
 - `window.electron.getGameSessions(shop, objectId)` — for game page sessions
 - `window.electron.getAllSessions()` — for activity page sessions
 
@@ -248,6 +269,7 @@ Both return `GameSession[]` / `SessionWithGame[]` which include `hardwareMetrics
 ### 4.3 Data Aggregation
 
 For sparkline cards and global averages, aggregate all sessions' sample data in the component using `useMemo`:
+
 - Flatten all sessions' `hardwareMetrics.samples` arrays
 - Compute averages, mins, maxes
 - For sparklines, downsample to fit the small display
@@ -257,25 +279,27 @@ For sparkline cards and global averages, aggregate all sessions' sample data in 
 ## 5. Files to Create / Modify
 
 ### New Files
-| File | Purpose |
-|------|---------|
-| `src/renderer/src/pages/game-details/game-performance-view.tsx` | Performance view component for game page Activity tab |
-| `src/renderer/src/pages/game-details/game-performance-view.scss` | Styles for the above |
-| `src/renderer/src/pages/activity/performance-timeline.tsx` | Time-series charts section for Activity page Performance tab |
-| `src/renderer/src/pages/activity/performance-timeline.scss` | Styles for the above |
-| `src/renderer/src/components/performance-charts/combined-line-chart.tsx` | Reusable combined line chart component (CPU+GPU, Temps, RAM+FPS) |
-| `src/renderer/src/components/performance-charts/combined-line-chart.scss` | Styles for the above |
-| `src/renderer/src/components/performance-charts/performance-stat-cards.tsx` | Row of sparkline stat cards |
-| `src/renderer/src/components/performance-charts/performance-stat-cards.scss` | Styles for the above |
+
+| File                                                                         | Purpose                                                          |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `src/renderer/src/pages/game-details/game-performance-view.tsx`              | Performance view component for game page Activity tab            |
+| `src/renderer/src/pages/game-details/game-performance-view.scss`             | Styles for the above                                             |
+| `src/renderer/src/pages/activity/performance-timeline.tsx`                   | Time-series charts section for Activity page Performance tab     |
+| `src/renderer/src/pages/activity/performance-timeline.scss`                  | Styles for the above                                             |
+| `src/renderer/src/components/performance-charts/combined-line-chart.tsx`     | Reusable combined line chart component (CPU+GPU, Temps, RAM+FPS) |
+| `src/renderer/src/components/performance-charts/combined-line-chart.scss`    | Styles for the above                                             |
+| `src/renderer/src/components/performance-charts/performance-stat-cards.tsx`  | Row of sparkline stat cards                                      |
+| `src/renderer/src/components/performance-charts/performance-stat-cards.scss` | Styles for the above                                             |
 
 ### Modified Files
-| File | Change |
-|------|--------|
-| `src/renderer/src/pages/game-details/game-activity-panel.tsx` | Add toggle sub-view (Playtime/Performance), render `GamePerformanceView` when Performance selected |
-| `src/renderer/src/pages/game-details/game-activity-panel.scss` | Style additions for toggle buttons |
-| `src/renderer/src/pages/activity/performance-insights.tsx` | Add `PerformanceTimeline` section below existing bar charts and table |
-| `src/renderer/src/pages/activity/performance-insights.scss` | Style additions |
-| `src/locales/en/translation.json` | New i18n keys for performance labels |
+
+| File                                                           | Change                                                                                             |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `src/renderer/src/pages/game-details/game-activity-panel.tsx`  | Add toggle sub-view (Playtime/Performance), render `GamePerformanceView` when Performance selected |
+| `src/renderer/src/pages/game-details/game-activity-panel.scss` | Style additions for toggle buttons                                                                 |
+| `src/renderer/src/pages/activity/performance-insights.tsx`     | Add `PerformanceTimeline` section below existing bar charts and table                              |
+| `src/renderer/src/pages/activity/performance-insights.scss`    | Style additions                                                                                    |
+| `src/locales/en/translation.json`                              | New i18n keys for performance labels                                                               |
 
 ---
 
@@ -329,17 +353,17 @@ For sparkline cards and global averages, aggregate all sessions' sample data in 
 
 ## 9. Reference — Existing Components to Reuse
 
-| Component | File | Usage |
-|-----------|------|-------|
-| `ActivitySparkline` | `activity-sparkline.tsx` | Performance stat cards |
-| `samplesToSparklineData` | `activity-sparkline.tsx` | Convert samples to sparkline data |
-| `ActivityHardwareCard` | `activity-hardware-card.tsx` | Hardware summary card pattern |
-| `ActivitySessionList` | `activity-session-list.tsx` | Session list (already in game page) |
-| `ResponsiveLine` (`@nivo/line`) | npm | Line charts |
-| `ResponsiveBar` (`@nivo/bar`) | npm | Already used in PerformanceInsights |
-| `html2canvas` | npm | Screenshot export |
-| `framer-motion` | npm | AnimatePresence for toggles |
-| `globals.scss` variables | `src/renderer/src/scss/globals.scss` | Colors, spacing, brand tokens |
+| Component                       | File                                 | Usage                               |
+| ------------------------------- | ------------------------------------ | ----------------------------------- |
+| `ActivitySparkline`             | `activity-sparkline.tsx`             | Performance stat cards              |
+| `samplesToSparklineData`        | `activity-sparkline.tsx`             | Convert samples to sparkline data   |
+| `ActivityHardwareCard`          | `activity-hardware-card.tsx`         | Hardware summary card pattern       |
+| `ActivitySessionList`           | `activity-session-list.tsx`          | Session list (already in game page) |
+| `ResponsiveLine` (`@nivo/line`) | npm                                  | Line charts                         |
+| `ResponsiveBar` (`@nivo/bar`)   | npm                                  | Already used in PerformanceInsights |
+| `html2canvas`                   | npm                                  | Screenshot export                   |
+| `framer-motion`                 | npm                                  | AnimatePresence for toggles         |
+| `globals.scss` variables        | `src/renderer/src/scss/globals.scss` | Colors, spacing, brand tokens       |
 
 ---
 

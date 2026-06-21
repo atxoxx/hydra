@@ -178,7 +178,9 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
   const [sessions, setSessions] = useState<GameSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [sessionsLoading, setSessionsLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<"playtime" | "performance">("playtime");
+  const [viewMode, setViewMode] = useState<"playtime" | "performance">(
+    "playtime"
+  );
   const panelRef = useRef<HTMLDivElement>(null);
 
   const prevIsGameRunning = useRef(isGameRunning);
@@ -539,7 +541,10 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
             {/* Stats Grid */}
             <div className="game-activity-panel__stats-grid">
               {statsItems.map((item) => (
-                <div className="game-activity-panel__stat-card" key={item.label}>
+                <div
+                  className="game-activity-panel__stat-card"
+                  key={item.label}
+                >
                   <span className="game-activity-panel__stat-icon">
                     {item.icon}
                   </span>
@@ -588,7 +593,10 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
             {/* Playtime Stats Grid */}
             <div className="game-activity-panel__stats-grid">
               {statsItems.map((item) => (
-                <div className="game-activity-panel__stat-card" key={item.label}>
+                <div
+                  className="game-activity-panel__stat-card"
+                  key={item.label}
+                >
                   <span className="game-activity-panel__stat-icon">
                     {item.icon}
                   </span>

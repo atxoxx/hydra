@@ -74,10 +74,7 @@ export function GamePerformanceView({
   );
 
   const sessionSamples = useMemo(
-    () =>
-      hwSessions.map(
-        (s) => s.hardwareMetrics?.samples ?? []
-      ),
+    () => hwSessions.map((s) => s.hardwareMetrics?.samples ?? []),
     [hwSessions]
   );
 
@@ -87,7 +84,9 @@ export function GamePerformanceView({
   );
 
   // Session isolation state - shared across all three charts
-  const [isolatedSessionIndex, setIsolatedSessionIndex] = useState<number | null>(null);
+  const [isolatedSessionIndex, setIsolatedSessionIndex] = useState<
+    number | null
+  >(null);
 
   if (hwSessions.length === 0) {
     return (
@@ -132,9 +131,7 @@ export function GamePerformanceView({
                 }
                 onChange={(e) => {
                   const val = e.target.value;
-                  setIsolatedSessionIndex(
-                    val === "all" ? null : Number(val)
-                  );
+                  setIsolatedSessionIndex(val === "all" ? null : Number(val));
                 }}
               >
                 <option value="all">

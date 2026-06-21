@@ -57,7 +57,10 @@ export function PerformanceTimeline({
 
   // Build unique game list for selector
   const gameList = useMemo(() => {
-    const map = new Map<string, { title: string; sessions: SessionWithGame[] }>();
+    const map = new Map<
+      string,
+      { title: string; sessions: SessionWithGame[] }
+    >();
     for (const s of hwSessions) {
       if (!map.has(s.gameTitle)) {
         map.set(s.gameTitle, { title: s.gameTitle, sessions: [] });
@@ -70,7 +73,9 @@ export function PerformanceTimeline({
   }, [hwSessions]);
 
   const [selectedGame, setSelectedGame] = useState<string>("all");
-  const [isolatedSessionIndex, setIsolatedSessionIndex] = useState<number | null>(null);
+  const [isolatedSessionIndex, setIsolatedSessionIndex] = useState<
+    number | null
+  >(null);
 
   // Filter sessions by selected game
   const filteredSessions = useMemo(() => {
@@ -91,15 +96,14 @@ export function PerformanceTimeline({
 
   const sessionLabels = useMemo(
     () =>
-      filteredSessions.map((s) =>
-        `${s.gameTitle} — ${formatSessionDate(s.startTime)}`
+      filteredSessions.map(
+        (s) => `${s.gameTitle} — ${formatSessionDate(s.startTime)}`
       ),
     [filteredSessions]
   );
 
   const sessionSamples = useMemo(
-    () =>
-      filteredSessions.map((s) => s.hardwareMetrics?.samples ?? []),
+    () => filteredSessions.map((s) => s.hardwareMetrics?.samples ?? []),
     [filteredSessions]
   );
 
@@ -132,7 +136,8 @@ export function PerformanceTimeline({
         <div className="performance-timeline__header">
           <h3 className="performance-timeline__title">
             <Activity size={14} />
-            {t("session_performance_timeline") || "Session Performance Timeline"}
+            {t("session_performance_timeline") ||
+              "Session Performance Timeline"}
           </h3>
 
           <div className="performance-timeline__controls">
@@ -149,9 +154,7 @@ export function PerformanceTimeline({
                   setIsolatedSessionIndex(null);
                 }}
               >
-                <option value="all">
-                  {t("all_games") || "All Games"}
-                </option>
+                <option value="all">{t("all_games") || "All Games"}</option>
                 {gameList.map((g) => (
                   <option key={g.title} value={g.title}>
                     {g.title}
@@ -175,9 +178,7 @@ export function PerformanceTimeline({
                   }
                   onChange={(e) => {
                     const val = e.target.value;
-                    setIsolatedSessionIndex(
-                      val === "all" ? null : Number(val)
-                    );
+                    setIsolatedSessionIndex(val === "all" ? null : Number(val));
                   }}
                 >
                   <option value="all">

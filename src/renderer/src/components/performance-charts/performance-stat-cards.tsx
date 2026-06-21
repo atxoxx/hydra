@@ -1,6 +1,9 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { samplesToSparklineData, ActivitySparkline } from "../../pages/game-details/activity-sparkline";
+import {
+  samplesToSparklineData,
+  ActivitySparkline,
+} from "../../pages/game-details/activity-sparkline";
 import type { HardwareSample } from "../../declaration";
 import "./performance-stat-cards.scss";
 
@@ -13,11 +16,37 @@ export interface PerformanceStat {
 }
 
 const DEFAULT_STATS: PerformanceStat[] = [
-  { label: "Avg FPS", metric: "fps", unit: "", thresholds: { warn: 60, danger: 30 }, inverted: true },
-  { label: "CPU Usage", metric: "cpuUsage", unit: "%", thresholds: { warn: 70, danger: 90 } },
-  { label: "GPU Usage", metric: "gpuUsage", unit: "%", thresholds: { warn: 70, danger: 90 } },
-  { label: "CPU Temp", metric: "cpuTemp", unit: "°C", thresholds: { warn: 75, danger: 85 } },
-  { label: "GPU Temp", metric: "gpuTemp", unit: "°C", thresholds: { warn: 75, danger: 85 } },
+  {
+    label: "Avg FPS",
+    metric: "fps",
+    unit: "",
+    thresholds: { warn: 60, danger: 30 },
+    inverted: true,
+  },
+  {
+    label: "CPU Usage",
+    metric: "cpuUsage",
+    unit: "%",
+    thresholds: { warn: 70, danger: 90 },
+  },
+  {
+    label: "GPU Usage",
+    metric: "gpuUsage",
+    unit: "%",
+    thresholds: { warn: 70, danger: 90 },
+  },
+  {
+    label: "CPU Temp",
+    metric: "cpuTemp",
+    unit: "°C",
+    thresholds: { warn: 75, danger: 85 },
+  },
+  {
+    label: "GPU Temp",
+    metric: "gpuTemp",
+    unit: "°C",
+    thresholds: { warn: 75, danger: 85 },
+  },
   { label: "RAM Usage", metric: "ramUsageMB", unit: "GB" },
 ];
 
@@ -35,7 +64,9 @@ function computeMax(arr: number[]): number {
   return Math.max(...arr);
 }
 
-export function PerformanceStatCards({ allSamples }: Readonly<PerformanceStatCardsProps>) {
+export function PerformanceStatCards({
+  allSamples,
+}: Readonly<PerformanceStatCardsProps>) {
   const { t } = useTranslation("activity");
 
   const stats = useMemo(() => {

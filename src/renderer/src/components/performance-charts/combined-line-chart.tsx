@@ -76,16 +76,15 @@ export function CombinedLineChart({
         const sessionSamples = samples[sessionIdx];
         if (!sessionSamples || sessionSamples.length < 2) continue;
 
-        const step = Math.max(1, Math.floor(sessionSamples.length / MAX_POINTS));
+        const step = Math.max(
+          1,
+          Math.floor(sessionSamples.length / MAX_POINTS)
+        );
         const downsampled = sessionSamples.filter((_, i) => i % step === 0);
         const duration = sessionDurations[sessionIdx] ?? 0;
 
         const data = downsampled.map((sample, idx) => ({
-          x: formatSessionTime(
-            idx * step,
-            sessionSamples.length,
-            duration
-          ),
+          x: formatSessionTime(idx * step, sessionSamples.length, duration),
           y: (sample[s.field] as number) || 0,
         }));
 
@@ -150,10 +149,7 @@ export function CombinedLineChart({
 
   return (
     <div className="combined-line-chart">
-      <div
-        className="combined-line-chart__container"
-        style={{ height }}
-      >
+      <div className="combined-line-chart__container" style={{ height }}>
         {chartData.length === 0 ? (
           <div className="combined-line-chart__empty">
             {t("no_performance_data") || "No performance data available yet."}
@@ -161,7 +157,12 @@ export function CombinedLineChart({
         ) : (
           <ResponsiveLine
             data={chartData}
-            margin={{ top: 12, right: rightAxis ? 40 : 20, bottom: 30, left: 50 }}
+            margin={{
+              top: 12,
+              right: rightAxis ? 40 : 20,
+              bottom: 30,
+              left: 50,
+            }}
             xScale={{ type: "point" }}
             yScale={{
               type: "linear",

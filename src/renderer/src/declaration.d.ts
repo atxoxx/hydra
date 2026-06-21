@@ -594,12 +594,14 @@ declare global {
       cpuUsageAlertThreshold?: number;
       ramUsageAlertThresholdMB?: number;
     }) => Promise<{ success: boolean; error?: string }>;
-    getSystemGpus: () => Promise<{
-      index: number;
-      model: string;
-      vendor: string;
-      vram: number;
-    }[]>;
+    getSystemGpus: () => Promise<
+      {
+        index: number;
+        model: string;
+        vendor: string;
+        vram: number;
+      }[]
+    >;
     getPlaytimeSummary: (
       startDate: string,
       endDate: string
