@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUserDetails } from "@renderer/hooks";
 import type { GameShop } from "@types";
@@ -6,18 +6,33 @@ import type {
   DailyPlaytimeEntry,
   PlaytimeSummary,
   FriendPlaytimeStats,
+  SessionWithGame,
 } from "../../declaration";
 import { DateRangeFilter, type DateRange } from "./date-range-filter";
-import { StatsOverviewCards } from "./stats-overview-cards";
-import { TopPlayedGames } from "./top-played-games";
+import {
+  ActivityToolbar,
+  type AggregationMode,
+  type ChartType,
+} from "./activity-toolbar";
+import { ActivityStatsBar } from "./activity-stats-bar";
+import { ActivityGameSidebar } from "./activity-game-sidebar";
 import { WeeklyHeatmap, type HeatmapDay } from "./weekly-heatmap";
 import { FriendsComparison } from "./friends-comparison";
-import { PerGameDetails } from "./per-game-details";
+import { ActivityMainChart } from "./activity-main-chart";
 import { PlatformBreakdown } from "./platform-breakdown";
 import { GenreBreakdown } from "./genre-breakdown";
 import { GlobalSessionList } from "./global-session-list";
 import { PerformanceInsights } from "./performance-insights";
-import { LayoutDashboard, History, BarChart3 } from "lucide-react";
+import { ActivityGanttChart } from "./activity-gantt-chart";
+import {
+  LayoutDashboard,
+  History,
+  BarChart3,
+  GanttChart,
+  Camera,
+  Download,
+  Filter,
+} from "lucide-react";
 import "./activity.scss";
 
 const DATE_RANGE_PRESETS: Record<
@@ -68,11 +83,12 @@ const DATE_RANGE_PRESETS: Record<
   },
 };
 
-type ActiveTab = "dashboard" | "sessions" | "performance";
+type ActiveTab = "dashboard" | "sessions" | "performance" | "gantt";
 
 export default function Activity() {
   const { t } = useTranslation("activity");
   const { userDetails } = useUserDetails();
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("dashboard");
   const [dateRange, setDateRange] = useState<DateRange>("7d");
@@ -80,6 +96,10 @@ export default function Activity() {
   const [summary, setSummary] = useState<PlaytimeSummary | null>(null);
   const [dailyEntries, setDailyEntries] = useState<DailyPlaytimeEntry[]>([]);
   const [friendsStats, setFriendsStats] = useState<FriendPlaytimeStats[]>([]);
+  const [allSessions, setAllSessions] = useState<SessionWithGame[]>([]);
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [aggregation, setAggregation] = useState<AggregationMode>("day");
+  const [chartType, setChartType] = useState<ChartType>("bar");
   const [selectedGame, setSelectedGame] = useState<{
     objectId: string;
     shop: string;
@@ -94,15 +114,18 @@ export default function Activity() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [summaryResult, friendsResult] = await Promise.all([
+      const [summaryResult, friendsResult, sessionsResult] = await Promise.all([
         window.electron.getPlaytimeSummary(startDate, endDate),
         userDetails ? window.electron.getFriendsStats() : Promise.resolve([]),
+        window.electron.getAllSessions(),
       ]);
       setSummary(summaryResult);
       setFriendsStats(friendsResult);
+      setAllSessions(sessionsResult);
     } catch {
       setSummary(null);
       setFriendsStats([]);
+      setAllSessions([]);
     } finally {
       setLoading(false);
     }
@@ -132,6 +155,23 @@ export default function Activity() {
     fetchGameData();
   }, [selectedGame, startDate, endDate]);
 
+  // Derive unique sources from top games
+  const availableSources = useMemo(() => {
+    if (!summary?.topGames) return [];
+    const sources = new Set<string>();
+    for (const g of summary.topGames) {
+      if (g.shop) sources.add(g.shop);
+    }
+    return Array.from(sources).sort();
+  }, [summary]);
+
+  // Filter top games by source
+  const filteredTopGames = useMemo(() => {
+    if (!summary?.topGames) return [];
+    if (sourceFilter === "all") return summary.topGames;
+    return summary.topGames.filter((g) => g.shop === sourceFilter);
+  }, [summary, sourceFilter]);
+
   const heatmapDays: HeatmapDay[] = useMemo(() => {
     if (!summary || !summary.dailyPlaytimes) return [];
 
@@ -160,15 +200,68 @@ export default function Activity() {
     return days;
   }, [summary, startDate, endDate]);
 
+  // Filter sessions by date range for Gantt view
+  const ganttSessions = useMemo(() => {
+    return allSessions.filter((s) => {
+      const d = s.startTime.slice(0, 10);
+      return d >= startDate && d <= endDate;
+    });
+  }, [allSessions, startDate, endDate]);
+
   const handleGameSelect = (objectId: string, shop: string, title: string) => {
+    if (!objectId) {
+      setSelectedGame(null);
+      return;
+    }
     setSelectedGame((prev) =>
       prev?.objectId === objectId ? null : { objectId, shop, title }
     );
   };
 
+  const handleScreenshot = useCallback(async () => {
+    if (!contentRef.current) return;
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(contentRef.current, {
+        backgroundColor: "#121212",
+        scale: 2,
+        useCORS: true,
+      });
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `activity-overview-${new Date().toISOString().slice(0, 10)}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    } catch (err) {
+      console.error("Screenshot failed:", err);
+    }
+  }, []);
+
+  const handleExportCSV = useCallback(() => {
+    if (!allSessions.length) return;
+    const header = "Game,Start Time,End Time,Duration (min),Shop\n";
+    const rows = allSessions
+      .map((s) => {
+        const durationMin = Math.round(s.durationMs / 60_000);
+        return `"${s.gameTitle}","${s.startTime}","${s.endTime}",${durationMin},"${s.shop}"`;
+      })
+      .join("\n");
+    const blob = new Blob([header + rows], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `activity-sessions-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [allSessions]);
+
   return (
     <section className="activity__container">
-      <div className="activity__content">
+      <div className="activity__content" ref={contentRef}>
         <header className="activity__header">
           <div className="activity__header-left">
             <h2 className="activity__title">{t("activity")}</h2>
@@ -180,6 +273,14 @@ export default function Activity() {
               >
                 <LayoutDashboard size={14} />
                 {t("dashboard") || "Dashboard"}
+              </button>
+              <button
+                type="button"
+                className={`activity__tab-btn ${activeTab === "gantt" ? "activity__tab-btn--active" : ""}`}
+                onClick={() => setActiveTab("gantt")}
+              >
+                <GanttChart size={14} />
+                {t("timeline") || "Timeline"}
               </button>
               <button
                 type="button"
@@ -195,59 +296,132 @@ export default function Activity() {
                 onClick={() => setActiveTab("performance")}
               >
                 <BarChart3 size={14} />
-                {t("performance") || "Performance Insights"}
+                {t("performance") || "Performance"}
               </button>
             </div>
           </div>
-          {activeTab === "dashboard" && (
-            <DateRangeFilter value={dateRange} onChange={setDateRange} />
-          )}
+
+          <div className="activity__header-right">
+            {/* Date range filter for non-dashboard tabs */}
+            {activeTab === "gantt" && (
+              <DateRangeFilter value={dateRange} onChange={setDateRange} />
+            )}
+
+            {/* Source filter for gantt tab (toolbar handles dashboard) */}
+            {activeTab === "gantt" && availableSources.length > 1 && (
+              <div className="activity__source-filter">
+                <Filter size={12} />
+                <select
+                  className="activity__source-select"
+                  value={sourceFilter}
+                  onChange={(e) => setSourceFilter(e.target.value)}
+                >
+                  <option value="all">{t("all_sources") || "All Sources"}</option>
+                  {availableSources.map((src) => (
+                    <option key={src} value={src}>
+                      {src.charAt(0).toUpperCase() + src.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Export buttons */}
+            <div className="activity__export-actions">
+              <button
+                type="button"
+                className="activity__icon-btn"
+                onClick={handleScreenshot}
+                title={t("export_screenshot") || "Save Screenshot"}
+              >
+                <Camera size={14} />
+              </button>
+              <button
+                type="button"
+                className="activity__icon-btn"
+                onClick={handleExportCSV}
+                title={t("export_csv") || "Export CSV"}
+              >
+                <Download size={14} />
+              </button>
+            </div>
+          </div>
         </header>
 
         {activeTab === "dashboard" && (
           <>
-            <StatsOverviewCards
-              summary={summary}
-              loading={loading}
-              totalSessions={summary?.totalSessions ?? 0}
-              longestStreak={summary?.longestStreak ?? 0}
+            <ActivityToolbar
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+              aggregation={aggregation}
+              onAggregationChange={setAggregation}
+              chartType={chartType}
+              onChartTypeChange={setChartType}
+              sources={availableSources}
+              sourceFilter={sourceFilter}
+              onSourceFilterChange={setSourceFilter}
             />
 
-            <div className="activity__two-column">
-              <TopPlayedGames
-                games={summary?.topGames ?? []}
+            <ActivityStatsBar
+              summary={summary}
+              selectedGame={selectedGame}
+              dailyEntries={dailyEntries}
+              loading={loading}
+            />
+
+            <div className="activity__dashboard-layout">
+              <ActivityGameSidebar
+                games={filteredTopGames}
                 loading={loading}
                 onGameSelect={handleGameSelect}
                 selectedGameId={selectedGame?.objectId ?? null}
               />
-              <PlatformBreakdown
-                platformBreakdown={summary?.platformBreakdown}
-                loading={loading}
-              />
+
+              <div className="activity__dashboard-main">
+                <ActivityMainChart
+                  dailyPlaytimes={summary?.dailyPlaytimes ?? null}
+                  selectedGame={selectedGame}
+                  dailyEntries={dailyEntries}
+                  aggregation={aggregation}
+                  chartType={chartType}
+                  loading={loading}
+                  startDate={startDate}
+                  endDate={endDate}
+                />
+
+                {!selectedGame && (
+                  <>
+                    <div className="activity__two-column">
+                      <PlatformBreakdown
+                        platformBreakdown={summary?.platformBreakdown}
+                        loading={loading}
+                      />
+                      <GenreBreakdown
+                        genreBreakdown={summary?.genreBreakdown}
+                        loading={loading}
+                      />
+                    </div>
+
+                    <WeeklyHeatmap days={heatmapDays} loading={loading} />
+
+                    <FriendsComparison
+                      friendsStats={friendsStats}
+                      isSignedIn={!!userDetails}
+                      loading={loading}
+                    />
+                  </>
+                )}
+              </div>
             </div>
-
-            <WeeklyHeatmap days={heatmapDays} loading={loading} />
-
-            <div className="activity__two-column">
-              <GenreBreakdown
-                genreBreakdown={summary?.genreBreakdown}
-                loading={loading}
-              />
-              <FriendsComparison
-                friendsStats={friendsStats}
-                isSignedIn={!!userDetails}
-                loading={loading}
-              />
-            </div>
-
-            {selectedGame && (
-              <PerGameDetails
-                game={selectedGame}
-                dailyEntries={dailyEntries}
-                onClose={() => setSelectedGame(null)}
-              />
-            )}
           </>
+        )}
+
+        {activeTab === "gantt" && (
+          <ActivityGanttChart
+            sessions={ganttSessions}
+            loading={loading}
+            dateRange={{ startDate, endDate }}
+          />
         )}
 
         {activeTab === "sessions" && <GlobalSessionList />}

@@ -8,13 +8,22 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { GraphIcon } from "@primer/octicons-react";
+import {
+  Calendar,
+  Clock,
+  Trophy,
+  Zap,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  BarChart2,
+  Camera,
+} from "lucide-react";
 import type { GameShop } from "@types";
 import { gameDetailsContext } from "@renderer/context";
 import type { DailyPlaytimeEntry, GameSession } from "../../declaration";
 import { ActivityChart } from "./activity-chart";
-import { ActivityHardwareCard } from "./activity-hardware-card";
 import { ActivitySessionList } from "./activity-session-list";
-import { ActivityStatsGrid, computeStreaks } from "./activity-stats-grid";
 import { WeeklyHeatmap } from "../activity/weekly-heatmap";
 import {
   ActivityTimeframeTabs,
@@ -73,6 +82,24 @@ function getMostActiveDay(dailyEntries: DailyPlaytimeEntry[]): string | null {
   return dayNames[maxDay];
 }
 
+function formatPlaytime(ms: number): string {
+  const hours = ms / 3_600_000;
+  if (hours < 1) return `${Math.round(hours * 60)}m`;
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString([], {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export interface GameActivityPanelProps {
   shop: GameShop;
   objectId: string;
@@ -92,6 +119,55 @@ function getDateRange(days: number) {
   return { startDate: fmt(start), endDate: fmt(end) };
 }
 
+function computeStreaks(sessions: GameSession[]): {
+  currentStreak: number;
+  bestStreak: number;
+} {
+  if (sessions.length === 0) return { currentStreak: 0, bestStreak: 0 };
+
+  const uniqueDays = new Set<string>();
+  for (const s of sessions) {
+    uniqueDays.add(s.startTime.slice(0, 10));
+  }
+
+  const sortedDays = Array.from(uniqueDays).sort().reverse();
+  if (sortedDays.length === 0) return { currentStreak: 0, bestStreak: 0 };
+
+  let currentStreak = 0;
+  const today = new Date().toISOString().slice(0, 10);
+  let checkDate = today;
+
+  for (let i = 0; i < sortedDays.length + 1; i++) {
+    if (sortedDays.includes(checkDate)) {
+      currentStreak++;
+      const d = new Date(checkDate);
+      d.setDate(d.getDate() - 1);
+      checkDate = d.toISOString().slice(0, 10);
+    } else {
+      break;
+    }
+  }
+
+  let bestStreak = 0;
+  let run = 1;
+
+  for (let i = 1; i < sortedDays.length; i++) {
+    const prev = new Date(sortedDays[i - 1]);
+    const curr = new Date(sortedDays[i]);
+    const diffDays = (prev.getTime() - curr.getTime()) / (1000 * 60 * 60 * 24);
+
+    if (Math.abs(diffDays - 1) < 0.01) {
+      run++;
+    } else {
+      bestStreak = Math.max(bestStreak, run);
+      run = 1;
+    }
+  }
+  bestStreak = Math.max(bestStreak, run);
+
+  return { currentStreak, bestStreak };
+}
+
 export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
   const { t } = useTranslation("activity");
   const { isGameRunning, game, updateGame } = useContext(gameDetailsContext);
@@ -100,6 +176,7 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
   const [sessions, setSessions] = useState<GameSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [sessionsLoading, setSessionsLoading] = useState(true);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const prevIsGameRunning = useRef(isGameRunning);
   const isFirstTimeframeRender = useRef(true);
@@ -138,7 +215,6 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
     }
   }, [shop, objectId]);
 
-  // 1. Initial load on mount or game change (shop/objectId)
   useEffect(() => {
     let cancelled = false;
 
@@ -174,9 +250,8 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
     return () => {
       cancelled = true;
     };
-  }, [shop, objectId]); // Only runs when shop or objectId changes
+  }, [shop, objectId]);
 
-  // 2. Fetch daily playtime when timeframe changes
   useEffect(() => {
     if (isFirstTimeframeRender.current) {
       isFirstTimeframeRender.current = false;
@@ -185,7 +260,6 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
     fetchDailyPlaytime();
   }, [timeframe, fetchDailyPlaytime]);
 
-  // 3. Fetch all data when game stops running
   useEffect(() => {
     if (prevIsGameRunning.current && !isGameRunning) {
       fetchDailyPlaytime();
@@ -227,10 +301,26 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
     [dailyEntries]
   );
 
-  const latestHardwareMetrics = useMemo(
-    () => sessions.find((s) => s.hardwareMetrics)?.hardwareMetrics ?? null,
-    [sessions]
+  const dayCount = useMemo(
+    () => dailyEntries.filter((e) => e.totalMilliseconds > 0).length,
+    [dailyEntries]
   );
+
+  const firstPlayed = useMemo(() => {
+    if (sessions.length === 0) return null;
+    const sorted = [...sessions].sort((a, b) =>
+      a.startTime.localeCompare(b.startTime)
+    );
+    return sorted[0]?.startTime ?? null;
+  }, [sessions]);
+
+  const lastPlayed = useMemo(() => {
+    if (sessions.length === 0) return null;
+    const sorted = [...sessions].sort((a, b) =>
+      b.startTime.localeCompare(a.startTime)
+    );
+    return sorted[0]?.startTime ?? null;
+  }, [sessions]);
 
   const heatmapDays = useMemo(() => {
     const dayMap = new Map<string, number>();
@@ -261,6 +351,48 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
     return daysList;
   }, [dailyEntries, timeframe]);
 
+  const handleScreenshot = useCallback(async () => {
+    if (!panelRef.current) return;
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(panelRef.current, {
+        backgroundColor: "#121212",
+        scale: 2,
+        useCORS: true,
+      });
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `activity-${game?.title ?? objectId}-${new Date().toISOString().slice(0, 10)}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    } catch (err) {
+      console.error("Screenshot failed:", err);
+    }
+  }, [game?.title, objectId]);
+
+  const handleRefresh = useCallback(() => {
+    fetchDailyPlaytime();
+    fetchSessions();
+    updateGame();
+  }, [fetchDailyPlaytime, fetchSessions, updateGame]);
+
+  const TrendIcon =
+    trend.direction === "up"
+      ? TrendingUp
+      : trend.direction === "down"
+        ? TrendingDown
+        : Minus;
+  const trendColor =
+    trend.direction === "up"
+      ? "var(--color-primary, #16b195)"
+      : trend.direction === "down"
+        ? "#e74c3c"
+        : "rgba(255,255,255,0.4)";
+
   if (loading) {
     return (
       <div className="game-activity-panel">
@@ -289,53 +421,144 @@ export function GameActivityPanel({ shop, objectId }: GameActivityPanelProps) {
     );
   }
 
+  const statsItems = [
+    {
+      icon: <Clock size={14} />,
+      label: t("total_playtime"),
+      value: formatPlaytime(game?.playTimeInMilliseconds ?? 0),
+    },
+    {
+      icon: <BarChart2 size={14} />,
+      label: t("session_count"),
+      value: String(sessionCount),
+    },
+    {
+      icon: <Clock size={14} />,
+      label: t("avg_session_duration"),
+      value: formatPlaytime(avgSessionMs),
+    },
+    {
+      icon: <Trophy size={14} />,
+      label: t("longest_session"),
+      value: formatPlaytime(longestSessionMs),
+    },
+    {
+      icon: <Zap size={14} />,
+      label: t("current_streak"),
+      value:
+        streaks.currentStreak > 0
+          ? t("streak_days", { count: streaks.currentStreak })
+          : "—",
+    },
+    {
+      icon: <Zap size={14} />,
+      label: t("best_streak"),
+      value:
+        streaks.bestStreak > 0
+          ? t("streak_days", { count: streaks.bestStreak })
+          : "—",
+    },
+    {
+      icon: <TrendIcon size={14} />,
+      label: t("play_trend"),
+      value:
+        trend.direction === "flat" ? "—" : `${trend.percent}%`,
+      color: trendColor,
+    },
+    {
+      icon: <Calendar size={14} />,
+      label: t("most_active_day"),
+      value: mostActiveDay ?? "—",
+    },
+    {
+      icon: <Calendar size={14} />,
+      label: t("active_days"),
+      value: String(dayCount),
+    },
+    {
+      icon: <Calendar size={14} />,
+      label: t("first_played") || "First Played",
+      value: firstPlayed ? formatDate(firstPlayed) : "—",
+    },
+    {
+      icon: <Calendar size={14} />,
+      label: t("last_played") || "Last Played",
+      value: lastPlayed ? formatDate(lastPlayed) : "—",
+    },
+  ];
+
   return (
-    <div className="game-activity-panel">
+    <div className="game-activity-panel" ref={panelRef}>
+      {/* ── Header ── */}
       <div className="game-activity-panel__header">
         <h3 className="game-activity-panel__title">
           <GraphIcon size={14} />
           {t("activity")}
         </h3>
-        <ActivityTimeframeTabs active={timeframe} onChange={setTimeframe} />
+        <div className="game-activity-panel__header-actions">
+          <ActivityTimeframeTabs active={timeframe} onChange={setTimeframe} />
+          <button
+            type="button"
+            className="game-activity-panel__icon-btn"
+            onClick={handleScreenshot}
+            title={t("export_screenshot") || "Save as Screenshot"}
+          >
+            <Camera size={14} />
+          </button>
+        </div>
       </div>
 
-      <div className="game-activity-panel__two-column">
-        <div className="game-activity-panel__chart-section">
-          <ActivityChart data={chartData} />
+      {/* ── Two-column body ── */}
+      <div className="game-activity-panel__body">
+        {/* LEFT COLUMN: Stats + Sessions */}
+        <div className="game-activity-panel__left">
+          {/* Stats Grid */}
+          <div className="game-activity-panel__stats-grid">
+            {statsItems.map((item) => (
+              <div
+                className="game-activity-panel__stat-card"
+                key={item.label}
+              >
+                <span className="game-activity-panel__stat-icon">
+                  {item.icon}
+                </span>
+                <div className="game-activity-panel__stat-content">
+                  <span className="game-activity-panel__stat-label">
+                    {item.label}
+                  </span>
+                  <span
+                    className="game-activity-panel__stat-value"
+                    style={item.color ? { color: item.color } : undefined}
+                  >
+                    {item.value}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Session List */}
+          <div className="game-activity-panel__sessions-section">
+            <ActivitySessionList
+              sessions={sessions}
+              loading={sessionsLoading}
+              onDelete={handleRefresh}
+            />
+          </div>
         </div>
 
-        <div className="game-activity-panel__hardware-section">
-          <ActivityHardwareCard metrics={latestHardwareMetrics} />
+        {/* RIGHT COLUMN: Charts */}
+        <div className="game-activity-panel__right">
+          {/* Playtime Chart Card */}
+          <div className="game-activity-panel__chart-card">
+            <ActivityChart data={chartData} />
+          </div>
+
+          {/* Heatmap Card */}
+          <div className="game-activity-panel__heatmap-card">
+            <WeeklyHeatmap days={heatmapDays} loading={loading} />
+          </div>
         </div>
-      </div>
-
-      <ActivityStatsGrid
-        totalPlaytimeMs={game?.playTimeInMilliseconds ?? 0}
-        sessionCount={sessionCount}
-        avgSessionMs={avgSessionMs}
-        longestSessionMs={longestSessionMs}
-        currentStreak={streaks.currentStreak}
-        bestStreak={streaks.bestStreak}
-        sessions={sessions}
-        trend={trend}
-        mostActiveDay={mostActiveDay}
-        dayCount={dailyEntries.filter((e) => e.totalMilliseconds > 0).length}
-      />
-
-      <div className="game-activity-panel__heatmap-section">
-        <WeeklyHeatmap days={heatmapDays} loading={loading} />
-      </div>
-
-      <div className="game-activity-panel__sessions">
-        <ActivitySessionList
-          sessions={sessions}
-          loading={sessionsLoading}
-          onDelete={() => {
-            fetchDailyPlaytime();
-            fetchSessions();
-            updateGame();
-          }}
-        />
       </div>
     </div>
   );

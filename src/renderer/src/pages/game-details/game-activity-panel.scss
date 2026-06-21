@@ -8,7 +8,7 @@
   );
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
-  padding: calc(globals.$spacing-unit * 4) calc(globals.$spacing-unit * 5);
+  padding: calc(globals.$spacing-unit * 3) calc(globals.$spacing-unit * 4);
   margin-bottom: calc(globals.$spacing-unit * 2);
   transition:
     border-color 0.25s ease,
@@ -19,6 +19,7 @@
     box-shadow: 0 0 40px rgba(var(--color-primary-rgb, 74, 158, 255), 0.04);
   }
 
+  // ── Header ──
   &__header {
     display: flex;
     align-items: center;
@@ -40,6 +41,33 @@
     letter-spacing: 0.5px;
   }
 
+  &__header-actions {
+    display: flex;
+    align-items: center;
+    gap: calc(globals.$spacing-unit);
+  }
+
+  &__icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.9);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  // ── Loading/Empty ──
   &__loading,
   &__empty {
     color: rgba(255, 255, 255, 0.4);
@@ -48,37 +76,120 @@
     padding: calc(globals.$spacing-unit * 4) calc(globals.$spacing-unit * 2);
   }
 
-  &__two-column {
+  // ── Two-column body ──
+  &__body {
     display: grid;
     grid-template-columns: 1fr;
     gap: calc(globals.$spacing-unit * 3);
-    margin-bottom: calc(globals.$spacing-unit * 3);
 
     @media (min-width: 960px) {
-      grid-template-columns: 1fr 320px;
-      gap: calc(globals.$spacing-unit * 4);
+      grid-template-columns: 380px 1fr;
+      gap: calc(globals.$spacing-unit * 3);
+    }
+
+    @media (min-width: 1200px) {
+      grid-template-columns: 420px 1fr;
     }
   }
 
-  &__chart-section {
-    min-width: 0;
-  }
-
-  &__hardware-section {
-    min-width: 0;
+  // ── Left Column: Stats + Sessions ──
+  &__left {
     display: flex;
     flex-direction: column;
+    gap: calc(globals.$spacing-unit * 2);
+    min-width: 0;
   }
 
-  &__heatmap-section {
-    margin-top: calc(globals.$spacing-unit * 3);
-    margin-bottom: calc(globals.$spacing-unit * 3);
+  // ── Stats Grid ──
+  &__stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 
-  &__sessions {
-    margin-top: calc(globals.$spacing-unit * 2.5);
-    padding-top: calc(globals.$spacing-unit * 2.5);
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  &__stat-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.25);
+      background: rgba(255, 255, 255, 0.04);
+    }
+  }
+
+  &__stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(var(--color-primary-rgb, 74, 158, 255), 0.1);
+    color: var(--color-primary, #4a9eff);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  &__stat-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  &__stat-label {
+    color: globals.$body-color;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__stat-value {
+    color: globals.$muted-color;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    line-height: 1.2;
+  }
+
+  // ── Sessions Section ──
+  &__sessions-section {
+    flex: 1;
+    min-height: 0;
+  }
+
+  // ── Right Column: Charts ──
+  &__right {
+    display: flex;
+    flex-direction: column;
+    gap: calc(globals.$spacing-unit * 2);
+    min-width: 0;
+  }
+
+  &__chart-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: calc(globals.$spacing-unit * 2);
+    min-width: 0;
+  }
+
+  &__heatmap-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: calc(globals.$spacing-unit * 2);
+    min-width: 0;
   }
 
   // Optimize nested section-panel component inside this layout
