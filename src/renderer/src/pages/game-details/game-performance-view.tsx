@@ -154,7 +154,10 @@ export function GamePerformanceView({
           <div className="game-performance-view__chart-header">
             <span className="game-performance-view__chart-title">
               <Activity size={14} />
-              {t("session_performance_timeline", "Session Performance Timeline")}
+              {t(
+                "session_performance_timeline",
+                "Session Performance Timeline"
+              )}
             </span>
             <div className="game-performance-view__session-selector">
               <BarChart3 size={12} />

@@ -282,7 +282,7 @@ export function PerformanceInsights() {
             layout="horizontal"
             valueScale={{
               type: "linear",
-              max: metric === "ram" ? totalRam : "auto"
+              max: metric === "ram" ? totalRam : "auto",
             }}
             colors={colors}
             groupMode="grouped"

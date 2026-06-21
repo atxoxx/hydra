@@ -302,7 +302,9 @@ export class NativeAddon {
     });
   }
 
-  public static readHardwareMetrics(selectedGpuIndex?: number): HardwareMetricsPayload | null {
+  public static readHardwareMetrics(
+    selectedGpuIndex?: number
+  ): HardwareMetricsPayload | null {
     try {
       const mod = this.load();
       if (typeof mod.readHardwareMetrics !== "function") {

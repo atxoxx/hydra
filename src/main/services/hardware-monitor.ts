@@ -119,7 +119,9 @@ export class HardwareMonitor {
 
   private static async readHardwareMetrics(): Promise<HardwareSample> {
     // Try native addon first (MSI Afterburner / RTSS shared memory on Windows)
-    const nativeMetrics = NativeAddon.readHardwareMetrics(this.config.selectedGpuIndex);
+    const nativeMetrics = NativeAddon.readHardwareMetrics(
+      this.config.selectedGpuIndex
+    );
 
     if (nativeMetrics) {
       let cpuUsage = Math.round(nativeMetrics.cpuUsage);
