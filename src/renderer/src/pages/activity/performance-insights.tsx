@@ -233,7 +233,10 @@ export function PerformanceInsights() {
               display: "block",
             }}
           >
-            {t("hw_monitoring_hint", "Play games with hardware monitoring enabled to see metrics here.")}
+            {t(
+              "hw_monitoring_hint",
+              "Play games with hardware monitoring enabled to see metrics here."
+            )}
           </small>
         </div>
       </div>

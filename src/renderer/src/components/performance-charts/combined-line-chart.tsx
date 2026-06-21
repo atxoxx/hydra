@@ -111,7 +111,9 @@ export function CombinedLineChart({
         progressPercent,
         elapsedSeconds:
           sessionData.length === 1
-            ? Math.round((i / (MAX_POINTS - 1)) * (sessionData[0].duration / 1000))
+            ? Math.round(
+                (i / (MAX_POINTS - 1)) * (sessionData[0].duration / 1000)
+              )
             : 0,
       };
 
