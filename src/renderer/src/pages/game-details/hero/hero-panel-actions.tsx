@@ -446,6 +446,15 @@ export function HeroPanelActions() {
     </Button>
   );
 
+  const handleOpenDownloadOptionsModal = () => {
+    if (game) {
+      setGameOptionsInitialCategory("downloads");
+      setShowGameOptionsModal(true);
+    } else {
+      setShowRepacksModal(true);
+    }
+  };
+
   const gameActionButton = () => {
     if (isTransferring) {
       const percent = Math.round(transferProgress * 100);
@@ -512,7 +521,7 @@ export function HeroPanelActions() {
 
     return (
       <Button
-        onClick={() => setShowRepacksModal(true)}
+        onClick={handleOpenDownloadOptionsModal}
         theme="outline"
         className="hero-panel-actions__action hero-panel-actions__cta"
       >
@@ -527,7 +536,7 @@ export function HeroPanelActions() {
   // which then explains empty/error states.
   const downloadButton = (
     <Button
-      onClick={() => setShowRepacksModal(true)}
+      onClick={handleOpenDownloadOptionsModal}
       theme="outline"
       className="hero-panel-actions__action"
     >

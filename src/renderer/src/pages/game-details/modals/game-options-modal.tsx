@@ -79,6 +79,7 @@ export function GameOptionsModal({
     achievements,
     shopDetails,
     isTransferring,
+    repacks,
   } = useContext(gameDetailsContext);
 
   const [transferProgress, setTransferProgress] = useState(0);
@@ -986,6 +987,7 @@ export function GameOptionsModal({
                 isGameDownloading={isGameDownloading}
                 onOpenRepacks={() => setShowRepacksModal(true)}
                 onOpenDownloadFolder={handleOpenDownloadFolder}
+                repacksCount={repacks.length}
               />
             )}
             {selectedCategory === "danger_zone" && (

@@ -345,6 +345,49 @@
     color: globals.$muted-color;
   }
 
+  &__empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 32px 16px;
+    text-align: center;
+  }
+
+  &__empty-state-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin-bottom: 4px;
+
+    &--info {
+      background: rgba(255, 255, 255, 0.06);
+      color: globals.$muted-color;
+    }
+  }
+
+  &__empty-state-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #dadbe1;
+    margin: 0;
+  }
+
+  &__empty-state-description {
+    font-size: 13px;
+    color: globals.$muted-color;
+    margin: 0;
+    max-width: 320px;
+    line-height: 1.5;
+  }
+
+  &__empty-state-action {
+    margin-top: 4px;
+  }
+
   @media (max-width: 860px) {
     &__container {
       flex-direction: column;

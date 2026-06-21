@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 import { Button } from "@renderer/components";
 import type { LibraryGame, StoreId } from "@types";
+import { PlusCircleIcon } from "@primer/octicons-react";
+import { Inbox } from "lucide-react";
 
 interface OwnedGameEntry {
   storeGameId: string;
@@ -34,6 +37,7 @@ interface DownloadsSettingsSectionProps {
   isGameDownloading: boolean;
   onOpenRepacks: () => void;
   onOpenDownloadFolder: () => Promise<void>;
+  repacksCount: number;
 }
 
 export function DownloadsSettingsSection({
@@ -42,8 +46,10 @@ export function DownloadsSettingsSection({
   isGameDownloading,
   onOpenRepacks,
   onOpenDownloadFolder,
+  repacksCount,
 }: Readonly<DownloadsSettingsSectionProps>) {
   const { t } = useTranslation("game_details");
+  const navigate = useNavigate();
   const [ownedEntry, setOwnedEntry] = useState<OwnedGameEntry | null>(null);
   const [storeAction, setStoreAction] = useState<string>("");
 
@@ -143,13 +149,36 @@ export function DownloadsSettingsSection({
       )}
 
       <div className="game-options-modal__row">
-        <Button
-          onClick={onOpenRepacks}
-          theme="outline"
-          disabled={deleting || isGameDownloading}
-        >
-          {t("open_download_options")}
-        </Button>
+        {repacksCount === 0 ? (
+          <div className="game-options-modal__empty-state">
+            <div className="game-options-modal__empty-state-icon game-options-modal__empty-state-icon--info">
+              <Inbox size={48} />
+            </div>
+            <h3 className="game-options-modal__empty-state-title">
+              {t("no_available_downloads_title")}
+            </h3>
+            <p className="game-options-modal__empty-state-description">
+              {t("no_available_downloads_description")}
+            </p>
+            <Button
+              type="button"
+              theme="primary"
+              onClick={() => navigate("/settings?tab=2")}
+              className="game-options-modal__empty-state-action"
+            >
+              <PlusCircleIcon />
+              {t("no_available_downloads_action")}
+            </Button>
+          </div>
+        ) : (
+          <Button
+            onClick={onOpenRepacks}
+            theme="outline"
+            disabled={deleting || isGameDownloading}
+          >
+            {t("open_download_options")}
+          </Button>
+        )}
         {game.download?.downloadPath && (
           <Button
             onClick={onOpenDownloadFolder}
