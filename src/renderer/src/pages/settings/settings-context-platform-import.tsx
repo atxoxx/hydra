@@ -19,6 +19,21 @@ import type {
   StoreStatus,
 } from "@types";
 import { LinkIcon } from "@primer/octicons-react";
+import cn from "classnames";
+import type React from "react";
+import {
+  SteamIcon,
+  EpicIcon,
+  GogIcon,
+  BattlenetIcon,
+  AmazonIcon,
+  UbisoftIcon,
+  EaIcon,
+  XboxIcon,
+  RockstarIcon,
+  ItchioIcon,
+  HumbleIcon,
+} from "@renderer/assets/store-icons";
 import "./settings-platform-import.scss";
 
 interface PlatformInfo {
@@ -82,10 +97,27 @@ const IMPORT_PLATFORMS: PlatformInfo[] = [
   },
 ];
 
+/** Map each platform shop to its SVG icon component */
+const PLATFORM_ICON_MAP: Partial<
+  Record<GameShop, React.ComponentType<{ className?: string }>>
+> = {
+  steam: SteamIcon,
+  epic: EpicIcon,
+  gog: GogIcon,
+  "battle-net": BattlenetIcon,
+  amazon: AmazonIcon,
+  ubisoft: UbisoftIcon,
+  ea: EaIcon,
+  xbox: XboxIcon,
+  rockstar: RockstarIcon,
+  "itch-io": ItchioIcon,
+  humble: HumbleIcon,
+};
+
 /* Store types that use browser OAuth (need explicit Login button) */
 const BROWSER_OAUTH_STORES = new Set<StoreId>(["epic", "gog", "xbox"]);
 
-/* Store types that auto-detect local data (no Login button, just Sync) */
+/* Store types that auto-detect local data (show Scan button) */
 const AUTODETECT_STORES = new Set<StoreId>([
   "amazon",
   "humble",
@@ -116,7 +148,7 @@ export function SettingsContextPlatformImport() {
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [discoveredGames, setDiscoveredGames] = useState<PlatformGame[]>([]);
   const [showDiscoveryModal, setShowDiscoveryModal] = useState(false);
-  const [showApiKeyFallback, setShowApiKeyFallback] = useState(false);
+  const [showSteamExtras, setShowSteamExtras] = useState(false);
 
   /* Store integration state */
   const [storeStatuses, setStoreStatuses] = useState<StoreStatus[]>([]);
@@ -236,7 +268,6 @@ export function SettingsContextPlatformImport() {
       const result = await window.electron.storeLogin(storeId);
       if (result.success) {
         showSuccessToast(t("store_login_success"));
-        // storeManager.login auto-triggers sync on success — just refresh statuses
         const statuses = await window.electron.getStoreStatuses();
         setStoreStatuses(statuses);
       } else {
@@ -287,12 +318,11 @@ export function SettingsContextPlatformImport() {
     setStoreStatuses(statuses);
   };
 
-  /* For auto-detect stores, a "Login/Sync" that triggers detection + sync */
+  /* For auto-detect stores, trigger detection + sync */
   const handleAutoDetectSync = async (storeId: StoreId) => {
     if (storeActions[storeId]) return;
-    setStoreActions((prev) => ({ ...prev, [storeId]: "syncing" }));
+    setStoreActions((prev) => ({ ...prev, [storeId]: "scanning" }));
     try {
-      // Auto-detect this store first (storeLogin will auto-detect)
       await window.electron.storeLogin(storeId);
       const result = await window.electron.storeSync(storeId);
       const statuses = await window.electron.getStoreStatuses();
@@ -356,7 +386,7 @@ export function SettingsContextPlatformImport() {
           t("scan_games_no_results_description", { ns: "notifications" })
         );
       }
-    } catch (err) {
+    } catch (_err) {
       setScanningStatus(t("scan_failed"));
     } finally {
       setTimeout(() => setScanningStatus(null), 5000);
@@ -409,9 +439,100 @@ export function SettingsContextPlatformImport() {
     }
   };
 
-  /** Renders the store status badge and action buttons for a platform card */
-  const renderStoreSection = (platform: PlatformInfo) => {
+  /**
+   * Unified store row — renders the same layout for all store platforms (including Steam).
+   * Determines the right buttons and status based on store type and authentication state.
+   */
+  const renderUnifiedStoreRow = (platform: PlatformInfo) => {
+    const isSteam = platform.shop === "steam";
     const storeId = platform.storeId;
+
+    // Steam uses its own state from useSteamLogin
+    if (isSteam) {
+      const isLoggingIn = steamLogin.status === "logging-in";
+      const isSyncing = steamLogin.status === "syncing";
+      const isExpired = steamLogin.status === "expired";
+      const isConnected = steamLogin.hasCredentials && !isExpired;
+
+      return (
+        <div className="settings-platform-import__store-row">
+          <span className="settings-platform-import__store-info">
+            <span
+              className={cn("settings-platform-import__store-dot", {
+                "settings-platform-import__store-dot--connected": isConnected,
+                "settings-platform-import__store-dot--expired": isExpired,
+                "settings-platform-import__store-dot--disconnected":
+                  !steamLogin.hasCredentials,
+              })}
+            />
+            <span className="settings-platform-import__store-status-text">
+              {isExpired
+                ? t("store_expired")
+                : isConnected
+                  ? t("store_connected")
+                  : t("store_not_connected")}
+            </span>
+            {steamLogin.username && isConnected && (
+              <span className="settings-platform-import__store-username">
+                {steamLogin.username}
+              </span>
+            )}
+            {steamLogin.lastSyncAt && (
+              <span className="settings-platform-import__store-last-sync">
+                {t("store_last_synced", {
+                  time: formatTimestamp(
+                    new Date(steamLogin.lastSyncAt).getTime()
+                  ),
+                })}
+              </span>
+            )}
+            {!steamLogin.lastSyncAt && isConnected && (
+              <span className="settings-platform-import__store-last-sync">
+                {t("store_never_synced")}
+              </span>
+            )}
+          </span>
+
+          <span className="settings-platform-import__store-actions">
+            {isExpired ? (
+              <button
+                className="settings-platform-import__store-btn settings-platform-import__store-btn--login"
+                onClick={steamLogin.login}
+                disabled={isLoggingIn}
+              >
+                {isLoggingIn ? t("store_logging_in") : t("store_re_login")}
+              </button>
+            ) : isConnected ? (
+              <>
+                <button
+                  className="settings-platform-import__store-btn settings-platform-import__store-btn--sync"
+                  onClick={handleSteamSync}
+                  disabled={isSyncing || syncStatus !== null}
+                >                    {syncStatus ??
+                      (isSyncing ? t("store_syncing") : t("store_sync"))}
+                </button>
+                <button
+                  className="settings-platform-import__store-btn settings-platform-import__store-btn--logout"
+                  onClick={steamLogin.logout}
+                >
+                  {t("store_logout")}
+                </button>
+              </>
+            ) : (
+              <button
+                className="settings-platform-import__store-btn settings-platform-import__store-btn--login"
+                onClick={steamLogin.login}
+                disabled={isLoggingIn}
+              >
+                {isLoggingIn ? t("store_logging_in") : t("store_login")}
+              </button>
+            )}
+          </span>
+        </div>
+      );
+    }
+
+    // Non-Steam stores — use getStoreStatus
     if (!storeId) return null;
 
     const status = getStoreStatus(storeId);
@@ -419,116 +540,155 @@ export function SettingsContextPlatformImport() {
     const isBrowserOAuth = BROWSER_OAUTH_STORES.has(storeId);
     const isAutoDetect = AUTODETECT_STORES.has(storeId);
 
-    return (
-      <div className="settings-platform-import__store-row">
-        {status ? (
-          <>
-            <span className="settings-platform-import__store-info">
-              <span
-                className={`settings-platform-import__store-dot ${
-                  status.isExpired
-                    ? "settings-platform-import__store-dot--expired"
-                    : status.isAuthenticated
-                      ? "settings-platform-import__store-dot--connected"
-                      : "settings-platform-import__store-dot--disconnected"
-                }`}
-              />
-              <span className="settings-platform-import__store-status-text">
-                {status.isExpired
-                  ? t("store_expired")
-                  : status.isAuthenticated
-                    ? t("store_connected")
-                    : t("store_disconnected")}
-              </span>
-              {status.gameCount > 0 && (
-                <span className="settings-platform-import__store-count">
-                  {t("store_games_count", { count: status.gameCount })}
-                </span>
-              )}
-              <span className="settings-platform-import__store-last-sync">
-                {status.lastSync
-                  ? t("store_last_synced", {
-                      time: formatTimestamp(status.lastSync),
-                    })
-                  : t("store_never_synced")}
-              </span>
-            </span>
+    // Determine button and status for the store row
+    const renderButtons = () => {
+      if (status) {
+        if (status.isExpired) {
+          return (
+            <button
+              className="settings-platform-import__store-btn settings-platform-import__store-btn--login"
+              onClick={() => handleStoreLogin(storeId)}
+              disabled={action === "logging-in"}
+            >
+              {action === "logging-in"
+                ? t("store_logging_in")
+                : t("store_re_login")}
+            </button>
+          );
+        }
 
-            <span className="settings-platform-import__store-actions">
-              {status.isExpired ? (
-                <button
-                  className="settings-platform-import__store-btn settings-platform-import__store-btn--login"
-                  onClick={() => handleStoreLogin(storeId)}
-                  disabled={action === "logging-in"}
-                >
-                  {action === "logging-in"
-                    ? t("store_logging_in")
-                    : t("store_login")}
-                </button>
-              ) : status.isAuthenticated ? (
-                <>
-                  <button
-                    className="settings-platform-import__store-btn settings-platform-import__store-btn--sync"
-                    onClick={() => handleStoreSync(storeId)}
-                    disabled={action === "syncing"}
-                  >
-                    {action === "syncing"
-                      ? t("store_syncing")
-                      : t("store_sync")}
-                  </button>
-                  <button
-                    className="settings-platform-import__store-btn settings-platform-import__store-btn--logout"
-                    onClick={() => handleStoreLogout(storeId)}
-                  >
-                    {t("store_logout")}
-                  </button>
-                </>
-              ) : isBrowserOAuth ? (
-                <button
-                  className="settings-platform-import__store-btn settings-platform-import__store-btn--login"
-                  onClick={() => handleStoreLogin(storeId)}
-                  disabled={action === "logging-in"}
-                >
-                  {action === "logging-in"
-                    ? t("store_logging_in")
-                    : t("store_login")}
-                </button>
-              ) : isAutoDetect ? (
-                <button
-                  className="settings-platform-import__store-btn settings-platform-import__store-btn--sync"
-                  onClick={() => handleAutoDetectSync(platform.storeId!)}
-                  disabled={action === "syncing"}
-                >
-                  {action === "syncing" ? t("store_syncing") : t("store_sync")}
-                </button>
-              ) : null}
-            </span>
-          </>
-        ) : (
+        if (status.isAuthenticated) {
+          return (
+            <>
+              <button
+                className="settings-platform-import__store-btn settings-platform-import__store-btn--sync"
+                onClick={() => handleStoreSync(storeId)}
+                disabled={action === "syncing"}
+              >
+                {action === "syncing" ? t("store_syncing") : t("store_sync")}
+              </button>
+              <button
+                className="settings-platform-import__store-btn settings-platform-import__store-btn--logout"
+                onClick={() => handleStoreLogout(storeId)}
+              >
+                {t("store_logout")}
+              </button>
+            </>
+          );
+        }
+
+        // Has status but not authenticated — show login
+        if (isBrowserOAuth) {
+          return (
+            <button
+              className="settings-platform-import__store-btn settings-platform-import__store-btn--login"
+              onClick={() => handleStoreLogin(storeId)}
+              disabled={action === "logging-in"}
+            >
+              {action === "logging-in"
+                ? t("store_logging_in")
+                : t("store_login")}
+            </button>
+          );
+        }
+
+        // Auto-detect store that's not authenticated — show Scan
+        return (
+          <button
+            className="settings-platform-import__store-btn settings-platform-import__store-btn--scan"
+            onClick={() => handleAutoDetectSync(storeId)}
+            disabled={action === "scanning"}
+          >
+            {action === "scanning"
+              ? t("store_scanning")
+              : t("store_scan_for_games")}
+          </button>
+        );
+      }
+
+      // No status at all (first load, never tried)
+      if (isBrowserOAuth) {
+        return (
+          <button
+            className="settings-platform-import__store-btn settings-platform-import__store-btn--login"
+            onClick={() => handleStoreLogin(storeId)}
+            disabled={!!action}
+          >
+            {action ? t("store_logging_in") : t("store_login")}
+          </button>
+        );
+      }
+
+      if (isAutoDetect) {
+        return (
+          <button
+            className="settings-platform-import__store-btn settings-platform-import__store-btn--scan"
+            onClick={() => handleAutoDetectSync(storeId)}
+            disabled={!!action}
+          >
+            {action === "scanning"
+              ? t("store_scanning")
+              : t("store_scan_for_games")}
+          </button>
+        );
+      }
+
+      return null;
+    };
+
+    // Status info display
+    const renderStatusInfo = () => {
+      if (!status) {
+        return (
           <span className="settings-platform-import__store-info">
             <span className="settings-platform-import__store-dot settings-platform-import__store-dot--disconnected" />
             <span className="settings-platform-import__store-status-text">
-              {t("store_disconnected")}
+              {t("store_not_connected")}
             </span>
-            {(isBrowserOAuth || isAutoDetect) && (
-              <button
-                className="settings-platform-import__store-btn settings-platform-import__store-btn--login"
-                onClick={() =>
-                  isAutoDetect
-                    ? handleAutoDetectSync(storeId)
-                    : handleStoreLogin(storeId)
-                }
-                disabled={!!action}
-              >
-                {action === "logging-in"
-                  ? t("store_logging_in")
-                  : isAutoDetect
-                    ? t("store_sync")
-                    : t("store_login")}
-              </button>
-            )}
           </span>
-        )}
+        );
+      }
+
+      return (
+        <span className="settings-platform-import__store-info">
+          <span
+            className={cn("settings-platform-import__store-dot", {
+              "settings-platform-import__store-dot--connected":
+                status.isAuthenticated && !status.isExpired,
+              "settings-platform-import__store-dot--expired": status.isExpired,
+              "settings-platform-import__store-dot--disconnected":
+                !status.isAuthenticated && !status.isExpired,
+            })}
+          />
+          <span className="settings-platform-import__store-status-text">
+            {status.isExpired
+              ? t("store_expired")
+              : status.isAuthenticated
+                ? t("store_connected")
+                : t("store_not_connected")}
+          </span>
+          {status.gameCount > 0 && (
+            <span className="settings-platform-import__store-count">
+              {t("store_games_count", { count: status.gameCount })}
+            </span>
+          )}
+          <span className="settings-platform-import__store-last-sync">
+            {status.lastSync
+              ? t("store_last_synced", {
+                  time: formatTimestamp(status.lastSync),
+                })
+              : t("store_never_synced")}
+          </span>
+        </span>
+      );
+    };
+
+    return (
+      <div className="settings-platform-import__store-row">
+        {renderStatusInfo()}
+        <span className="settings-platform-import__store-actions">
+          {renderButtons()}
+        </span>
       </div>
     );
   };
@@ -555,177 +715,117 @@ export function SettingsContextPlatformImport() {
               {t("config_per_platform")}
             </h3>
 
-            {IMPORT_PLATFORMS.map((platform) => (
-              <div
-                key={platform.shop}
-                className="settings-platform-import__platform-row"
-              >
-                <div className="settings-platform-import__platform-header">
-                  <span className="settings-platform-import__platform-name">
-                    {t(platform.labelKey)}
-                  </span>
-                </div>
+            {IMPORT_PLATFORMS.map((platform) => {
+              const Icon = PLATFORM_ICON_MAP[platform.shop];
+              const isSteam = platform.shop === "steam";
+              const steamExtrasOpen = isSteam && showSteamExtras;
 
-                {/* Store integration row for platforms with store support */}
-                {platform.storeId &&
-                  platform.shop !== "steam" &&
-                  renderStoreSection(platform)}
+              return (
+                <div
+                  key={platform.shop}
+                  className="settings-platform-import__platform-row"
+                >
+                  {/* Card header with icon + platform name */}
+                  <div className="settings-platform-import__platform-header">
+                    {Icon && (
+                      <Icon className="settings-platform-import__platform-icon" />
+                    )}
+                    <span className="settings-platform-import__platform-name">
+                      {t(platform.labelKey)}
+                    </span>
+                  </div>
 
-                <div className="settings-platform-import__platform-options">
-                  <CheckboxField
-                    label={t("scan_installed_games")}
-                    checked={scanInstalled[platform.shop] ?? true}
-                    onChange={() => handleToggleScanInstalled(platform.shop)}
-                  />
+                  {/* Unified store row — shown for all stores with storeId, plus Steam */}
+                  {(platform.storeId || isSteam) &&
+                    renderUnifiedStoreRow(platform)}
 
-                  {platform.needsApiKey && (
-                    <>
-                      {/* Steam Login Panel */}
-                      {platform.shop === "steam" && (
-                        <div className="settings-platform-import__steam-login">
-                          {steamLogin.hasCredentials ? (
-                            <div className="settings-platform-import__steam-status">
-                              <div className="settings-platform-import__steam-status-header">
-                                <span
-                                  className={`settings-platform-import__steam-dot ${
-                                    steamLogin.status === "expired"
-                                      ? "settings-platform-import__steam-dot--expired"
-                                      : "settings-platform-import__steam-dot--online"
-                                  }`}
-                                />
-                                <span className="settings-platform-import__steam-username">
-                                  {steamLogin.status === "expired"
-                                    ? t("steam_session_expired")
-                                    : t("steam_logged_in_as", {
-                                        username: steamLogin.username ?? "",
-                                      })}
-                                </span>
-                                <Button
-                                  theme="outline"
-                                  onClick={steamLogin.logout}
-                                >
-                                  {t("steam_logout")}
-                                </Button>
-                              </div>
-                              {steamLogin.status === "expired" && (
-                                <p className="settings-platform-import__steam-sync-info settings-platform-import__steam-sync-info--expired">
-                                  {t("steam_session_expired_message")}
-                                </p>
-                              )}
-                              <p className="settings-platform-import__steam-sync-info">
-                                {steamLogin.lastSyncAt
-                                  ? t("steam_last_synced", {
-                                      time: formatRelativeTime(
-                                        steamLogin.lastSyncAt
-                                      ),
-                                    })
-                                  : t("steam_never_synced")}
-                              </p>
+                  {/* Scan installed checkbox */}
+                  <div className="settings-platform-import__platform-options">
+                    <CheckboxField
+                      label={t("scan_installed_games")}
+                      checked={scanInstalled[platform.shop] ?? true}
+                      onChange={() => handleToggleScanInstalled(platform.shop)}
+                    />
+                  </div>
 
-                              <div className="settings-platform-import__steam-sync-actions">
-                                <Button
-                                  theme="outline"
-                                  onClick={handleSteamSync}
-                                  disabled={syncStatus !== null}
-                                >
-                                  {syncStatus ?? t("steam_sync")}
-                                </Button>
-                              </div>
+                  {/* Steam-specific collapsible extras */}
+                  {isSteam && (
+                    <div className="settings-platform-import__steam-extras">
+                      <button
+                        type="button"
+                        className="settings-platform-import__steam-extras-toggle"
+                        onClick={() => setShowSteamExtras(!showSteamExtras)}
+                      >
+                        <span className="settings-platform-import__steam-extras-arrow">
+                          {showSteamExtras ? "▾" : "▸"}
+                        </span>
+                        {t("steam_additional_settings")}
+                      </button>
 
-                              {steamLogin.status === "expired" && (
-                                <Button
-                                  theme="primary"
-                                  onClick={steamLogin.login}
-                                >
-                                  {t("steam_relogin")}
-                                </Button>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="settings-platform-import__steam-login-row">
-                              <Button
-                                theme="primary"
-                                onClick={steamLogin.login}
-                                disabled={steamLogin.status === "logging-in"}
-                              >
-                                {steamLogin.status === "logging-in"
-                                  ? t("steam_logging_in")
-                                  : t("steam_login_button")}
-                              </Button>
-                              <button
-                                type="button"
-                                className="settings-platform-import__toggle-api-key"
-                                onClick={() =>
-                                  setShowApiKeyFallback(!showApiKeyFallback)
+                      {steamExtrasOpen && (
+                        <div className="settings-platform-import__steam-extras-content">
+                          {/* API key fallback — shown when logged out */}
+                          {!steamLogin.hasCredentials && (
+                            <>
+                              <TextField
+                                label={t(
+                                  platform.apiKeyLabel ?? "api_key"
+                                )}
+                                value={steamApiKey}
+                                placeholder={t(
+                                  platform.apiKeyPlaceholder ??
+                                    "api_key_placeholder"
+                                )}
+                                onChange={(e) =>
+                                  handleSteamApiKeyChange(e.target.value)
                                 }
-                              >
-                                {showApiKeyFallback ? "▾" : "▸"}{" "}
-                                {t("steam_api_key_fallback")}
-                              </button>
-                            </div>
+                                theme="dark"
+                                type="password"
+                              />
+                              {platform.setupUrl && (
+                                <a
+                                  href={platform.setupUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="settings-platform-import__setup-link"
+                                >
+                                  <LinkIcon size={12} />
+                                  {t("get_api_key_at", {
+                                    url: platform.setupUrl,
+                                  })}
+                                </a>
+                              )}
+                            </>
+                          )}
+
+                          {/* Family sharing — shown when logged in */}
+                          {steamLogin.hasCredentials && (
+                            <>
+                              <TextField
+                                label={t("steam_family_share_ids")}
+                                value={steamFamilyShareIds}
+                                placeholder={t(
+                                  "steam_family_share_ids_placeholder"
+                                )}
+                                onChange={(e) =>
+                                  handleSteamFamilyShareIdsChange(
+                                    e.target.value
+                                  )
+                                }
+                                theme="dark"
+                              />
+                              <span className="settings-platform-import__hint">
+                                {t("steam_family_share_ids_hint")}
+                              </span>
+                            </>
                           )}
                         </div>
                       )}
-
-                      {/* Collapsible API Key fallback (only when logged out) */}
-                      {platform.shop === "steam" &&
-                        steamLogin.status === "logged-out" &&
-                        showApiKeyFallback && (
-                          <div className="settings-platform-import__api-key-row">
-                            <TextField
-                              label={t(platform.apiKeyLabel ?? "api_key")}
-                              value={steamApiKey}
-                              placeholder={t(
-                                platform.apiKeyPlaceholder ??
-                                  "api_key_placeholder"
-                              )}
-                              onChange={(e) =>
-                                handleSteamApiKeyChange(e.target.value)
-                              }
-                              theme="dark"
-                              type="password"
-                            />
-                            {platform.setupUrl && (
-                              <a
-                                href={platform.setupUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="settings-platform-import__setup-link"
-                              >
-                                <LinkIcon size={12} />
-                                {t("get_api_key_at", {
-                                  url: platform.setupUrl,
-                                })}
-                              </a>
-                            )}
-                          </div>
-                        )}
-
-                      {/* Steam Family Sharing — only visible when logged in */}
-                      {platform.shop === "steam" &&
-                        steamLogin.hasCredentials && (
-                          <div className="settings-platform-import__family-share">
-                            <TextField
-                              label={t("steam_family_share_ids")}
-                              value={steamFamilyShareIds}
-                              placeholder={t(
-                                "steam_family_share_ids_placeholder"
-                              )}
-                              onChange={(e) =>
-                                handleSteamFamilyShareIdsChange(e.target.value)
-                              }
-                              theme="dark"
-                            />
-                            <span className="settings-platform-import__hint">
-                              {t("steam_family_share_ids_hint")}
-                            </span>
-                          </div>
-                        )}
-                    </>
+                    </div>
                   )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="settings-context-panel__group">
@@ -842,24 +942,6 @@ function parseSteamIds(input: string): string[] {
     .split(/[,;\s]+/)
     .map((s) => s.trim())
     .filter((s) => /^\d{17}$/.test(s));
-}
-
-function formatRelativeTime(isoTimestamp: string): string {
-  const now = Date.now();
-  const then = new Date(isoTimestamp).getTime();
-  const diffMs = now - then;
-  const diffSeconds = Math.floor(diffMs / 1000);
-  const diffMinutes = Math.floor(diffSeconds / 60);
-  const diffHours = Math.floor(diffMinutes / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffSeconds < 60) return "just now";
-  if (diffMinutes < 2) return "1 minute ago";
-  if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
-  if (diffHours < 2) return "1 hour ago";
-  if (diffHours < 24) return `${diffHours} hours ago`;
-  if (diffDays < 2) return "yesterday";
-  return `${diffDays} days ago`;
 }
 
 function formatTimestamp(ts: number): string {

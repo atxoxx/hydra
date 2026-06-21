@@ -21,53 +21,74 @@
   &__platform-row {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 12px;
+    gap: 10px;
+    padding: 14px 16px;
     margin-bottom: 8px;
     border-radius: 8px;
     background: var(--surface-secondary, #1e1e1e);
     border: 1px solid var(--border-subtle, #2a2a2a);
+    transition: border-color 0.2s ease;
+
+    &:hover {
+      border-color: var(--border-muted, #3a3a4a);
+    }
   }
 
+  /* ── Platform header with icon ── */
   &__platform-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
+    gap: 10px;
+    margin-bottom: 2px;
+  }
+
+  &__platform-icon {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    color: var(--text-primary, #e1e1e1);
+    opacity: 0.85;
   }
 
   &__platform-name {
     font-weight: 600;
-    font-size: 13px;
+    font-size: 14px;
     color: var(--text-primary, #e1e1e1);
+    letter-spacing: 0.01em;
   }
 
   &__platform-options {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding-left: 4px;
+    gap: 4px;
+    padding-left: 2px;
+    margin-top: 2px;
   }
 
-  /* Store integration inline status row */
+  /* ── Unified store row ── */
   &__store-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
-    padding: 8px 12px;
-    margin-bottom: 2px;
+    gap: 10px;
+    padding: 10px 14px;
     border-radius: 6px;
     background: var(--surface-tertiary, #161616);
     border: 1px solid var(--border-subtle, #2a2a2a);
     flex-wrap: wrap;
+    transition: border-color 0.15s;
+
+    &:hover {
+      border-color: var(--border-muted, #3a3a4a);
+    }
   }
 
   &__store-info {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     flex-wrap: wrap;
+    min-width: 0;
   }
 
   &__store-dot {
@@ -75,6 +96,7 @@
     height: 7px;
     border-radius: 50%;
     flex-shrink: 0;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 
     &--connected {
       background-color: #22c55e;
@@ -92,9 +114,26 @@
   }
 
   &__store-status-text {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--text-muted, #8b8b8b);
+    white-space: nowrap;
+  }
+
+  &__store-username {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary, #e1e1e1);
+    white-space: nowrap;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &::before {
+      content: "·";
+      margin-right: 7px;
+      color: var(--text-muted, #6a6a7a);
+    }
   }
 
   &__store-count {
@@ -102,30 +141,33 @@
     font-weight: 600;
     color: var(--text-primary, #e1e1e1);
     background: rgba(255, 255, 255, 0.06);
-    padding: 1px 7px;
+    padding: 2px 8px;
     border-radius: 999px;
+    white-space: nowrap;
   }
 
   &__store-last-sync {
     font-size: 10px;
     color: var(--text-muted, #6a6a7a);
     font-style: italic;
+    white-space: nowrap;
   }
 
   &__store-actions {
     display: flex;
-    gap: 4px;
+    gap: 5px;
     flex-shrink: 0;
   }
 
   &__store-btn {
-    padding: 3px 10px;
-    border-radius: 4px;
+    padding: 4px 12px;
+    border-radius: 5px;
     font-size: 11px;
     font-weight: 500;
     cursor: pointer;
     border: 1px solid transparent;
-    transition: all 0.15s;
+    transition: all 0.15s ease;
+    white-space: nowrap;
 
     &--login {
       background: var(--accent, #4a9eff);
@@ -145,6 +187,18 @@
       &:hover:not(:disabled) {
         background: rgba(255, 255, 255, 0.12);
         color: var(--text-primary, #e1e1e1);
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+    }
+
+    &--scan {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--accent, #4a9eff);
+      border-color: rgba(74, 158, 255, 0.25);
+
+      &:hover:not(:disabled) {
+        background: rgba(74, 158, 255, 0.1);
+        border-color: rgba(74, 158, 255, 0.4);
       }
     }
 
@@ -156,6 +210,7 @@
       &:hover:not(:disabled) {
         color: var(--text-primary, #e1e1e1);
         border-color: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.03);
       }
     }
 
@@ -165,14 +220,45 @@
     }
   }
 
-  &__api-key-row {
+  /* ── Steam collapsible extras ── */
+  &__steam-extras {
+    margin-top: 2px;
+  }
+
+  &__steam-extras-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: var(--text-muted, #8b8b8b);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 6px 0;
+    transition: color 0.15s;
+
+    &:hover {
+      color: var(--text-primary, #e1e1e1);
+    }
+  }
+
+  &__steam-extras-arrow {
+    font-size: 10px;
+    width: 12px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  &__steam-extras-content {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    margin-top: 8px;
+    gap: 8px;
     padding: 12px;
+    margin-top: 4px;
     background: var(--surface-tertiary, #161616);
     border-radius: 6px;
+    border: 1px solid var(--border-subtle, #2a2a2a);
+    animation: slideDown 0.2s ease;
   }
 
   &__setup-link {
@@ -188,90 +274,6 @@
     }
   }
 
-  /* Steam Login Panel */
-  &__steam-login {
-    margin-top: 8px;
-    padding: 12px;
-    background: var(--surface-tertiary, #161616);
-    border-radius: 6px;
-  }
-
-  &__steam-login-row {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    align-items: flex-start;
-  }
-
-  &__steam-status {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  &__steam-status-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  &__steam-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-
-    &--online {
-      background-color: #22c55e;
-      box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
-    }
-
-    &--expired {
-      background-color: #f59e0b;
-      box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
-    }
-  }
-
-  &__steam-username {
-    flex: 1;
-    font-size: 13px;
-    color: var(--text-primary, #e1e1e1);
-  }
-
-  &__steam-sync-info {
-    font-size: 11px;
-    color: var(--text-muted, #8b8b8b);
-    margin: 0;
-
-    &--expired {
-      color: #f59e0b;
-    }
-  }
-
-  &__steam-sync-actions {
-  }
-
-  &__toggle-api-key {
-    background: none;
-    border: none;
-    color: var(--text-muted, #8b8b8b);
-    font-size: 12px;
-    cursor: pointer;
-    padding: 0;
-    text-align: left;
-
-    &:hover {
-      color: var(--text-primary, #e1e1e1);
-    }
-  }
-
-  &__family-share {
-    margin-top: 8px;
-    padding: 12px;
-    background: var(--surface-tertiary, #161616);
-    border-radius: 6px;
-  }
-
   &__hint {
     display: block;
     font-size: 11px;
@@ -280,10 +282,12 @@
     line-height: 1.4;
   }
 
+  /* ── Bottom actions ── */
   &__actions {
     display: flex;
     gap: 8px;
     margin-top: 8px;
+    flex-wrap: wrap;
   }
 
   &__status {
@@ -302,5 +306,16 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
   }
 }
