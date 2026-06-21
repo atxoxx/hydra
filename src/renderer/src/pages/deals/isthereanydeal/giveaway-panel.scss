@@ -67,7 +67,7 @@
     width: 28px;
     height: 28px;
     border: 3px solid rgba(255, 255, 255, 0.1);
-    border-top-color: globals.$brand-teal;
+    border-top-color: var(--color-primary, #4a9eff);
     border-radius: 50%;
     animation: giveaway-spin 0.8s linear infinite;
   }
@@ -77,7 +77,7 @@
     align-items: center;
     gap: calc(globals.$spacing-unit * 0.5);
     padding: calc(globals.$spacing-unit * 0.75) calc(globals.$spacing-unit * 2);
-    background: globals.$brand-teal;
+    background: var(--color-primary, #4a9eff);
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -166,7 +166,7 @@
 
   &__card-shop {
     font-size: 11px;
-    color: globals.$brand-teal;
+    color: var(--color-primary, #4a9eff);
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -211,7 +211,7 @@
     transition: all 0.15s ease;
 
     &:hover {
-      background: globals.$brand-teal;
+      background: var(--color-primary, #4a9eff);
       color: #fff;
     }
   }
@@ -227,7 +227,7 @@
     align-items: center;
     gap: calc(globals.$spacing-unit * 0.5);
     font-size: 13px;
-    color: globals.$brand-teal;
+    color: var(--color-primary, #4a9eff);
     text-decoration: none;
     font-weight: 500;
 

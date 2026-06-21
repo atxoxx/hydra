@@ -344,7 +344,7 @@ export function WebsiteLinksIframe({ link }: WebsiteLinksIframeProps) {
             title={t(copied ? "link_copied" : "copy_link")}
           >
             {copied ? (
-              <span style={{ color: "#16b195", display: "inline-flex" }}>
+              <span style={{ color: "var(--color-primary, #16b195)", display: "inline-flex" }}>
                 <CheckIcon size={16} />
               </span>
             ) : (

@@ -33,7 +33,7 @@
       width: 50%;
       height: 2px;
       border-radius: 1.5px;
-      background: globals.$brand-teal;
+      background: var(--color-primary, #4a9eff);
       transition: transform 0.2s ease;
     }
 

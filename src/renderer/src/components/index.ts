@@ -33,3 +33,4 @@ export * from "./metadata-search-modal/metadata-search-modal";
 export * from "./game-status-dropdown/game-status-dropdown";
 export * from "./chip-input/chip-input";
 export * from "./watchlist-modal/watchlist-modal";
+export * from "./accent-color-picker/accent-color-picker";

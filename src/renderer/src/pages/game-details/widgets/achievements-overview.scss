@@ -46,13 +46,13 @@
 
   &__progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, globals.$brand-teal, #30edc5);
+    background: linear-gradient(90deg, var(--color-primary, #4a9eff), color-mix(in srgb, var(--color-primary, #4a9eff) 70%, white));
     border-radius: 3px;
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
 
     &--complete {
-      background: linear-gradient(90deg, #2ecc71, globals.$brand-teal);
+      background: linear-gradient(90deg, globals.$success-color, var(--color-primary, #4a9eff));
     }
   }
 
@@ -129,7 +129,7 @@
 
   &__badge-points {
     font-size: 9px;
-    color: globals.$brand-teal;
+    color: var(--color-primary, #4a9eff);
     font-weight: 600;
   }
 

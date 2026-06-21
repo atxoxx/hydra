@@ -31,7 +31,7 @@
       background 0.2s ease;
 
     &:hover {
-      border-color: rgba(22, 177, 149, 0.3);
+      border-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.3);
       background: rgba(255, 255, 255, 0.03);
     }
   }

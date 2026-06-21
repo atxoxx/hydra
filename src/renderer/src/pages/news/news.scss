@@ -37,8 +37,8 @@
   }
 
   &__unread-badge {
-    background: rgba(globals.$primary-color, 0.18);
-    color: globals.$primary-color;
+    background: rgba(var(--color-primary-rgb, 74, 158, 255), 0.18);
+    color: var(--color-primary, #4a9eff);
     padding: 2px 8px;
     border-radius: 999px;
     font-size: globals.$small-font-size;
@@ -82,13 +82,13 @@
     }
 
     &--active {
-      background: rgba(globals.$primary-color, 0.2);
-      border-color: globals.$primary-color;
-      color: globals.$primary-color;
+      background: rgba(var(--color-primary-rgb, 74, 158, 255), 0.2);
+      border-color: var(--color-primary, #4a9eff);
+      color: var(--color-primary, #4a9eff);
       font-weight: 600;
 
       &:hover {
-        background: rgba(globals.$primary-color, 0.3);
+        background: rgba(var(--color-primary-rgb, 74, 158, 255), 0.3);
       }
     }
   }
@@ -181,7 +181,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: globals.$primary-color;
+    background: var(--color-primary, #4a9eff);
     align-self: center;
     margin-left: calc(globals.$spacing-unit * 0.5);
   }
@@ -234,9 +234,9 @@
       color 120ms ease;
 
     &:hover {
-      background: rgba(globals.$primary-color, 0.12);
-      border-color: rgba(globals.$primary-color, 0.5);
-      color: globals.$primary-color;
+      background: rgba(var(--color-primary-rgb, 74, 158, 255), 0.12);
+      border-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.5);
+      color: var(--color-primary, #4a9eff);
     }
   }
 
@@ -318,11 +318,11 @@
   }
 
   &__feed-default {
-    color: globals.$primary-color;
+    color: var(--color-primary, #4a9eff);
     font-size: globals.$small-font-size;
     padding: 2px 6px;
     border-radius: 4px;
-    background: rgba(globals.$primary-color, 0.1);
+    background: rgba(var(--color-primary-rgb, 74, 158, 255), 0.1);
   }
 
   &__empty {
@@ -397,7 +397,7 @@
 
   &__header-source {
     font-weight: 600;
-    color: globals.$primary-color;
+    color: var(--color-primary, #4a9eff);
   }
 
   &__header-title {
@@ -486,7 +486,7 @@
   }
 
   &__blocked-overlay-icon {
-    color: globals.$primary-color;
+    color: var(--color-primary, #4a9eff);
     opacity: 0.85;
   }
 

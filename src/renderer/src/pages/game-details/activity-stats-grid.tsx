@@ -41,7 +41,7 @@ export function ActivityStatsGrid({
   const TrendIcon = trend.direction === "up" ? ArrowUpIcon : ArrowDownIcon;
   const trendColor =
     trend.direction === "up"
-      ? "#16b195"
+      ? "var(--color-primary, #16b195)"
       : trend.direction === "down"
         ? "#e74c3c"
         : "rgba(255,255,255,0.4)";

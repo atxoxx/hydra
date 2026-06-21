@@ -33,6 +33,15 @@ import { BigPictureI18nBridge, ensureBigPictureI18nResources } from "./i18n";
 
 import "./styles/globals.scss";
 
+const DEFAULT_ACCENT_COLOR = "#4a9eff";
+
+function applyAccentColorToRoot(hexColor: string | null | undefined) {
+  const color = hexColor || DEFAULT_ACCENT_COLOR;
+  const root = document.documentElement;
+  root.style.setProperty("--accent", color);
+  root.style.setProperty("--color-primary", color);
+}
+
 export default function App() {
   ensureBigPictureI18nResources();
 
@@ -57,6 +66,20 @@ export default function App() {
     }
 
     initializeBigPictureRunningGamesStore();
+
+    globalThis.electron?.getUserPreferences?.().then((prefs) => {
+      applyAccentColorToRoot(prefs?.accentColor);
+    });
+
+    const unsubscribe = globalThis.electron?.onUserPreferencesUpdated?.(
+      (prefs) => {
+        applyAccentColorToRoot(prefs?.accentColor);
+      }
+    );
+
+    return () => {
+      unsubscribe?.();
+    };
   }, []);
 
   useEffect(() => {

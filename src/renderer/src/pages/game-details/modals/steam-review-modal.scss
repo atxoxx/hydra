@@ -49,7 +49,7 @@
 
     &--active {
       color: globals.$body-color;
-      border-bottom-color: globals.$brand-teal;
+      border-bottom-color: var(--color-primary, #4a9eff);
     }
   }
 

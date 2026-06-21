@@ -260,6 +260,8 @@ export interface UserPreferences {
   sidebarShowNewsTab?: boolean;
   /** Show only unread articles in the News tab (default true) */
   newsShowOnlyUnread?: boolean;
+  /** User-selected accent color (hex string, e.g. "#4a9eff"). Falls back to #4a9eff when null/undefined. */
+  accentColor?: string | null;
   /** Hardware monitoring configuration */
   hardwareMonitorConfig?: {
     enabled: boolean;

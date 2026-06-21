@@ -1,24 +1,24 @@
 import { useContext } from "react";
 import { gameDetailsContext } from "@renderer/context";
+import { getComputedAccentColor } from "../../../helpers";
 import "./metadata-chips-row.scss";
-
-const GENRE_COLORS = [
-  "#16b195",
-  "#e74c3c",
-  "#3498db",
-  "#f39c12",
-  "#9b59b6",
-  "#1abc9c",
-  "#e67e22",
-  "#2ecc71",
-];
-
-function getGenreColor(index: number): string {
-  return GENRE_COLORS[index % GENRE_COLORS.length];
-}
 
 export function MetadataChipsRow() {
   const { shopDetails, effectiveShop } = useContext(gameDetailsContext);
+
+  const genreColors = [
+    getComputedAccentColor(),
+    "#e74c3c",
+    "#3498db",
+    "#f39c12",
+    "#9b59b6",
+    "#1abc9c",
+    "#e67e22",
+    "#2ecc71",
+  ];
+
+  const getGenreColor = (index: number): string =>
+    genreColors[index % genreColors.length];
 
   if (!shopDetails) return null;
 

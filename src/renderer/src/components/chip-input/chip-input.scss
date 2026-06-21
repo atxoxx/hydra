@@ -119,7 +119,7 @@
 
     &:hover,
     &--active {
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(var(--color-primary-rgb, 74, 158, 255), 0.12);
     }
 
     &--empty {

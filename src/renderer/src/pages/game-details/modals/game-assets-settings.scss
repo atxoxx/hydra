@@ -82,7 +82,7 @@
     outline: none;
 
     &:hover {
-      border-color: globals.$brand-teal;
+      border-color: var(--color-primary, #4a9eff);
     }
 
     &--icon {
@@ -151,15 +151,15 @@
   }
 
   &__drop-zone--active {
-    border-color: globals.$brand-teal !important;
-    background-color: rgba(22, 177, 149, 0.08) !important;
+    border-color: var(--color-primary, #4a9eff) !important;
+    background-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.08) !important;
     transform: scale(1.02);
   }
 
   &__drop-overlay {
     position: absolute;
     inset: 0;
-    background-color: rgba(22, 177, 149, 0.9);
+    background-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.9);
     display: flex;
     align-items: center;
     justify-content: center;

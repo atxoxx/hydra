@@ -17,6 +17,7 @@ import { useDownloadOptionsListener } from "@renderer/hooks/use-download-options
 import i18n from "i18next";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { WorkWonders } from "workwonders-sdk";
+import cn from "classnames";
 
 import {
   clearExtraction,
@@ -41,6 +42,7 @@ import {
   getAchievementSoundUrl,
   getAchievementSoundVolume,
   injectCustomCss,
+  injectAccentColor,
   removeCustomCss,
 } from "./helpers";
 import { levelDBService } from "./services/leveldb.service";
@@ -91,6 +93,14 @@ export function App() {
 
   const toast = useAppSelector((state) => state.toast);
 
+  const userPreferences = useAppSelector(
+    (state) => state.userPreferences.value
+  );
+
+  const titleBarClassName = cn("title-bar", {
+    "title-bar--accented": Boolean(userPreferences?.accentColor),
+  });
+
   const { showSuccessToast, showErrorToast } = useToast();
 
   const [showArchiveDeletionModal, setShowArchiveDeletionModal] =
@@ -118,6 +128,8 @@ export function App() {
         if (preferences.language && preferences.language !== i18n.language) {
           void i18n.changeLanguage(preferences.language);
         }
+
+        injectAccentColor(preferences.accentColor);
 
         dispatch(setUserPreferences(preferences));
       }
@@ -367,6 +379,14 @@ export function App() {
   }, [dispatch, draggingDisabled]);
 
   const loadAndApplyTheme = useCallback(async () => {
+    // Apply user accent first so theme CSS can override it via cascade
+    const prefs = (await levelDBService.get(
+      "userPreferences",
+      null,
+      "json"
+    )) as UserPreferences | null;
+    injectAccentColor(prefs?.accentColor);
+
     const allThemes = (await levelDBService.values("themes")) as {
       isActive?: boolean;
       code?: string;
@@ -432,7 +452,7 @@ export function App() {
   return (
     <>
       {window.electron.platform === "win32" && (
-        <div className="title-bar">
+        <div className={titleBarClassName}>
           <h4>
             Hydra
             {hasActiveSubscription && (

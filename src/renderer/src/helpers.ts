@@ -82,6 +82,69 @@ export const buildGameAchievementPath = (
 export const darkenColor = (color: string, amount: number, alpha: number = 1) =>
   new Color(color).darken(amount).alpha(alpha).toString();
 
+const DEFAULT_ACCENT_COLOR = "#4a9eff";
+const ACCENT_STYLE_ID = "user-accent";
+
+/**
+ * Injects the user's accent color as CSS custom properties via a <style> tag.
+ * Also auto-generates shade variants (--accent-100 through --accent-900).
+ *
+ * Uses a <style> tag (not inline element.style) so that custom theme CSS
+ * injected AFTER this tag can override accent variables via normal cascade.
+ * Call with null/undefined to reset to default.
+ */
+export const injectAccentColor = (
+  hexColor: string | null | undefined
+): void => {
+  const color = hexColor || DEFAULT_ACCENT_COLOR;
+  let parsed: Color;
+
+  try {
+    parsed = new Color(color);
+  } catch {
+    parsed = new Color(DEFAULT_ACCENT_COLOR);
+  }
+
+  const hex = parsed.hex();
+  const rgb = `${parsed.red()}, ${parsed.green()}, ${parsed.blue()}`;
+
+  // Build shade variants
+  const hslValues = parsed.hsl().array();
+  const baseLightness = hslValues[2];
+  const shadeVars: string[] = [];
+
+  for (let i = 1; i <= 9; i++) {
+    const lightness = Math.min(95, Math.max(5, baseLightness + (5 - i) * 8));
+    const shade = parsed.lightness(lightness);
+    shadeVars.push(`  --accent-${i}00: ${shade.hex()};`);
+  }
+
+  const css = `:root {
+  --accent: ${hex};
+  --color-primary: ${hex};
+  --color-primary-rgb: ${rgb};
+${shadeVars.join("\n")}
+}`;
+
+  // Insert or update the accent <style> tag in <head>
+  let styleEl = document.getElementById(
+    ACCENT_STYLE_ID
+  ) as HTMLStyleElement | null;
+  if (!styleEl) {
+    styleEl = document.createElement("style");
+    styleEl.id = ACCENT_STYLE_ID;
+    document.head.appendChild(styleEl);
+  }
+  styleEl.textContent = css;
+};
+
+/**
+ * Removes the user accent <style> tag. SCSS :root defaults will take over.
+ */
+export const removeAccentColor = (): void => {
+  document.getElementById(ACCENT_STYLE_ID)?.remove();
+};
+
 export const injectCustomCss = (
   css: string,
   target: HTMLElement = document.head
@@ -193,6 +256,15 @@ export const getAchievementSoundVolume = async (): Promise<number> => {
 
 export const getGameKey = (shop: GameShop, objectId: string): string => {
   return `${shop}:${objectId}`;
+};
+
+export const getComputedAccentColor = (): string => {
+  if (typeof document === "undefined") return "#4a9eff";
+  return (
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-primary")
+      .trim() || "#4a9eff"
+  );
 };
 
 export const isGameCompleted = (

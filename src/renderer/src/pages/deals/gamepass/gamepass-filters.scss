@@ -43,7 +43,7 @@
     outline: none;
 
     &:focus {
-      border-color: globals.$brand-teal;
+      border-color: var(--color-primary, #4a9eff);
     }
 
     option {
@@ -65,7 +65,7 @@
     color: globals.$muted-color;
 
     &:focus-within {
-      border-color: globals.$brand-teal;
+      border-color: var(--color-primary, #4a9eff);
       color: globals.$body-color;
     }
   }
@@ -103,9 +103,9 @@
     }
 
     &--active {
-      background: rgba(globals.$brand-teal, 0.1);
-      border-color: rgba(globals.$brand-teal, 0.3);
-      color: globals.$brand-teal;
+      background: rgba(var(--color-primary-rgb, 74, 158, 255), 0.1);
+      border-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.3);
+      color: var(--color-primary, #4a9eff);
     }
 
     &--has-filters::after {
@@ -113,7 +113,7 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: globals.$brand-teal;
+      background: var(--color-primary, #4a9eff);
     }
   }
 
@@ -158,9 +158,9 @@
     }
 
     &--active {
-      background: rgba(globals.$brand-teal, 0.15);
-      border-color: rgba(globals.$brand-teal, 0.4);
-      color: globals.$brand-teal;
+      background: rgba(var(--color-primary-rgb, 74, 158, 255), 0.15);
+      border-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.4);
+      color: var(--color-primary, #4a9eff);
     }
   }
 

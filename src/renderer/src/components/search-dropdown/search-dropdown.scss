@@ -141,7 +141,7 @@
 
     &:hover,
     &--active {
-      background-color: globals.$background-color;
+      background-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.15);
     }
 
     &:focus {

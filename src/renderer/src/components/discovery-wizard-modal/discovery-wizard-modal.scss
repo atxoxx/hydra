@@ -141,7 +141,7 @@
     }
 
     &--selected {
-      background: rgba(74, 158, 255, 0.05);
+      background: rgba(var(--color-primary-rgb, 74, 158, 255), 0.05);
     }
 
     & + & {

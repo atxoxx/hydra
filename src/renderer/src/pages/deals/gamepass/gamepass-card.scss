@@ -47,8 +47,8 @@
     justify-content: center;
     background: linear-gradient(
       135deg,
-      rgba(globals.$brand-teal, 0.2),
-      rgba(globals.$brand-teal, 0.05)
+      rgba(var(--color-primary-rgb, 74, 158, 255), 0.2),
+      rgba(var(--color-primary-rgb, 74, 158, 255), 0.05)
     );
 
     span {
@@ -79,8 +79,8 @@
     border: 1px solid rgba(255, 255, 255, 0.15);
 
     &:hover {
-      background: globals.$brand-teal;
-      border-color: globals.$brand-teal;
+      background: var(--color-primary, #4a9eff);
+      border-color: var(--color-primary, #4a9eff);
     }
   }
 

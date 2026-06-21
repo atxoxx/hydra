@@ -46,9 +46,9 @@
   }
 
   &--shop {
-    background-color: rgba(22, 177, 149, 0.08);
-    border-color: rgba(22, 177, 149, 0.2);
-    color: #16b195;
+    background-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.08);
+    border-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.2);
+    color: var(--color-primary, #4a9eff);
     text-transform: capitalize;
   }
 }

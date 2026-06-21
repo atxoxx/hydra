@@ -20,7 +20,7 @@
   }
 
   &--unread {
-    border-left: 3px solid globals.$brand-teal;
+    border-left: 3px solid var(--color-primary, #4a9eff);
     opacity: 1;
 
     &:hover {

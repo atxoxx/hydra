@@ -16,6 +16,7 @@ import {
   LineChart,
   Line,
 } from "recharts";
+import { getComputedAccentColor } from "../../../helpers";
 import "./steam-review-modal.scss";
 
 interface SteamReviewModalProps {
@@ -120,7 +121,7 @@ export function SteamReviewModal({
     text: "#d0d1d7",
     blue: "#66c0f4",
     red: "#a34c25",
-    teal: "#16b195",
+    teal: getComputedAccentColor(),
   };
 
   return (

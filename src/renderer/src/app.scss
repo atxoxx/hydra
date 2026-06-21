@@ -128,6 +128,16 @@ progress[value] {
   -webkit-app-region: drag;
   z-index: 4;
   border-bottom: 1px solid globals.$border-color;
+  transition: background-color 0.3s ease;
+
+  &--accented {
+    background: linear-gradient(
+      180deg,
+      rgba(var(--color-primary-rgb, 74, 158, 255), 0.12) 0%,
+      rgba(var(--color-primary-rgb, 74, 158, 255), 0.04) 50%,
+      globals.$dark-background-color 100%
+    );
+  }
 
   &__cloud-text {
     background: linear-gradient(270deg, #16b195 50%, #3e62c0 100%);

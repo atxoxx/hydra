@@ -49,7 +49,7 @@
     font-variant-numeric: tabular-nums;
 
     &--good {
-      color: #16b195;
+      color: var(--color-primary, #4a9eff);
     }
 
     &--warn {
@@ -81,7 +81,7 @@
     }
 
     &-value {
-      color: #16b195;
+      color: var(--color-primary, #4a9eff);
       font-weight: 600;
       font-size: 13px;
     }

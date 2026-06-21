@@ -12,6 +12,7 @@
   align-items: center;
   justify-content: center;
   gap: globals.$spacing-unit;
+  color: globals.$dark-background-color;
 
   &:active {
     opacity: globals.$active-opacity;
@@ -23,12 +24,15 @@
   }
 
   &--primary {
+    background-color: var(--color-primary, #4a9eff);
+    color: #fff;
+
     &:hover {
-      background-color: #dadbe1;
+      background-color: color-mix(in srgb, var(--color-primary, #4a9eff) 85%, white);
     }
 
     &:disabled {
-      background-color: globals.$muted-color;
+      background-color: var(--color-primary, #4a9eff);
     }
   }
 

@@ -63,7 +63,7 @@
   }
 
   &__spinner {
-    color: globals.$brand-teal;
+    color: var(--color-primary, #4a9eff);
   }
 
   /* Results Grid */
@@ -93,17 +93,17 @@
     }
 
     &:focus-visible {
-      border-color: globals.$brand-teal;
-      box-shadow: 0 0 0 2px rgba(22, 177, 149, 0.4);
+      border-color: var(--color-primary, #4a9eff);
+      box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb, 74, 158, 255), 0.4);
     }
 
     &--selected {
-      border-color: globals.$brand-teal;
-      box-shadow: 0 0 0 3px rgba(22, 177, 149, 0.5);
-      background: rgba(22, 177, 149, 0.05);
+      border-color: var(--color-primary, #4a9eff);
+      box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb, 74, 158, 255), 0.5);
+      background: rgba(var(--color-primary-rgb, 74, 158, 255), 0.05);
 
       &:hover {
-        border-color: globals.$brand-teal;
+        border-color: var(--color-primary, #4a9eff);
       }
     }
 

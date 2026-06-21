@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ResponsiveBar } from "@nivo/bar";
 import { ResponsiveLine } from "@nivo/line";
 import { parseISO, format, startOfWeek, startOfMonth } from "date-fns";
+import { getComputedAccentColor } from "../../helpers";
 import "./activity-chart.scss";
 
 export interface ChartDataPoint {
@@ -145,7 +146,7 @@ export function ActivityChart({ data }: Readonly<ActivityChartProps>) {
             margin={{ top: 8, right: 8, bottom: 24, left: 36 }}
             padding={0.3}
             valueScale={{ type: "linear" }}
-            colors={["#16b195"]}
+            colors={[getComputedAccentColor()]}
             borderRadius={2}
             axisTop={null}
             axisRight={null}
@@ -222,7 +223,7 @@ export function ActivityChart({ data }: Readonly<ActivityChartProps>) {
             margin={{ top: 8, right: 8, bottom: 24, left: 36 }}
             xScale={{ type: "point" }}
             yScale={{ type: "linear", min: 0, max: "auto" }}
-            colors={["#16b195"]}
+            colors={[getComputedAccentColor()]}
             lineWidth={2.5}
             enableArea={true}
             areaOpacity={0.12}

@@ -55,12 +55,12 @@
       color 0.15s ease;
 
     &:hover:not(:disabled) {
-      background: rgba(globals.$brand-teal, 0.12);
-      color: globals.$brand-teal;
+      background: rgba(var(--color-primary-rgb, 74, 158, 255), 0.12);
+      color: var(--color-primary, #4a9eff);
     }
 
     &:focus-visible {
-      outline: 2px solid rgba(globals.$brand-teal, 0.65);
+      outline: 2px solid rgba(var(--color-primary-rgb, 74, 158, 255), 0.65);
       outline-offset: 2px;
     }
   }

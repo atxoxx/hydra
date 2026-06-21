@@ -40,7 +40,7 @@
   }
 
   &__confidence {
-    color: globals.$brand-teal;
+    color: var(--color-primary, #4a9eff);
 
     &--low {
       color: #d4a853;
@@ -188,8 +188,8 @@
     height: 100%;
     background: linear-gradient(
       90deg,
-      rgba(22, 177, 149, 0.7),
-      globals.$brand-teal
+      rgba(var(--color-primary-rgb, 74, 158, 255), 0.7),
+      var(--color-primary, #4a9eff)
     );
     border-radius: 999px;
     transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
@@ -210,7 +210,7 @@
     height: 10px;
     border-radius: 50%;
     background-color: globals.$muted-color;
-    border: 2px solid globals.$brand-teal;
+    border: 2px solid var(--color-primary, #4a9eff);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
     transform: translate(-50%, -50%);
     transition:
@@ -267,9 +267,9 @@
     display: inline-flex;
     align-items: center;
     gap: calc(globals.$spacing-unit * 0.5);
-    background-color: rgba(22, 177, 149, 0.1);
-    border: 1px solid rgba(22, 177, 149, 0.3);
-    color: globals.$brand-teal;
+    background-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.1);
+    border: 1px solid rgba(var(--color-primary-rgb, 74, 158, 255), 0.3);
+    color: var(--color-primary, #4a9eff);
     border-radius: 6px;
     padding: calc(globals.$spacing-unit * 0.75)
       calc(globals.$spacing-unit * 1.25);
@@ -282,8 +282,8 @@
     align-self: flex-start;
 
     &:hover {
-      background-color: rgba(22, 177, 149, 0.18);
-      border-color: rgba(22, 177, 149, 0.55);
+      background-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.18);
+      border-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.55);
     }
 
     &:disabled {

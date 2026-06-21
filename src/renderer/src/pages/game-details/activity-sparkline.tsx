@@ -1,5 +1,6 @@
 import { ResponsiveLine } from "@nivo/line";
 import type { HardwareSample } from "../../declaration";
+import { getComputedAccentColor } from "../../helpers";
 import "./activity-sparkline.scss";
 
 export interface ActivitySparklineProps {
@@ -37,7 +38,7 @@ export function ActivitySparkline({
 
   const status = getStatus();
   const statusColors = {
-    good: "#16b195",
+    good: getComputedAccentColor(),
     warn: "#d4a853",
     danger: "#e74c3c",
   };

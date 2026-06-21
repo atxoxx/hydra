@@ -14,7 +14,7 @@
   }
 
   &--expanded {
-    border-color: rgba(globals.$brand-teal, 0.25);
+    border-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.25);
     background: rgba(255, 255, 255, 0.03);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   }
@@ -93,7 +93,7 @@
   }
 
   &__duration {
-    color: globals.$brand-teal;
+    color: var(--color-primary, #4a9eff);
     font-size: 14px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
@@ -186,7 +186,7 @@
     }
 
     &--active {
-      background: globals.$brand-teal;
+      background: var(--color-primary, #4a9eff);
       color: #fff;
 
       &:hover {

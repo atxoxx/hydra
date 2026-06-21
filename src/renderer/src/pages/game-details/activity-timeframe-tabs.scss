@@ -25,7 +25,7 @@
 
     &--active {
       color: #fff;
-      background-color: rgba(22, 177, 149, 0.2);
+      background-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.2);
     }
   }
 }

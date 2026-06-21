@@ -11,6 +11,23 @@
   overflow: hidden;
   padding-top: globals.$spacing-unit;
 
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      160deg,
+      rgba(var(--color-primary-rgb, 74, 158, 255), 0.04) 0%,
+      transparent 60%
+    );
+    pointer-events: none;
+    z-index: 0;
+    transition: background 0.3s ease;
+  }
+
   &--resizing {
     opacity: globals.$active-opacity;
     pointer-events: none;

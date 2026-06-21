@@ -18,6 +18,8 @@ import {
   replaceSavedDownloadDirectoryAndSetDefault,
 } from "@shared";
 import { SettingsAppearance } from "./appearance/settings-appearance";
+import { AccentColorPicker } from "@renderer/components/accent-color-picker/accent-color-picker";
+import { injectAccentColor } from "@renderer/helpers";
 import { DownloadDirectoryReplacementModal } from "./download-directory-replacement-modal";
 
 interface LanguageOption {
@@ -69,6 +71,7 @@ export function SettingsContextGeneral({
     sidebarShowAchievementsBadge: true,
     sidebarShowFriendsBadge: true,
     sidebarShowNewsTab: true,
+    accentColor: null as string | null,
   });
 
   useEffect(() => {
@@ -121,6 +124,7 @@ export function SettingsContextGeneral({
         userPreferences.sidebarShowAchievementsBadge ?? true,
       sidebarShowFriendsBadge: userPreferences.sidebarShowFriendsBadge ?? true,
       sidebarShowNewsTab: userPreferences.sidebarShowNewsTab ?? true,
+      accentColor: userPreferences.accentColor ?? null,
     });
   }, [userPreferences, defaultDownloadsPath]);
 
@@ -317,6 +321,15 @@ export function SettingsContextGeneral({
 
       <div className="settings-context-panel__group">
         <h3>{t("appearance")}</h3>
+
+        <AccentColorPicker
+          value={form.accentColor}
+          onChange={(color) => {
+            handleChange({ accentColor: color });
+            injectAccentColor(color);
+          }}
+        />
+
         <SettingsAppearance appearance={appearance} />
       </div>
 

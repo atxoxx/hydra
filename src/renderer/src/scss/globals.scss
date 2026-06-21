@@ -66,3 +66,9 @@ $body-font-size: 14px;
 $small-font-size: 12px;
 
 $app-container: app-container;
+
+:root {
+  --accent: $primary-color;
+  --color-primary: $primary-color;
+  --color-primary-rgb: 74, 158, 255;
+}

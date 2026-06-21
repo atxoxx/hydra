@@ -1,0 +1,191 @@
+@use "../../scss/globals.scss";
+
+.accent-color-picker {
+  display: flex;
+  flex-direction: column;
+  gap: calc(globals.$spacing-unit * 2);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__label {
+    font-size: globals.$body-font-size;
+    color: globals.$body-color;
+  }
+
+  &__reset {
+    font-size: 12px;
+    color: globals.$muted-color;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: globals.$body-color;
+    }
+  }
+
+  &__description {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.4;
+  }
+
+  &__presets {
+    display: flex;
+    flex-direction: column;
+    gap: globals.$spacing-unit;
+  }
+
+  &__presets-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  &__presets-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__preset {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.15s ease, border-color 0.15s ease,
+      box-shadow 0.15s ease;
+
+    &:hover:not(:disabled) {
+      transform: scale(1.15);
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+    }
+
+    &--selected {
+      border-color: #fff;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+      cursor: default;
+    }
+
+    &:disabled {
+      cursor: default;
+    }
+  }
+
+  &__custom {
+    display: flex;
+    flex-direction: column;
+    gap: globals.$spacing-unit;
+  }
+
+  &__custom-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  &__custom-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__custom-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid globals.$border-color;
+    flex-shrink: 0;
+    transition: background-color 0.3s ease;
+  }
+
+  &__custom-input {
+    flex: 1;
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 1px solid globals.$border-color;
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 13px;
+    color: globals.$body-color;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    &--error {
+      border-color: globals.$error-color;
+
+      &:focus {
+        border-color: globals.$error-color;
+      }
+    }
+  }
+
+  &__error {
+    font-size: 11px;
+    color: globals.$error-color;
+  }
+
+  &__preview {
+    display: flex;
+    flex-direction: column;
+    gap: globals.$spacing-unit;
+  }
+
+  &__preview-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  &__preview-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background-color: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    border: 1px solid globals.$border-color;
+  }
+
+  &__preview-button {
+    padding: 4px 12px;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+  }
+
+  &__preview-link {
+    font-size: 12px;
+    font-weight: 500;
+    cursor: default;
+    transition: color 0.3s ease;
+  }
+
+  &__preview-badge {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+  }
+}

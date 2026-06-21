@@ -61,8 +61,8 @@
     }
 
     &--active {
-      background-color: rgba(22, 177, 149, 0.18);
-      color: globals.$brand-teal;
+      background-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.18);
+      color: var(--color-primary, #4a9eff);
     }
 
     &--empty {
@@ -79,7 +79,7 @@
   }
 
   &__group-count {
-    background-color: globals.$brand-teal;
+    background-color: var(--color-primary, #4a9eff);
     color: #ffffff;
     border-radius: 999px;
     font-size: 10px;
@@ -133,12 +133,12 @@
     }
 
     &--selected {
-      background-color: rgba(22, 177, 149, 0.18);
-      border-color: rgba(22, 177, 149, 0.5);
-      color: globals.$brand-teal;
+      background-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.18);
+      border-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.5);
+      color: var(--color-primary, #4a9eff);
 
       &:hover:not(&--disabled) {
-        background-color: rgba(22, 177, 149, 0.25);
+        background-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.25);
       }
     }
 
@@ -171,8 +171,8 @@
   }
 
   &__chip--selected &__chip-count {
-    background-color: rgba(22, 177, 149, 0.32);
-    color: globals.$brand-teal;
+    background-color: rgba(var(--color-primary-rgb, 74, 158, 255), 0.32);
+    color: var(--color-primary, #4a9eff);
   }
 
   &__empty {

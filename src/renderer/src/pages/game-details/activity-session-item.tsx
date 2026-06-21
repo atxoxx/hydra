@@ -5,6 +5,7 @@ import type { GameSession } from "../../declaration";
 import { ActivityHardwareCard } from "./activity-hardware-card";
 import { Trash2, ChevronDown, ChevronUp, BarChart2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getComputedAccentColor } from "../../helpers";
 import "./activity-session-item.scss";
 
 export interface ActivitySessionItemProps {
@@ -202,7 +203,7 @@ export function ActivitySessionItem({
   }, [chartData]);
 
   const metricColors = (() => {
-    if (chartMetric === "fps") return ["#16b195"];
+    if (chartMetric === "fps") return [getComputedAccentColor()];
     if (chartMetric === "temps") return ["#e74c3c", "#f39c12"];
     if (chartMetric === "usages") return ["#3e62c0", "#9b59b6"];
     return ["#2ecc71"];
